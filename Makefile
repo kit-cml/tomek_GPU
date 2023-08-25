@@ -37,12 +37,12 @@ LDFLAGS  += -g
 # List the project' sources to compile or let the Makefile recognize
 # them for you using 'wildcard' function.
 #
-SOURCES	= $(wildcard *.cpp) $(wildcard **/*.cpp)
+SOURCES	= $(wildcard *.cpp) $(wildcard **/*.cpp) $(wildcard *.c) $(wildcard **/*.c)
 
 # List the project' headers or let the Makefile recognize
 # them for you using 'wildcard' function.
 #
-HEADERS	= $(wildcard *.hpp) $(wildcard **/*.hpp)
+HEADERS	= $(wildcard *.hpp) $(wildcard **/*.hpp) $(wildcard *.h) $(wildcard **/*.h)
 
 # Construct the list of object files based on source files using
 # simple extension substitution.
@@ -78,6 +78,4 @@ $(PROGNAME) : $(OBJECTS) Makefile
 # - the '-' before 'rm' command to informs make to ignore errors.
 clean :
 	@echo "Clean."
-	del /f /s *.o bin\$(PROGNAME)
-	rmdir /q /s bin\result
-	mkdir bin\result
+	rm -rf *.o bin/$(PROGNAME)
