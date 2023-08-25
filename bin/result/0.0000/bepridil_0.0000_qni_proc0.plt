@@ -1,0 +1,2 @@
+Sample_ID,Qnet_AP,Qnet4_AP,Qinward_CL,Qnet_CL,Qnet4_CL,Qinward_CL
+0,0.052112,-0.001151,0.000000,0.074434,-0.095678,0.000000
