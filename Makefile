@@ -14,13 +14,14 @@
 .PHONY: all, clean
 
 # Define the final program name
-PROGNAME := drug_sim.exe
+PROGNAME := drug_sim
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
 CPPFLAGS := 
 
 # CXX to set the compiler
-CXX := g++
+# CXX := g++
+CXX := mpicxx
 
 # CXXFLAGS is used for C++ compilation options.
 #CXXFLAGS += -Wall -O0 -fpermissive -std=c++11
