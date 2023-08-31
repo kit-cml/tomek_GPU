@@ -9,3 +9,4 @@
 bin/result/*/*.plt
 bin/drug_sim
 *.o
+*.plt
