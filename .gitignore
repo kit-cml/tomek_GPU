@@ -5,8 +5,6 @@
 *.cubin
 *.fatbin
 .DS_Store
-*.plt
-bin/result/*/*.plt
 bin/drug_sim
 *.o
 *.plt
