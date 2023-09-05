@@ -346,6 +346,7 @@ enum E_CONSTANTS_T{
   upScale = 108,
   stim_start = 139,
   BCL = 140,
+  stim_end  = 141
 };
 
 enum E_STATES_T{

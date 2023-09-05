@@ -18,28 +18,6 @@ void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...);
 // parameter setup function
 void edison_assign_params(int argc, char *argv[], param_t *p_param);
 
-
-
-
-#ifndef _WIN32
-// Main interface for zipping a folder
-void create_zip(const char *zip_filename, const char *target_folder);
-
-
-// Main interface for extracting a zipfile
-int extract_zip(const char *zip_filename, const char *target_folder);
-
-// Zip folder recursively
-// Source:
-// https://github.com/kuba--/zip
-void zip_walk(struct zip_t *zip, const char *path);
-
-// delete folder that have contents
-// Source:
-// https://stackoverflow.com/a/54956690/981481
-void remove_dir_content(const char *path);
-#endif
-
 // create a directory.
 // supporting different OS.
 int make_directory(const char* dirname );

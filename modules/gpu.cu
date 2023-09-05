@@ -1,7 +1,9 @@
 #include "cellmodels/enums/enum_ord2011.hpp"
 #include "cellmodels/Ohara_Rudy_2011.hpp"
-#include "cellmodels/cellmodel.hpp"
 #include <stdio.h>
+
+#include "modules/glob_funct.hpp"
+#include "modules/glob_type.hpp"
 
 /*
 all kernel function has been moved. Unlike the previous GPU code, now we seperate everything into each modules.
@@ -56,12 +58,15 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // unsigned short pace_steepest = 0;
     // double conc = 243.0; //mmol
     double conc = 0.0;
+    double type = 0.;
+    bool dutta = false;
+    double epsilon = 10E-14;
 
 
     // printf("Core %d:\n",sample_id);
-    kernel_InitConsts(sample_id,d_CONSTANTS, d_STATES);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, dutta, sample_id);
 
-    kernel_ApplyDrugEffect(sample_id,conc,d_ic50,10E-14,d_CONSTANTS);
+    ___applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
 
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
@@ -73,7 +78,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt_set[sample_id], tcurr, d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
 
     while (tcurr[sample_id]<tmax){
-        dt_set = kernel_SetTimeStep(sample_id, tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES); 
+        dt_set = set_time_step(sample_id, tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES); 
         computeRates(sample_id, tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC); 
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
           dt[sample_id] = dt_set;
@@ -123,8 +128,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
                                        double *d_ALGEBRAIC, double *time, double *out_dt, double *states,
                                        double *ical, double *inal, unsigned int sample_size){
-    unsigned short sample_id;
-    
     sample_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[56000];
     double dt_for_each_sample[56000];

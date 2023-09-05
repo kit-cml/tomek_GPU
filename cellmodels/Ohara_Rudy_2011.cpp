@@ -433,38 +433,12 @@
  * RATES[Jrelp] is d/dt Jrelp in component ryr (dimensionless).
  */
 
-Ohara_Rudy_2011::Ohara_Rudy_2011()
-{
-	algebraic_size = 198;
-	constants_size = 144;
-	states_size = 41;
-	gates_size = 30;
-	current_size = 21;
-	concs_size = 8;
-	// need more construction.
-	unsigned short gates_indices_temp[255] = {14,13,40,17,37,6,3,36,34,30,16,5,32,4,21,38,1,35,7,23,19,10,28,27,24,11,31,20,8,22,};
-	std::swap(gates_indices, gates_indices_temp);
-	snprintf(gates_header, sizeof(gates_header), "m,j,jp,hf,hs,hsp,mL,hL,hLp,a,ap,ki,iF,iS,iFp,iSp,xrf,xrs,xs1,xs2,xk1,d,ff,fs,fcaf,nca,jca,fcas,ffp,fcafp,");
-	unsigned short current_indices_temp[255] = {16,67,30,187,157,168,169,73,178,150,135,42,1,9,26,49,147,143,17,184,36,};
-	std::swap(current_indices, current_indices_temp);
-	snprintf(current_header, sizeof(current_header), "INa,INaL,Ito,IKr,IKs,IK1,ICaL,ICaNa,ICaK,INaCa_ss,INaK,Jdiff,JdiffK,JdiffNa,Jup,Jrel,Jtr,,IpCa,ICab,INab,IKb");
-	unsigned short concs_indices_temp[255] = {18,5,2,0,25,26,29,9,};
-	std::swap(concs_indices, concs_indices_temp);
-	snprintf(concs_header, sizeof(concs_header), "nai,ki,cass,nass,cai,kss,CaMKT,cansr,cajsr");
-
-}
-
-Ohara_Rudy_2011::~Ohara_Rudy_2011()
-{
-
-}
-
-void Ohara_Rudy_2011::___initConsts(double type, int offset)
+void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset)
 {
 
 int num_of_constants = 146;
 int num_of_states = 41;
-CONSTANTS[celltype+(offset * num_of_constants)] = 0;
+CONSTANTS[celltype+(offset * num_of_constants)] = type;
 CONSTANTS[R+(offset * num_of_constants)] = 8314;
 CONSTANTS[T+(offset * num_of_constants)] = 310;
 CONSTANTS[F+(offset * num_of_constants)] = 96485;
@@ -653,16 +627,18 @@ STATES[Jrelp+(offset * num_of_states)] = 0;
 STATES[cajsr+(offset * num_of_states)] = 1.2;
 }
 
-void Ohara_Rudy_2011::___applyDutta()
+void ___applyDutta(double *CONSTANTS, int offset)
 {
-CONSTANTS[IKs] *= 1.870;
-CONSTANTS[IKr] *= 1.013;
-CONSTANTS[IK1] *= 1.698;
-CONSTANTS[ICaL] *= 1.007;
-CONSTANTS[INaL] *= 2.661;
+int num_of_constants = 146;
+
+CONSTANTS[IKs + (offset * num_of_constants)] *= 1.870;
+CONSTANTS[IKr + (offset * num_of_constants)] *= 1.013;
+CONSTANTS[IK1 + (offset * num_of_constants)] *= 1.698;
+CONSTANTS[ICaL + (offset * num_of_constants)] *= 1.007;
+CONSTANTS[INaL + (offset * num_of_constants)] *= 2.661;
 }
 
-void Ohara_Rudy_2011::___applyDrugEffect(double conc, double *ic50, double epsilon, int offset)
+void ___applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset)
 {
 int num_of_constants = 146;
 
@@ -676,36 +652,38 @@ CONSTANTS[PCa+(offset * num_of_constants)] = CONSTANTS[PCa+(offset * num_of_cons
 
 }
 
-void Ohara_Rudy_2011::initConsts()
-{
-	___initConsts(0.);
-}
+// void initConsts(int offset)
+// {
+// 	___initConsts(0.,offset);
+// }
 
-void Ohara_Rudy_2011::initConsts(double type)
-{
-	___initConsts(type);
-}
+// void initConsts(double type)
+// {
+// 	___initConsts(type, offset);
+// }
 
-void Ohara_Rudy_2011::initConsts(double type, double conc, double *ic50, bool is_dutta)
+void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, bool is_dutta, int offset)
 {
-	___initConsts(type);
-	mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
-	#ifndef COMPONENT_PATCH
-	mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
+  int num_of_constants = 146;
+
+	___initConsts(CONSTANTS, STATES, type, offset); // initconst kan minta 
+	// mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
+	#ifndef COMPONENT_PATCH // for patch clamp component based research
+	// mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
 	#endif
 	if(is_dutta == true){
-		___applyDutta();
+		___applyDutta(CONSTANTS, offset);
 	}
 	#ifndef COMPONENT_PATCH
-	mpi_printf(0,"After Dutta %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
+	// mpi_printf(0,"After Dutta %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
 	#endif	
-	___applyDrugEffect(conc, ic50, 10E-14);
+	___applyDrugEffect(CONSTANTS, conc, ic50, 10E-14, offset);
 	#ifndef COMPONENT_PATCH
-	mpi_printf(0,"After drug %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
+	// mpi_printf(0,"After drug %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
 	#endif
 }
 
-void Ohara_Rudy_2011::computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
+void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
 {
 int num_of_constants = 146; //done
 int num_of_states = 41; //done
@@ -954,7 +932,7 @@ RATES[(offset * num_of_rates) + cansr] = ALGEBRAIC[(offset * num_of_algebraic) +
 RATES[(offset * num_of_rates) + cajsr] =  ALGEBRAIC[(offset * num_of_algebraic) + Bcajsr]*(ALGEBRAIC[(offset * num_of_algebraic) + Jtr] - ALGEBRAIC[(offset * num_of_algebraic) + Jrel]);
 }
 
-void Ohara_Rudy_2011::solveAnalytical(double dt, int offset)
+void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset)
 {
   int num_of_constants = 146;
   int num_of_states = 41;
@@ -1075,7 +1053,7 @@ void Ohara_Rudy_2011::solveAnalytical(double dt, int offset)
 // #endif
 }
 
-double Ohara_Rudy_2011::set_time_step(double TIME,
+double set_time_step(double TIME,
   double time_point,
   double max_time_step,
   double* CONSTANTS,
