@@ -21,12 +21,12 @@ CPPFLAGS :=
 
 # CXX to set the compiler
 # CXX := g++
-CXX := mpicxx
+CXX := nvcc
 
 # CXXFLAGS is used for C++ compilation options.
 #CXXFLAGS += -Wall -O0 -fpermissive -std=c++11
 #CXXFLAGS += -Wall -O2 -fno-alias -fpermissive
-CXXFLAGS += -Wall
+# CXXFLAGS += -Wall
 # Use this if you want to use Tomek 2019 cell model.
 # Otherwise, comment it
 #CXXFLAGS += -DTOMEK_2019

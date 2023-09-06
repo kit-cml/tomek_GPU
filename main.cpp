@@ -1,7 +1,7 @@
 #include "modules/drug_sim.hpp"
 #include "modules/glob_funct.hpp"
 #include "modules/glob_type.hpp"
-
+#include "modules/gpu.cuh"
 
 #include <cstdio>
 #include <cstdlib>
@@ -9,12 +9,16 @@
 #include <ctime>
 #include <vector>
 
+#define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
+char buffer[255];
+double ic50[14*56000]; //temporary
+
 // since installing MPI in Windows
 // is quite a hassle, don't bother
 // to use it in Windows.
-#ifndef _WIN32
-	#include <mpi.h>
-#endif
+// #ifndef _WIN32
+// 	#include <mpi.h>
+// #endif
 
 // constants to avoid magic values
 static const char *RESULT_FOLDER_PATH = "result";
@@ -27,195 +31,80 @@ drug_t get_IC50_data_from_file(const char* file_name);
 int check_IC50_content(const drug_t* ic50, const param_t* p_param);
 
 // define MPI data structure for qinward_t to be broadcasted
-#ifndef _WIN32
-MPI_Datatype create_mpi_qinward_t();
-#endif
+// #ifndef _WIN32
+// MPI_Datatype create_mpi_qinward_t();
+// #endif
 
-int main(int argc, char **argv)
+// drug_t get_IC50_data_from_file(const char* file_name)
+// {
+//   FILE *fp_drugs;
+//   drug_t ic50;
+//   char *token, buffer[255];
+//   row_data temp_array;
+//   unsigned short idx;
+
+//   if( (fp_drugs = fopen(file_name, "r")) == NULL){
+//     printf("Cannot open file %s in %s at rank %d\n",
+//       file_name, mympi::host_name, mympi::rank);
+//     return ic50;
+//   }
+
+//   fgets(buffer, sizeof(buffer), fp_drugs); // skip header
+//   while( fgets(buffer, sizeof(buffer), fp_drugs) != NULL )
+//   { // begin line reading
+//     token = strtok( buffer, "," );
+//     idx = 0;
+//     while( token != NULL )
+//     { // begin data tokenizing
+//       temp_array.data[idx++] = strtod(token, NULL);
+//       token = strtok(NULL, ",");
+//     } // end data tokenizing
+//     ic50.push_back(temp_array);
+//   } // end line reading
+
+//   fclose(fp_drugs);
+//   return ic50;
+// }
+
+int get_IC50_data_from_file(const char* file_name, double *ic50)
 {
-	// enable real-time output in stdout
-	setvbuf( stdout, NULL, _IONBF, 0 );
-	
-#ifndef _WIN32
-	MPI_Init( &argc, &argv );
-	MPI_Comm_size( MPI_COMM_WORLD, &mympi::size );
-	MPI_Comm_rank( MPI_COMM_WORLD, &mympi::rank );
-	MPI_Get_processor_name(mympi::host_name, &mympi::host_name_len);
-#else
-	mympi::size = 1;
-	mympi::rank = 0;
-	snprintf(mympi::host_name,sizeof(mympi::host_name),"%s","host");
-	mympi::host_name_len = 4;
-#endif
+    /*
+    a host function to take all samples from the file, assuming each sample has 14 features.
 
-	// buffer for writing in snprintf() function
-	char buffer[255];
+    it takes the file name, and an ic50 (already declared in 1D, everything become 1D)
+    as a note, the data will be stored in 1D array, means this functions applies flatten.
 
-	// looping control and error control
-	unsigned short idx;
-	unsigned short sample_id;
-	unsigned short group_id;
-	unsigned short error_code;
-	
-	int is_ead;
-	unsigned short ead_counter;
-
-	// input parameter object
-	param_t *p_param;
-	p_param = new param_t();
-	p_param->init();
-	edison_assign_params(argc,argv,p_param);
-	p_param->show_val();
-
-	// parsing ic50 and hill constants file into variables
-	drug_t ic50;
-	ic50 = get_IC50_data_from_file(p_param->hill_file);
-	error_code = check_IC50_content(&ic50, p_param);
-	if(error_code != 0) return 1;
-	
-	// get concentration from input
-	std::vector<double> concs;
-	char *token = strtok( p_param->concs, "," );
-	while( token != NULL )
-	{ // begin data tokenizing
-	  concs.push_back(strtod(token, NULL));
-	  token = strtok(NULL, ",");
-	} // end data tokenizing
-
-
-	// make a directory for each concentration
-	// and wait till all directories have been created
-	if(mympi::rank == 0){
-		make_directory(RESULT_FOLDER_PATH);
-		snprintf( buffer, sizeof(buffer), "%s/%.4lf", RESULT_FOLDER_PATH, CONTROL_CONC);
-		if(is_file_existed(RESULT_FOLDER_PATH) == 0) make_directory(buffer);
-		for( idx = 0; idx < concs.size(); idx++ )
-		{ // begin concentration loop
-			snprintf( buffer, sizeof(buffer), "%s/%.4lf", RESULT_FOLDER_PATH, concs[idx] );
-			if(is_file_existed(RESULT_FOLDER_PATH) == 0) make_directory(buffer);
-		} // end concentration loop
-	}
-#ifndef _WIN32
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-	
-
-	// save qinward in control state
-	qinward_t *qin;
-	qin = new qinward_t();
-	// execute control in order to get
-	// qinward control values.
-	if( mympi::rank == 0 ){
-	sample_id = 0;
-	group_id = 0;
-	is_ead = do_drug_sim(CONTROL_CONC, ic50[0],
-			  p_param, sample_id, group_id, qin);
-	}
-
-	printf("Before INaL at rank %d: %lf\n",mympi::rank, qin->inal_auc_control);
-	printf("Before ICaL at rank %d: %lf\n",mympi::rank, qin->ical_auc_control);
-
-#ifndef _WIN32
-	// provide MPI_Datatype for broadcasting qinward_t struct.
-	MPI_Datatype mpi_qinward_t = create_mpi_qinward_t();
-	MPI_Bcast(qin, 1, mpi_qinward_t, 0, MPI_COMM_WORLD );
-#endif
-	printf("After INaL at rank %d: %lf\n",mympi::rank, qin->inal_auc_control);
-	printf("After ICaL at rank %d: %lf\n",mympi::rank, qin->ical_auc_control);
-
-#ifndef _WIN32
-	double begin = MPI_Wtime();
-#else
-	clock_t begin = clock();
-#endif
-
-	// sample-based simulation
-	is_ead = false;
-	ead_counter = 0;
-
-	if( p_param->simulation_mode == 0 ) 
-	{
-		mpi_printf(0, "Simulate sample-based simulation\n");
-		for( sample_id = mympi::rank, group_id = 0;
-			 sample_id < ic50.size();
-			 sample_id += mympi::size, group_id++ )
-		{ // begin sample loop
-		
-			printf("Sample_ID:%hu  Count:%llu Rank:%d \nData: ",
-			sample_id, ic50.size(), mympi::rank );
-			for( idx = 0; idx < 14; idx++ ){
-				printf("%.4lf|", (ic50[sample_id]).data[idx]);
-			}
-			printf("\n");
-			
-			for( idx = 0; idx < concs.size(); idx++ )
-			{ // begin concentration loop
-				// execute main simulation function
-				printf("Concentration: %.4lf\n",concs[idx]);
-				is_ead = do_drug_sim(concs[idx], ic50[sample_id],
-					  p_param, sample_id, group_id, qin);
-				if(is_ead == true){
-					ead_counter++;
-					printf("EAD happened in drug %s sample %hu concentration %.6lf\n", p_param->drug_name, sample_id, concs[idx]);
-				}
-			} // end concentration loop	
-			
-		
-		} // end sample loop
-	}
-
-#ifndef _WIN32
-	double end = MPI_Wtime();
-	double elapsed = (end-begin);
-	MPI_Barrier(MPI_COMM_WORLD);
-	mpi_printf(0, "Time elapsed: %lf seconds\n", elapsed);
-#else
-	clock_t end = clock();
-	double elapsed = (double)(end-begin)/(double)CLOCKS_PER_SEC;
-	mpi_printf(0, "Time elapsed: %lf seconds\n", elapsed);
-#endif
-
-
-	// memory cleanup
-	delete qin;
-	
-#ifndef _WIN32
-	MPI_Finalize();
-#else	
-	return 0;
-#endif
-}
-
-drug_t get_IC50_data_from_file(const char* file_name)
-{
+    it returns 'how many samples were detected?' in integer.
+    */
   FILE *fp_drugs;
-  drug_t ic50;
-  char *token, buffer[255];
-  row_data temp_array;
+//   drug_t ic50;
+  char *token;
+  
   unsigned short idx;
 
   if( (fp_drugs = fopen(file_name, "r")) == NULL){
-    printf("Cannot open file %s in %s at rank %d\n",
-      file_name, mympi::host_name, mympi::rank);
-    return ic50;
+    printf("Cannot open file %s\n",
+      file_name);
+    return 0;
   }
-
+  idx = 0;
+  int sample_size = 0;
   fgets(buffer, sizeof(buffer), fp_drugs); // skip header
   while( fgets(buffer, sizeof(buffer), fp_drugs) != NULL )
   { // begin line reading
     token = strtok( buffer, "," );
-    idx = 0;
     while( token != NULL )
     { // begin data tokenizing
-      temp_array.data[idx++] = strtod(token, NULL);
+      ic50[idx++] = strtod(token, NULL);
       token = strtok(NULL, ",");
     } // end data tokenizing
-    ic50.push_back(temp_array);
+    sample_size++;
   } // end line reading
 
   fclose(fp_drugs);
-  return ic50;
+  return sample_size;
 }
+
 
 int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 {
@@ -242,58 +131,145 @@ int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 	}
 }
 
-#ifndef _WIN32
-MPI_Datatype create_mpi_qinward_t()
+int main(int argc, char **argv)
 {
-	// create MPI_Datatype for qinward_t
-	// Reference:
-	// https://rookiehpc.github.io/mpi/docs/mpi_type_create_struct/index.html
-	MPI_Datatype mpi_qinward_t;
-	int length[4] = {1,1,1,1};
+	// enable real-time output in stdout
+	setvbuf( stdout, NULL, _IONBF, 0 );
+	
+// #ifndef _WIN32
+// 	MPI_Init( &argc, &argv );
+// 	MPI_Comm_size( MPI_COMM_WORLD, &mympi::size );
+// 	MPI_Comm_rank( MPI_COMM_WORLD, &mympi::rank );
+// 	MPI_Get_processor_name(mympi::host_name, &mympi::host_name_len);
+// #else
+// 	mympi::size = 1;
+// 	mympi::rank = 0;
+// 	snprintf(mympi::host_name,sizeof(mympi::host_name),"%s","host");
+// 	mympi::host_name_len = 4;
+// #endif
 
-	// calculate displacement for each member of the struct
-	MPI_Aint displacements[4];
-	qinward_t dummy_qin;
-	MPI_Aint base_address;
+// NEW CODE STARTS HERE //
+ double *d_ic50;
+    double *d_ALGEBRAIC;
+    double *d_CONSTANTS;
+    double *d_RATES;
+    double *d_STATES;
 
-	// blame EDISON for not having MPI3.0
-	#if( MPI_VERSION >= 3 )
-	mpi_printf(0, "This has MPI version 3 or more\n");
-	MPI_Get_address(&dummy_qin, &base_address);
-	MPI_Get_address(&dummy_qin.ical_auc_control, &displacements[0]);
-	MPI_Get_address(&dummy_qin.inal_auc_control, &displacements[1]);
-	MPI_Get_address(&dummy_qin.ical_auc_drug, &displacements[2]);
-	MPI_Get_address(&dummy_qin.inal_auc_drug, &displacements[3]);
-	displacements[0] = MPI_Aint_diff( displacements[0], base_address );
-	displacements[1] = MPI_Aint_diff( displacements[1], base_address );
-	displacements[2] = MPI_Aint_diff( displacements[2], base_address );
-	displacements[3] = MPI_Aint_diff( displacements[3], base_address );
+    double *time;
+    double *dt;
+    double *states;
+    double *ical;
+    double *inal;
 
-	// define the new data type mpi_qinward_t using MPI_Type_create_struct()
-	MPI_Datatype block_count[4] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE};
-	MPI_Type_create_struct(4, length, displacements, block_count, &mpi_qinward_t  );
-	#else
-	// Alternative for MPI lower than 3.0
-	// Reference:
-	// https://stackoverflow.com/questions/9864510/struct-serialization-in-c-and-transfer-over-mpi
-	mpi_printf(0, "This has MPI version lower than 3.0\n");
-	MPI_Address(&dummy_qin, &base_address);
-	MPI_Address(&dummy_qin.ical_auc_control, &displacements[0]);
-	MPI_Address(&dummy_qin.inal_auc_control, &displacements[1]);
-	MPI_Address(&dummy_qin.ical_auc_drug, &displacements[2]);
-	MPI_Address(&dummy_qin.inal_auc_drug, &displacements[3]);
+    // input variables for cell simulation
 
-	displacements[0] = offsetof(qinward_t, ical_auc_control);
-	displacements[1] = offsetof(qinward_t, inal_auc_control);
-	displacements[2] = offsetof(qinward_t, ical_auc_drug);
-	displacements[3] = offsetof(qinward_t, inal_auc_drug);
+    int num_of_constants = 146;
+    int num_of_states = 41;
+    int num_of_algebraic = 199;
+    int num_of_rates = 41;
 
-	// define the new data type mpi_qinward_t using MPI_Type_create_struct()
-	MPI_Datatype block_count[4] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE};
-	MPI_Type_struct(4, length, displacements, block_count, &mpi_qinward_t  );
-	#endif
-	MPI_Type_commit(&mpi_qinward_t);
+    snprintf(buffer, sizeof(buffer),
+      "./drugs/quinidine/IC50_samples.csv"
+      // "./IC50_samples.csv"
+      );
+    int sample_size = get_IC50_data_from_file(buffer, ic50);
+    if(sample_size == 0)
+        printf("Something problem with the IC50 file!\n");
+    // else if(sample_size > 2000)
+    //     printf("Too much input! Maximum sample data is 2000!\n");
+    printf("Sample size: %d\n",sample_size);
+   
+    printf("preparing GPU memory space \n");
+    cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
+    cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
+    cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
+    cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
+    // prep for 1 cycle plus a bit (700 * sample_size)
+    cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
+    cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
+    cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
+    
 
-	return mpi_qinward_t;
+    printf("Copying sample files to GPU memory space \n");
+    cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+
+    // // Get the maximum number of active blocks per multiprocessor
+    // cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, do_drug_sim_analytical, threadsPerBlock);
+
+    // // Calculate the total number of blocks
+    // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
+
+    tic();
+    printf("Timer started, doing simulation.... \n");
+    int thread = 100;
+    int block = int(ceil(sample_size/thread));
+    // int block = (sample_size + thread - 1) / thread;
+
+    printf("Sample size: %d\n",sample_size);
+    printf("\n   Configuration: \n block  ||  thread\n-------------------\n   %d    ||    %d\n\n\n", block,thread);
+    // initscr();
+    // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
+    trigger_parallelisation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+                                              time, dt, states, ical, inal, 
+                                              sample_size);
+                                      //block per grid, threads per block
+    // endwin();
+    cudaDeviceSynchronize();
+    
+
+    printf("allocating memory for computation result in the CPU, malloc style \n");
+    double *h_states,*h_time,*h_dt,*h_ical,*h_inal;
+
+    h_states = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for STATES, \n");
+    h_time = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for time, \n");
+    h_dt = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for dt, \n");
+    h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for ICaL, \n");
+    h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocating for INaL, all set!\n");
+
+    ////// copy the data back to CPU, and write them into file ////////
+    printf("copying the data back to the CPU \n");
+    cudaMemcpy(h_states, states, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_time, time, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_dt, dt, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ical, ical, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_inal, inal, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+
+    FILE *writer;
+
+    printf("writing to file... \n");
+    // sample loop
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      
+      char sample_str[ENOUGH];
+      char filename[150] = "./result/quinidine/";
+      sprintf(sample_str, "%d", sample_id);
+      strcat(filename,sample_str);
+      strcat(filename,".csv");
+
+      writer = fopen(filename,"w");
+      fprintf(writer, "time,dt,state,ICaL,INaL\n"); 
+      for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
+       // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
+        fprintf(writer, "%lf,%lf,%lf,%lf,%lf\n",
+        h_time[ sample_id + (datapoint * sample_size)],
+        h_dt[ sample_id + (datapoint * sample_size)], 
+        h_states[ sample_id + (datapoint * sample_size)], 
+        h_ical[ sample_id + (datapoint * sample_size)], 
+        h_inal[ sample_id + (datapoint * sample_size)]
+        );
+      }
+      fclose(writer);
+    }
+    toc();
+    
+    return 0;
+	
 }
-#endif

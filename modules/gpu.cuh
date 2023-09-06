@@ -1,6 +1,7 @@
 #include "cellmodels/enums/enum_ord2011.hpp"
 #include "cellmodels/Ohara_Rudy_2011.hpp"
 #include <stdio.h>
+#include "cuda_runtime.h"
 
 #include "modules/glob_funct.hpp"
 #include "modules/glob_type.hpp"
@@ -145,5 +146,6 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                           time_for_each_sample, dt_for_each_sample, sample_size);
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);
+    
     
   }
