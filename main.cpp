@@ -1,3 +1,5 @@
+#include <cuda.h>
+
 #include "modules/drug_sim.hpp"
 #include "modules/glob_funct.hpp"
 #include "modules/glob_type.hpp"
@@ -212,7 +214,7 @@ int main(int argc, char **argv)
     printf("\n   Configuration: \n block  ||  thread\n-------------------\n   %d    ||    %d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
-    trigger_parallelisation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+    kernel_DoDrugSim<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
                                               time, dt, states, ical, inal, 
                                               sample_size);
                                       //block per grid, threads per block

@@ -17,7 +17,7 @@
 PROGNAME := drug_sim
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
-CPPFLAGS := 
+CPPFLAGS := -I/usr/local/cuda/lib64
 
 # CXX to set the compiler
 # CXX := g++
@@ -32,21 +32,22 @@ CXX := nvcc
 #CXXFLAGS += -DTOMEK_2019
 
 # LDFLAGS is used for linker (-g enables debug symbols)
-LDFLAGS  += -g
+LDFLAGS  += -g -L/usr/local/cuda/lib64
 
 # List the project' sources to compile or let the Makefile recognize
 # them for you using 'wildcard' function.
 #
-SOURCES	= $(wildcard *.cpp) $(wildcard **/*.cpp) $(wildcard *.c) $(wildcard **/*.c)
+SOURCES	= $(wildcard *.cpp) $(wildcard **/*.cpp) $(wildcard *.c) $(wildcard **/*.c) $(wildcard **/*.cu)
 
 # List the project' headers or let the Makefile recognize
 # them for you using 'wildcard' function.
 #
-HEADERS	= $(wildcard *.hpp) $(wildcard **/*.hpp) $(wildcard *.h) $(wildcard **/*.h)
+HEADERS	= $(wildcard *.hpp) $(wildcard **/*.hpp) $(wildcard *.h) $(wildcard **/*.h) $(wildcard **/*.cuh)
 
 # Construct the list of object files based on source files using
 # simple extension substitution.
 OBJECTS := $(SOURCES:%.cpp=%.o)
+LIBS= -lopenblas -lpthread -lcudart -lcublas
 
 #
 # Now declare the dependencies rules and targets
