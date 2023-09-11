@@ -1,4 +1,5 @@
 #include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "modules/drug_sim.hpp"
 #include "modules/glob_funct.hpp"
@@ -9,11 +10,32 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <iostream>
+#include <math.h>
 #include <vector>
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
 double ic50[14*56000]; //temporary
+unsigned int datapoint_size = 7000;
+
+clock_t START_TIMER;
+
+clock_t tic();
+void toc(clock_t start = START_TIMER);
+
+clock_t tic()
+{
+    return START_TIMER = clock();
+}
+
+void toc(clock_t start)
+{
+    std::cout
+        << "Elapsed time: "
+        << (clock() - start) / (double)CLOCKS_PER_SEC << "s"
+        << std::endl;
+}
 
 // since installing MPI in Windows
 // is quite a hassle, don't bother
@@ -214,7 +236,7 @@ int main(int argc, char **argv)
     printf("\n   Configuration: \n block  ||  thread\n-------------------\n   %d    ||    %d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
-    kernel_DoDrugSim<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
                                               time, dt, states, ical, inal, 
                                               sample_size);
                                       //block per grid, threads per block

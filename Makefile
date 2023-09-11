@@ -17,8 +17,8 @@
 PROGNAME := drug_sim
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
-CPPFLAGS := -I/usr/local/cuda/lib64
-
+CPPFLAGS := -I/usr/local/cuda/include
+# CPPFLAGS :=
 # CXX to set the compiler
 # CXX := g++
 CXX := nvcc
