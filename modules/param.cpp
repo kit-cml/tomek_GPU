@@ -22,17 +22,18 @@ void param_t::init()
 
 void param_t::show_val()
 {
-  mpi_printf( 0, "%s -- %s\n", "Simulation mode", simulation_mode ? "full-pace" : "sample-based" );
-  mpi_printf( 0, "%s -- %s\n", "Hill File", hill_file );
-  mpi_printf( 0, "%s -- %hu\n", "Celltype", celltype);
-  mpi_printf( 0, "%s -- %s\n", "Is_Dutta", is_dutta ? "true" : "false" );
-  mpi_printf( 0, "%s -- %s\n", "Is_Print_Graph", is_print_graph ? "true" : "false" );
-  mpi_printf( 0, "%s -- %s\n", "Is_Using_Output", is_using_output ? "true" : "false" );
-  mpi_printf( 0, "%s -- %lf\n", "Basic_Cycle_Length", bcl);
-  mpi_printf( 0, "%s -- %hu\n", "Number_of_Pacing", pace_max);
-  mpi_printf( 0, "%s -- %lf\n", "Time_Step", dt);
-  mpi_printf( 0, "%s -- %lf\n", "Inet_Vm_Threshold", inet_vm_threshold);
-  mpi_printf( 0, "%s -- %lf\n", "Writing_Step", dt_write);
-  mpi_printf( 0, "%s -- %s\n", "Drug_Name", drug_name);
-  mpi_printf( 0, "%s -- %s\n", "Concentrations", concs);
+  //change this to printf somehow
+  // mpi_printf( 0, "%s -- %s\n", "Simulation mode", simulation_mode ? "full-pace" : "sample-based" );
+  // mpi_printf( 0, "%s -- %s\n", "Hill File", hill_file );
+  // mpi_printf( 0, "%s -- %hu\n", "Celltype", celltype);
+  // mpi_printf( 0, "%s -- %s\n", "Is_Dutta", is_dutta ? "true" : "false" );
+  // mpi_printf( 0, "%s -- %s\n", "Is_Print_Graph", is_print_graph ? "true" : "false" );
+  // mpi_printf( 0, "%s -- %s\n", "Is_Using_Output", is_using_output ? "true" : "false" );
+  // mpi_printf( 0, "%s -- %lf\n", "Basic_Cycle_Length", bcl);
+  // mpi_printf( 0, "%s -- %hu\n", "Number_of_Pacing", pace_max);
+  // mpi_printf( 0, "%s -- %lf\n", "Time_Step", dt);
+  // mpi_printf( 0, "%s -- %lf\n", "Inet_Vm_Threshold", inet_vm_threshold);
+  // mpi_printf( 0, "%s -- %lf\n", "Writing_Step", dt_write);
+  // mpi_printf( 0, "%s -- %s\n", "Drug_Name", drug_name);
+  // mpi_printf( 0, "%s -- %s\n", "Concentrations", concs);
 }

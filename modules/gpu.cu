@@ -1,10 +1,11 @@
-#include "cellmodels/enums/enum_ord2011.hpp"
-#include "cellmodels/Ohara_Rudy_2011.hpp"
+// #include "cellmodels/enums/enum_Ohara_Rudy_2011.hpp"
+#include "../cellmodels/Ohara_Rudy_2011.hpp"
 #include <stdio.h>
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
+#include <cuda.h>
 
-#include "modules/glob_funct.hpp"
-#include "modules/glob_type.hpp"
+#include "glob_funct.hpp"
+#include "glob_type.hpp"
 
 /*
 all kernel function has been moved. Unlike the previous GPU code, now we seperate everything into each modules.

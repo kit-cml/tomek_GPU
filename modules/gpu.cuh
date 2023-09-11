@@ -1,5 +1,7 @@
 #ifndef GPU_CUH
 #define GPU_CUH
+#include <cuda_runtime.h>
+#include <cuda.h>
 
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
                                        double *d_ALGEBRAIC, double *time, double *out_dt, double *states,

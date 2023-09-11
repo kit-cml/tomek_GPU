@@ -1,5 +1,5 @@
-#ifndef COMMONS_HPP
-#define COMMONS_HPP
+#ifndef GLOB_FUNCT_HPP
+#define GLOB_FUNCT_HPP
 
 #include <cstdio>
 
@@ -12,8 +12,8 @@
 // In Windows, this function will be same
 // as your usual printf() or fprintf().
 // Will be defined for the sake of portability.
-void mpi_printf(unsigned short node_id, const char *fmt, ...);
-void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...);
+// void mpi_printf(unsigned short node_id, const char *fmt, ...);
+// void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...);
 
 // parameter setup function
 void edison_assign_params(int argc, char *argv[], param_t *p_param);
