@@ -125,60 +125,60 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
   if( is_default == false ) fclose( fp_inputdeck );
 }
 
-#ifndef _WIN32
-int extract_zip(const char *zip_filename, const char *target_folder)
-{
-  // return zip_extract( zip_filename, target_folder, NULL, NULL);
-}
+// #ifndef _WIN32
+// int extract_zip(const char *zip_filename, const char *target_folder)
+// {
+//   // return zip_extract( zip_filename, target_folder, NULL, NULL);
+// }
 
-void create_zip(const char *zip_filename, const char *target_folder)
-{
-  // struct zip_t *zp_result = zip_open(zip_filename, ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
-  // if( zp_result != NULL ){
-  //   zip_walk(zp_result, target_folder);
-  // }
-  // else{
-  //   fprintf(stderr, "Error when zipping result folder!!\n");
-  //   return;
-  // }
-  // if( zp_result != NULL ) zip_close(zp_result);
-}
+// void create_zip(const char *zip_filename, const char *target_folder)
+// {
+//   // struct zip_t *zp_result = zip_open(zip_filename, ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
+//   // if( zp_result != NULL ){
+//   //   zip_walk(zp_result, target_folder);
+//   // }
+//   // else{
+//   //   fprintf(stderr, "Error when zipping result folder!!\n");
+//   //   return;
+//   // }
+//   // if( zp_result != NULL ) zip_close(zp_result);
+// }
 
-void zip_walk(struct zip_t *zip, const char *path) 
-{
-  // DIR *dir;
-  // struct dirent *entry;
-  // char fullpath[MAX_PATH];
-  // struct stat s;
+// void zip_walk(struct zip_t *zip, const char *path) 
+// {
+//   // DIR *dir;
+//   // struct dirent *entry;
+//   // char fullpath[MAX_PATH];
+//   // struct stat s;
 
-  // memset(fullpath, 0, MAX_PATH);
-  // dir = opendir(path);
-  // if(dir == NULL){
-  //   fprintf(stderr, "Error opening the directory %s\n", path);
-  //   return;
-  // }
+//   // memset(fullpath, 0, MAX_PATH);
+//   // dir = opendir(path);
+//   // if(dir == NULL){
+//   //   fprintf(stderr, "Error opening the directory %s\n", path);
+//   //   return;
+//   // }
 
 
-  // while ((entry = readdir(dir))) {
-  //   // skip "." and ".."
-  //   if (!strcasecmp(entry->d_name, ".\0") || !strcasecmp(entry->d_name, "..\0"))
-  //     continue;
+//   // while ((entry = readdir(dir))) {
+//   //   // skip "." and ".."
+//   //   if (!strcasecmp(entry->d_name, ".\0") || !strcasecmp(entry->d_name, "..\0"))
+//   //     continue;
 
-  //   snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
-  //   stat(fullpath, &s);
-  //   if (S_ISDIR(s.st_mode))
-  //     zip_walk(zip, fullpath);
-  //   else {
-  //     zip_entry_open(zip, fullpath);
-  //     zip_entry_fwrite(zip, fullpath);
-  //     zip_entry_close(zip);
-  //   }
-  // }
-  // closedir(dir);
-}
+//   //   snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+//   //   stat(fullpath, &s);
+//   //   if (S_ISDIR(s.st_mode))
+//   //     zip_walk(zip, fullpath);
+//   //   else {
+//   //     zip_entry_open(zip, fullpath);
+//   //     zip_entry_fwrite(zip, fullpath);
+//   //     zip_entry_close(zip);
+//   //   }
+//   // }
+//   // closedir(dir);
+// }
 
-void remove_dir_content(const char *path)
-{
+// void remove_dir_content(const char *path)
+// {
   // struct dirent *de;
   // char fname[300];
   // DIR *dr = opendir(path);
@@ -207,8 +207,8 @@ void remove_dir_content(const char *path)
   //   }
   // }
   // closedir(dr);
-}
-#endif
+// }
+// #endif
 
 int make_directory(const char* dirname )
 {
