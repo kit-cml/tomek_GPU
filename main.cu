@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "modules/drug_sim.hpp"
+// #include "modules/drug_sim.hpp"
 #include "modules/glob_funct.hpp"
 #include "modules/glob_type.hpp"
 #include "modules/gpu.cuh"
@@ -133,23 +133,23 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
 int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 {
 	if(ic50->size() == 0){
-		mpi_printf(0, "Something problem with the IC50 file!\n");
+		printf("Something problem with the IC50 file!\n");
 		return 1;
 	}
 	else if(ic50->size() > 2000){
-		mpi_printf(0, "Too much input! Maximum sample data is 2000!\n");
+		printf( "Too much input! Maximum sample data is 2000!\n");
 		return 2;
 	}
 	else if(p_param->pace_max < 750 && p_param->pace_max > 1000){
-		mpi_printf(0, "Make sure the maximum pace is around 750 to 1000!\n");
+		printf("Make sure the maximum pace is around 750 to 1000!\n");
 		return 3;
 	}
-	else if(mympi::size > ic50->size()){
-		mpi_printf(0, "%s\n%s\n",
-                "Overflow of MPI Process!",
-                "Make sure MPI Size is less than or equal the number of sample");
-		return 4;
-	}
+	// else if(mympi::size > ic50->size()){
+	// 	printf("%s\n%s\n",
+  //               "Overflow of MPI Process!",
+  //               "Make sure MPI Size is less than or equal the number of sample");
+	// 	return 4;
+	// }
 	else{
 		return 0;
 	}
@@ -173,7 +173,10 @@ int main(int argc, char **argv)
 // #endif
 
 // NEW CODE STARTS HERE //
- double *d_ic50;
+    // mycuda *thread_id;
+    // cudaMalloc(&thread_id, sizeof(mycuda));
+
+    double *d_ic50;
     double *d_ALGEBRAIC;
     double *d_CONSTANTS;
     double *d_RATES;

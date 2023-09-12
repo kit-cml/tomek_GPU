@@ -2,10 +2,6 @@
 #define GLOB_TYPE_HPP
 
 #include <vector>
-struct mycuda{
-static int thread_id; 
-
-};
 
 // global variable for MPI.
 struct mympi

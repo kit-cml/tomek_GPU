@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "../modules/glob_funct.hpp"
+#include <cuda_runtime.h>
 
 /*
  * TIME is time in component environment (millisecond).
@@ -433,7 +434,7 @@
  * RATES[Jrelp] is d/dt Jrelp in component ryr (dimensionless).
  */
 
-void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset)
+__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset)
 {
 
 int num_of_constants = 146;
@@ -627,7 +628,7 @@ STATES[Jrelp+(offset * num_of_states)] = 0;
 STATES[cajsr+(offset * num_of_states)] = 1.2;
 }
 
-void ___applyDutta(double *CONSTANTS, int offset)
+__device__ void ___applyDutta(double *CONSTANTS, int offset)
 {
 int num_of_constants = 146;
 
@@ -638,7 +639,7 @@ CONSTANTS[ICaL + (offset * num_of_constants)] *= 1.007;
 CONSTANTS[INaL + (offset * num_of_constants)] *= 2.661;
 }
 
-void ___applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset)
+__device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset)
 {
 int num_of_constants = 146;
 
@@ -662,28 +663,32 @@ CONSTANTS[PCa+(offset * num_of_constants)] = CONSTANTS[PCa+(offset * num_of_cons
 // 	___initConsts(type, offset);
 // }
 
-void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, bool is_dutta, int offset)
+__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, bool is_dutta, int offset)
 {
   int num_of_constants = 146;
 
 	___initConsts(CONSTANTS, STATES, type, offset); // initconst kan minta 
-	// mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
-	#ifndef COMPONENT_PATCH // for patch clamp component based research
-	// mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
-	#endif
-	if(is_dutta == true){
-		___applyDutta(CONSTANTS, offset);
-	}
-	#ifndef COMPONENT_PATCH
-	// mpi_printf(0,"After Dutta %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
-	#endif	
-	___applyDrugEffect(CONSTANTS, conc, ic50, 10E-14, offset);
-	#ifndef COMPONENT_PATCH
-	// mpi_printf(0,"After drug %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
-	#endif
+	// // mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
+	// #ifndef COMPONENT_PATCH // for patch clamp component based research
+	// // mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
+	// #endif
+	// if(is_dutta == true){
+	// 	___applyDutta(CONSTANTS, offset);
+	// }
+	// #ifndef COMPONENT_PATCH
+	// // mpi_printf(0,"After Dutta %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
+	// #endif	
+	// ___applyDrugEffect(CONSTANTS, conc, ic50, 10E-14, offset);
+	// #ifndef COMPONENT_PATCH
+	// // mpi_printf(0,"After drug %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
+	// #endif
+
+
 }
 
-void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
+
+
+__device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
 {
 int num_of_constants = 146; //done
 int num_of_states = 41; //done
@@ -932,7 +937,7 @@ RATES[(offset * num_of_rates) + cansr] = ALGEBRAIC[(offset * num_of_algebraic) +
 RATES[(offset * num_of_rates) + cajsr] =  ALGEBRAIC[(offset * num_of_algebraic) + Bcajsr]*(ALGEBRAIC[(offset * num_of_algebraic) + Jtr] - ALGEBRAIC[(offset * num_of_algebraic) + Jrel]);
 }
 
-void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset)
+__device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset)
 {
   int num_of_constants = 146;
   int num_of_states = 41;
@@ -1053,7 +1058,7 @@ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, doubl
 // #endif
 }
 
-double set_time_step(double TIME,
+__device__ double set_time_step(double TIME,
   double time_point,
   double max_time_step,
   double* CONSTANTS,

@@ -6,6 +6,7 @@
 
 #include "glob_funct.hpp"
 #include "glob_type.hpp"
+#include "gpu_glob_type.cuh"
 
 /*
 all kernel function has been moved. Unlike the previous GPU code, now we seperate everything into each modules.
@@ -68,7 +69,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, dutta, sample_id);
 
-    ___applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
+    applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
 
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
@@ -137,13 +138,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
                                        double *d_ALGEBRAIC, double *time, double *out_dt, double *states,
                                        double *ical, double *inal, unsigned int sample_size){
-    mycuda::thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[56000];
     double dt_for_each_sample[56000];
     
     // printf("Calculating %d\n",sample_id);
     kernel_DoDrugSim(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                          time, out_dt, states, ical, inal, mycuda::thread_id, 
+                          time, out_dt, states, ical, inal, thread_id, 
                           time_for_each_sample, dt_for_each_sample, sample_size);
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);
