@@ -660,7 +660,7 @@ CONSTANTS[PCa+(offset * num_of_constants)] = CONSTANTS[PCa+(offset * num_of_cons
 
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, bool is_dutta, int offset)
 {
-  int num_of_constants = 146;
+  // int num_of_constants = 146;
 
 	___initConsts(CONSTANTS, STATES, type, offset); // initconst kan minta 
 	// // mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);

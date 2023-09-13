@@ -26,7 +26,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
-    int num_of_rates = 41;
+    // int num_of_rates = 41;
 
     tcurr[sample_id] = 0.000001;
     dt[sample_id] = 0.005;
