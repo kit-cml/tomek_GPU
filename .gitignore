@@ -9,3 +9,4 @@ bin/drug_sim
 *.o
 *.plt
 *.out
+result/*.csv

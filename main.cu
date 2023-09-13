@@ -45,8 +45,8 @@ void toc(clock_t start)
 // #endif
 
 // constants to avoid magic values
-static const char *RESULT_FOLDER_PATH = "result";
-static const double CONTROL_CONC = 0.;
+// static const char *RESULT_FOLDER_PATH = "result";
+// static const double CONTROL_CONC = 0.;
 
 
 // get the IC50 data from file
@@ -196,6 +196,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
+      // "./drugs/bepridil/IC50_samples.csv"
       "./drugs/bepridil/IC50_samples100.csv"
       // "./IC50_samples.csv"
       );
@@ -236,7 +237,7 @@ int main(int argc, char **argv)
     // int block = (sample_size + thread - 1) / thread;
 
     printf("Sample size: %d\n",sample_size);
-    printf("\n   Configuration: \n block  ||  thread\n-------------------\n   %d    ||    %d\n\n\n", block,thread);
+    printf("\n   Configuration: \n  block\t||  thread\n-------------------\n   %d\t ||    %d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
