@@ -22,6 +22,7 @@ CPPFLAGS := -I/usr/local/cuda/include
 # CXX to set the compiler
 # CXX := g++
 CXX := nvcc
+CXXLINK := nvlink
 
 # CXXFLAGS is used for C++ compilation options.
 #CXXFLAGS += -Wall -O0 -fpermissive -std=c++11
@@ -32,17 +33,18 @@ CXX := nvcc
 #CXXFLAGS += -DTOMEK_2019
 
 # LDFLAGS is used for linker (-g enables debug symbols)
-LDFLAGS  += -g -L/usr/local/cuda/lib64
+# LDFLAGS  += -g -L/usr/local/cuda/lib64
+LDFLAGS  += -g -L/usr/local/cuda/lib64 -arch=sm_86 -rdc=true
 
 # List the project' sources to compile or let the Makefile recognize
 # them for you using 'wildcard' function.
 #
-SOURCES	= $(wildcard *.cpp) $(wildcard **/*.cpp) $(wildcard *.c) $(wildcard **/*.c) $(wildcard **/*.cu)
+SOURCES	= $(wildcard *.cpp) $(wildcard **/*.cpp) $(wildcard *.c) $(wildcard **/*.c) $(wildcard **/*.cu) $(wildcard *.cu)
 
 # List the project' headers or let the Makefile recognize
 # them for you using 'wildcard' function.
 #
-HEADERS	= $(wildcard *.hpp) $(wildcard **/*.hpp) $(wildcard *.h) $(wildcard **/*.h) $(wildcard **/*.cuh)
+HEADERS	= $(wildcard *.hpp) $(wildcard **/*.hpp) $(wildcard *.h) $(wildcard **/*.h) $(wildcard **/*.cuh) $(wildcard *.cuh)
 
 # Construct the list of object files based on source files using
 # simple extension substitution.
@@ -70,8 +72,8 @@ $(PROGNAME) : $(OBJECTS) Makefile
 #
 # Choice 2: don't use implicit rules and specify our will
 %.o: %.cpp $(HEADERS) Makefile
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $(OUTPUT_OPTION) $<
-
+	$(CXX) -x cu $(CXXFLAGS) $(CPPFLAGS) -dc -arch=sm_86 $(OUTPUT_OPTION) $<
+# -dc -rdc=true 
 
 # Simple clean-up target
 # notes:

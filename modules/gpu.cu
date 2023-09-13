@@ -17,7 +17,8 @@ differences are related to GPU offset calculations
 __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
                                        double *d_ALGEBRAIC, double *time, double *out_dt, double *states,
                                        double *ical, double *inal, unsigned short sample_id, double *tcurr, 
-                                       double *dt, unsigned int sample_size){
+                                       double *dt, unsigned int sample_size)
+    {
     
     unsigned int input_counter = 0;
     unsigned short cnt;
@@ -25,7 +26,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
-    // int num_of_rates = 41;
+    int num_of_rates = 41;
 
     tcurr[sample_id] = 0.000001;
     dt[sample_id] = 0.005;
@@ -77,8 +78,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
     tmax = pace_max * bcl;
     int pace_count = 0;
+    // printf("%lf", d_ic50[0]);
   
-    // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt_set[sample_id], tcurr, d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
+    // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
 
     while (tcurr[sample_id]<tmax){
         dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
@@ -128,26 +130,22 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         //printf("counter: %d core: %d\n",input_counter,sample_id);
         }
     }
-    // __syncthreads();
-    //avoid race condition with this? 
-    //But the waiting become too long for 2< samples
 }
 
 
 
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
                                        double *d_ALGEBRAIC, double *time, double *out_dt, double *states,
-                                       double *ical, double *inal, unsigned int sample_size){
+                                       double *ical, double *inal, unsigned int sample_size)
+  {
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    double time_for_each_sample[56000];
-    double dt_for_each_sample[56000];
+    double time_for_each_sample[2000];
+    double dt_for_each_sample[2000];
     
-    // printf("Calculating %d\n",sample_id);
+    // printf("Calculating %d\n",thread_id);
     kernel_DoDrugSim(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
                           time, out_dt, states, ical, inal, thread_id, 
                           time_for_each_sample, dt_for_each_sample, sample_size);
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);
-    
-    
   }

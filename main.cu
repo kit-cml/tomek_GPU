@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/quinidine/IC50_samples.csv"
+      "./drugs/bepridil/IC50_samples100.csv"
       // "./IC50_samples.csv"
       );
     int sample_size = get_IC50_data_from_file(buffer, ic50);
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 
     tic();
     printf("Timer started, doing simulation.... \n");
-    int thread = 100;
+    int thread = 20;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
 
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       
       char sample_str[ENOUGH];
-      char filename[150] = "./result/quinidine/";
+      char filename[150] = "./result/";
       sprintf(sample_str, "%d", sample_id);
       strcat(filename,sample_str);
       strcat(filename,".csv");
