@@ -90,7 +90,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         d_STATES, 
         d_ALGEBRAIC, 
         sample_id); 
-        
+        // printf("Core: %d, Pace %d\n",sample_id,pace_count);
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
@@ -103,21 +103,25 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           // printf("core %d, pace_count: %d, tcurr: %lf\n", sample_id, pace_count, tcurr);
           // printf("timestep corrected in core %d \n", sample_id);
         }
-        if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
-        // printf("Calculating... watching core 0: %.2lf %% done\n",(tcurr[sample_id]/tmax)*100.0);
-        printf("[");
-        for (cnt=0; cnt<pace_count/10;cnt++){
-          printf("=");
-        }
-        for (cnt=pace_count/10; cnt<pace_max/10;cnt++){
-          printf("_");
-        }
-        printf("] %.2lf %% \n",(tcurr[sample_id]/tmax)*100.0);
-        //mvaddch(0,pace_count,'=');
-        //refresh();
-        //system("clear");
-        writen = true;
-        }
+
+        //// progress bar starts ////
+        // if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
+        // // printf("Calculating... watching core 0: %.2lf %% done\n",(tcurr[sample_id]/tmax)*100.0);
+        // printf("[");
+        // for (cnt=0; cnt<pace_count/10;cnt++){
+        //   printf("=");
+        // }
+        // for (cnt=pace_count/10; cnt<pace_max/10;cnt++){
+        //   printf("_");
+        // }
+        // printf("] %.2lf %% \n",(tcurr[sample_id]/tmax)*100.0);
+        // //mvaddch(0,pace_count,'=');
+        // //refresh();
+        // //system("clear");
+        // writen = true;
+        // }
+        // //// progress bar ends ////
+
         solveAnalytical(d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, dt[sample_id], sample_id);
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
        
@@ -131,6 +135,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         //printf("counter: %d core: %d\n",input_counter,sample_id);
         }
     }
+    // __syncthreads();
 }
 
 

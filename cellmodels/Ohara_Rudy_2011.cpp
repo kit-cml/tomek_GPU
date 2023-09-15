@@ -10,6 +10,7 @@
 #include <cstdio>
 #include "../modules/glob_funct.hpp"
 #include <cuda_runtime.h>
+#include <cuda.h>
 
 /*
  * TIME is time in component environment (millisecond).
@@ -1094,6 +1095,7 @@ __device__ double set_time_step(double TIME,
             //printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
         }
     }
+    // __syncthreads();
     return time_step;
   }
 }

@@ -16,7 +16,7 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
-double ic50[14*56000]; //temporary
+double ic50[14*2000]; //temporary
 unsigned int datapoint_size = 7000;
 
 clock_t START_TIMER;
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
     // int block = (sample_size + thread - 1) / thread;
 
     printf("Sample size: %d\n",sample_size);
-    printf("\n   Configuration: \n  block\t||  thread\n-------------------\n   %d\t ||    %d\n\n\n", block,thread);
+    printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
