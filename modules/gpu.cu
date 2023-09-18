@@ -100,7 +100,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
           pace_count++;
           writen = false;
-          // printf("core %d, pace_count: %d, tcurr: %lf\n", sample_id, pace_count, tcurr);
+          printf("core %d, pace_count: %d, dt: %lf\n", sample_id, pace_count, dt[sample_id]);
           // printf("timestep corrected in core %d \n", sample_id);
         }
 
@@ -122,7 +122,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         // }
         // //// progress bar ends ////
 
-        solveAnalytical(d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, dt[sample_id], sample_id);
+        solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
        
         if (pace_count > pace_max-2){

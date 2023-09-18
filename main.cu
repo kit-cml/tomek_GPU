@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 
     snprintf(buffer, sizeof(buffer),
       // "./drugs/bepridil/IC50_samples.csv"
-      "./drugs/bepridil/IC50_samples100.csv"
+      "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
     int sample_size = get_IC50_data_from_file(buffer, ic50);
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 
     tic();
     printf("Timer started, doing simulation.... \n");
-    int thread = 20;
+    int thread = 1;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
 

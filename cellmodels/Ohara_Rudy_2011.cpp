@@ -440,7 +440,7 @@ __device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, in
 
 int num_of_constants = 146;
 int num_of_states = 41;
-
+// printf("%d\n", offset);
 CONSTANTS[(offset * num_of_constants) + nao] = 140;
 CONSTANTS[(offset * num_of_constants) + cao] = 1.8;
 CONSTANTS[(offset * num_of_constants) + ko] = 5.4;
@@ -578,7 +578,7 @@ STATES[(offset * num_of_states) + Jrelnp] = 0;
 STATES[(offset * num_of_states) + Jrelp] = 0;
 CONSTANTS[(offset * num_of_constants) + cmdnmax] = (CONSTANTS[(offset * num_of_constants) + celltype]==1.00000 ?  CONSTANTS[(offset * num_of_constants) + cmdnmax_b]*1.30000 : CONSTANTS[(offset * num_of_constants) + cmdnmax_b]);
 CONSTANTS[(offset * num_of_constants) + Ahs] = 1.00000 - CONSTANTS[(offset * num_of_constants) + Ahf];
-CONSTANTS[(offset * num_of_constants) + thLp] =  3.00000*CONSTANTS[(offset * num_of_constants) + thL];
+CONSTANTS[(offset * num_of_constants) + thLp] = 3.00000 * CONSTANTS[(offset * num_of_constants) + thL];
 CONSTANTS[(offset * num_of_constants) + GNaL] = (CONSTANTS[(offset * num_of_constants) + celltype]==1.00000 ?  CONSTANTS[(offset * num_of_constants) + GNaL_b]*0.600000 : CONSTANTS[(offset * num_of_constants) + GNaL_b]);
 CONSTANTS[(offset * num_of_constants) + Gto] = (CONSTANTS[(offset * num_of_constants) + celltype]==1.00000 ?  CONSTANTS[(offset * num_of_constants) + Gto_b]*4.00000 : CONSTANTS[(offset * num_of_constants) + celltype]==2.00000 ?  CONSTANTS[(offset * num_of_constants) + Gto_b]*4.00000 : CONSTANTS[(offset * num_of_constants) + Gto_b]);
 CONSTANTS[(offset * num_of_constants) + Aff] = 0.600000;
@@ -691,7 +691,7 @@ int num_of_states = 41; //done
 int num_of_algebraic = 199; //done
 int num_of_rates = 41; //done
 
-ALGEBRAIC[(offset * num_of_algebraic) +Istim] = (TIME>=CONSTANTS[(offset * num_of_constants) + stim_start + (offset * num_of_algebraic)] && (TIME - CONSTANTS[(offset * num_of_constants) + stim_start + (offset * num_of_algebraic)]) - floor((TIME - CONSTANTS[(offset * num_of_constants) + stim_start + (offset * num_of_algebraic)])/CONSTANTS[(offset * num_of_constants) + BCL + (offset * num_of_algebraic)])*CONSTANTS[(offset * num_of_constants) + BCL + (offset * num_of_algebraic)]<=CONSTANTS[(offset * num_of_constants) + duration] ? CONSTANTS[(offset * num_of_constants) + amp] : 0.000000);
+ALGEBRAIC[(offset * num_of_algebraic) +Istim] = (TIME>=CONSTANTS[(offset * num_of_constants) + stim_start] && (TIME - CONSTANTS[(offset * num_of_constants) + stim_start]) - floor((TIME - CONSTANTS[(offset * num_of_constants) + stim_start])/CONSTANTS[(offset * num_of_constants) + BCL])*CONSTANTS[(offset * num_of_constants) + BCL]<=CONSTANTS[(offset * num_of_constants) + duration] ? CONSTANTS[(offset * num_of_constants) + amp] : 0.000000);
 ALGEBRAIC[(offset * num_of_algebraic) +hLss] = 1.00000/(1.00000+exp((STATES[(offset * num_of_states) + V]+87.6100)/7.48800));
 ALGEBRAIC[(offset * num_of_algebraic) +hLssp] = 1.00000/(1.00000+exp((STATES[(offset * num_of_states) + V]+93.8100)/7.48800));
 ALGEBRAIC[(offset * num_of_algebraic) +mss] = 1.00000/(1.00000+exp(- (STATES[(offset * num_of_states) + V]+CONSTANTS[(offset * num_of_constants) + mssV1])/CONSTANTS[(offset * num_of_constants) + mssV2]));
@@ -1074,7 +1074,7 @@ __device__ double set_time_step(double TIME,
   else {
     //printf("TIME > time_point ms\n");
     if (std::abs(RATES[V + (offset * num_of_rates)] * time_step) <= 0.2) {//Slow changes in V
-        //printf("dV/dt <= 0.2\n");
+        // printf("dV/dt <= 0.2\n");
         time_step = std::abs(0.8 / RATES[V + (offset * num_of_rates)]);
         //Make sure time_step is between 0.005 and max_time_step
         if (time_step < 0.005) {
@@ -1086,13 +1086,13 @@ __device__ double set_time_step(double TIME,
         //printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
     }
     else if (std::abs(RATES[V + (offset * num_of_rates)] * time_step) >= 0.8) {//Fast changes in V
-        //printf("dV/dt >= 0.8\n");
+        // printf("dV/dt >= 0.8\n");
         time_step = std::abs(0.2 / RATES[V + (offset * num_of_rates)]);
-        while (std::abs(RATES[V] + (offset * num_of_rates) * time_step) >= 0.8 &&
+        while (std::abs(RATES[V + (offset * num_of_rates)]  * time_step) >= 0.8 &&
                0.005 < time_step &&
                time_step < max_time_step) {
             time_step = time_step / 10.0;
-            //printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
+            // printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
         }
     }
     // __syncthreads();
