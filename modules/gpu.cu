@@ -14,10 +14,13 @@ all modules here are optimised for GPU and slightly different than the original 
 differences are related to GPU offset calculations
 */
 
-__device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
-                                       double *d_ALGEBRAIC, double *time, double *out_dt, double *states,
-                                       double *ical, double *inal, unsigned short sample_id, double *tcurr, 
-                                       double *dt, unsigned int sample_size)
+__device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
+                                       double *time, double *states, double *out_dt,  double *cai_result, 
+                                       double *ina, double *inal,
+                                       double *ical, double *ito,
+                                       double *ikr, double *iks, 
+                                       double *ik1,
+                                       double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size)
     {
     
     unsigned int input_counter = 0;
@@ -26,7 +29,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
-    // int num_of_rates = 41;
+    int num_of_rates = 41;
 
     tcurr[sample_id] = 0.000001;
     dt[sample_id] = 0.005;
@@ -124,13 +127,36 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
+
+        // fprintf(fp_time_series,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+        //  "Time","Vm","dVm/dt","Cai(x1.000.000)(milliM->picoM)",
+        //  "INa(x1.000)(microA->picoA)","INaL(x1.000)(microA->picoA)","ICaL(x1.000)(microA->picoA)",
+        //  "IKs(x1.000)(microA->picoA)","IKr(x1.000)(microA->picoA)","IK1(x1.000)(microA->picoA)",
+        //  "Ito(x1.000)(microA->picoA)");
        
+        //  p_cell->STATES[V], p_cell->RATES[V], p_cell->STATES[cai]*CALCIUM_SCALING,
+        //           p_cell->ALGEBRAIC[INa]*CURRENT_SCALING, p_cell->ALGEBRAIC[INaL]*CURRENT_SCALING, 
+        //           p_cell->ALGEBRAIC[ICaL]*CURRENT_SCALING, p_cell->ALGEBRAIC[Ito]*CURRENT_SCALING,
+        //           p_cell->ALGEBRAIC[IKr]*CURRENT_SCALING, p_cell->ALGEBRAIC[IKs]*CURRENT_SCALING, 
+        //           p_cell->ALGEBRAIC[IK1]*CURRENT_SCALING
+
         if (pace_count > pace_max-2){
         time[input_counter + sample_id] = tcurr[sample_id];
-        out_dt[input_counter + sample_id] = dt[sample_id];
         states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
-        ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)];
-        inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)];
+        out_dt[input_counter + sample_id] = d_RATES[V + (sample_id * num_of_rates)];
+        cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
+
+        ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
+        inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
+
+        ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)] ;
+        ito[input_counter + sample_id] = d_ALGEBRAIC[Ito + (sample_id * num_of_algebraic)] ;
+
+        ikr[input_counter + sample_id] = d_ALGEBRAIC[IKr + (sample_id * num_of_algebraic)] ;
+        iks[input_counter + sample_id] = d_ALGEBRAIC[IKs + (sample_id * num_of_algebraic)] ;
+
+        ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
+
         input_counter = input_counter + sample_size;
         //printf("counter: %d core: %d\n",input_counter,sample_id);
         }
@@ -140,9 +166,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
 
 
-__global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, 
-                                       double *d_ALGEBRAIC, double *time, double *out_dt, double *states,
-                                       double *ical, double *inal, unsigned int sample_size)
+__global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
+                                      double *time, double *states, double *out_dt,  double *cai_result, 
+                                      double *ina, double *inal, 
+                                      double *ical, double *ito,
+                                      double *ikr, double *iks,
+                                      double *ik1,
+                                      unsigned int sample_size)
   {
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[2000];
@@ -150,8 +180,12 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
     
     // printf("Calculating %d\n",thread_id);
     kernel_DoDrugSim(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                          time, out_dt, states, ical, inal, thread_id, 
-                          time_for_each_sample, dt_for_each_sample, sample_size);
+                          time, states, out_dt, cai_result,
+                          ina, inal, 
+                          ical, ito,
+                          ikr, iks, 
+                          ik1,
+                          time_for_each_sample, dt_for_each_sample, thread_id, sample_size);
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);
   }

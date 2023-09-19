@@ -187,6 +187,15 @@ int main(int argc, char **argv)
     double *states;
     double *ical;
     double *inal;
+    double *cai_result;
+    double *ina;
+    double *ito;
+    double *ikr;
+    double *iks;
+    double *ik1;
+
+    static const int CALCIUM_SCALING = 1000000;
+    static const int CURRENT_SCALING = 1000;
 
     // input variables for cell simulation
 
@@ -218,7 +227,12 @@ int main(int argc, char **argv)
     cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
-    
+    cudaMalloc(&cai_result, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&ina, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&ito, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&ikr, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
@@ -240,8 +254,13 @@ int main(int argc, char **argv)
     printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
+
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                                              time, dt, states, ical, inal, 
+                                              time, states, dt, cai_result,
+                                              ina, inal, 
+                                              ical, ito,
+                                              ikr, iks, 
+                                              ik1,
                                               sample_size);
                                       //block per grid, threads per block
     // endwin();
@@ -249,7 +268,8 @@ int main(int argc, char **argv)
     
 
     printf("allocating memory for computation result in the CPU, malloc style \n");
-    double *h_states,*h_time,*h_dt,*h_ical,*h_inal;
+    double *h_states,*h_time,*h_dt,*h_ical,*h_inal,*h_cai_result,*h_ina,*h_ito,*h_ikr,*h_iks,*h_ik1;
+;
 
     h_states = (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for STATES, \n");
@@ -257,7 +277,19 @@ int main(int argc, char **argv)
     printf("...allocated for time, \n");
     h_dt = (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for dt, \n");
-    h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    h_cai_result= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for Cai, \n");
+     h_ina= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for iNa, \n");
+     h_ito= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for ito, \n");
+     h_ikr= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for ikr, \n");
+     h_iks= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for iks, \n");
+     h_ik1= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for ik1, \n");
+     h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for ICaL, \n");
     h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocating for INaL, all set!\n");
@@ -269,6 +301,13 @@ int main(int argc, char **argv)
     cudaMemcpy(h_dt, dt, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ical, ical, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_inal, inal, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_cai_result, cai_result, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ina, ina, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ito, ito, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    
 
     FILE *writer;
 
@@ -283,15 +322,28 @@ int main(int argc, char **argv)
       strcat(filename,".csv");
 
       writer = fopen(filename,"w");
-      fprintf(writer, "time,dt,state,ICaL,INaL\n"); 
+      fprintf(writer, "Time","Vm","dVm/dt","Cai(x1.000.000)(milliM->picoM)",
+         "INa(x1.000)(microA->picoA)","INaL(x1.000)(microA->picoA)","ICaL(x1.000)(microA->picoA)",
+         "IKs(x1.000)(microA->picoA)","IKr(x1.000)(microA->picoA)","IK1(x1.000)(microA->picoA)",
+         "Ito(x1.000)(microA->picoA)"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer, "%lf,%lf,%lf,%lf,%lf\n",
+        fprintf(writer,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
         h_time[ sample_id + (datapoint * sample_size)],
-        h_dt[ sample_id + (datapoint * sample_size)], 
-        h_states[ sample_id + (datapoint * sample_size)], 
-        h_ical[ sample_id + (datapoint * sample_size)], 
-        h_inal[ sample_id + (datapoint * sample_size)]
+        h_states[ sample_id + (datapoint * sample_size)],
+        h_dt[ sample_id + (datapoint * sample_size)],
+        h_cai_result[ sample_id + (datapoint * sample_size)]*CALCIUM_SCALING, 
+        
+        h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+
+        h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,  
+
+        h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+
+        h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING
         );
       }
       fclose(writer);
