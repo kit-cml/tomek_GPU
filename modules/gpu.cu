@@ -64,7 +64,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // double conc = 99.0; //mmol
     double conc = 0.0;
     double type = 0.;
-    bool dutta = false;
+    bool dutta = true;
     double epsilon = 10E-14;
 
 

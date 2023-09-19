@@ -668,9 +668,9 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 	// #ifndef COMPONENT_PATCH // for patch clamp component based research
 	// // mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
 	// #endif
-	// if(is_dutta == true){
-	// 	___applyDutta(CONSTANTS, offset);
-	// }
+	if(is_dutta == true){
+		___applyDutta(CONSTANTS, offset);
+	}
 	// #ifndef COMPONENT_PATCH
 	// // mpi_printf(0,"After Dutta %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
 	// #endif	
