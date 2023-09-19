@@ -322,13 +322,10 @@ int main(int argc, char **argv)
       strcat(filename,".csv");
 
       writer = fopen(filename,"w");
-      fprintf(writer, "Time","Vm","dVm/dt","Cai(x1.000.000)(milliM->picoM)",
-         "INa(x1.000)(microA->picoA)","INaL(x1.000)(microA->picoA)","ICaL(x1.000)(microA->picoA)",
-         "IKs(x1.000)(microA->picoA)","IKr(x1.000)(microA->picoA)","IK1(x1.000)(microA->picoA)",
-         "Ito(x1.000)(microA->picoA)"); 
+      fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+        fprintf(writer,"%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],
