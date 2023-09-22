@@ -23,19 +23,11 @@
 
 void mpi_printf(unsigned short node_id, const char *fmt, ...)
 {
-#ifndef _WIN32
-  if(mympi::rank == node_id){
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-  }
-#else
+
   va_list args;
   va_start(args, fmt);
   vprintf(fmt, args);
   va_end(args);	
-#endif
 }
 
 void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...)

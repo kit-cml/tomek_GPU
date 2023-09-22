@@ -198,11 +198,11 @@ int main(int argc, char **argv)
     static const int CURRENT_SCALING = 1000;
 
     // input variables for cell simulation
-    param_t *p_param;
+    param_t *p_param, *d_p_param;
 	  p_param = new param_t();
   	p_param->init();
 
-    p_param->show_val();
+    // p_param->show_val();
 
     int num_of_constants = 146;
     int num_of_states = 41;
@@ -226,6 +226,7 @@ int main(int argc, char **argv)
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
+    cudaMalloc(&d_p_param,  sizeof(param_t));
     // prep for 1 cycle plus a bit (700 * sample_size)
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
@@ -242,6 +243,7 @@ int main(int argc, char **argv)
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
     // // Get the maximum number of active blocks per multiprocessor
     // cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, do_drug_sim_analytical, threadsPerBlock);
@@ -267,7 +269,7 @@ int main(int argc, char **argv)
                                               ikr, iks, 
                                               ik1,
                                               sample_size,
-                                              p_param);
+                                              d_p_param);
                                       //block per grid, threads per block
     // endwin();
     cudaDeviceSynchronize();

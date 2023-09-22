@@ -20,7 +20,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
                                        double *ical, double *ito,
                                        double *ikr, double *iks, 
                                        double *ik1,
-                                       double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size)
+                                       double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
+                                       param_t *p_param)
     {
     
     unsigned int input_counter = 0;
@@ -32,7 +33,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_rates = 41;
 
     tcurr[sample_id] = 0.000001;
-    dt[sample_id] = 0.005;
+    dt[sample_id] = p_param->dt;
     double tmax;
     double max_time_step = 1.0, time_point = 25.0;
     double dt_set;
@@ -52,13 +53,15 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // simulation parameters
     // double dtw = 2.0;
     // const char *drug_name = "bepridil";
-    const double bcl = 2000; // bcl is basic cycle length
+    // const double bcl = 2000; // bcl is basic cycle length
+    const double bcl = p_param->bcl;
     
-    // const double inet_vm_threshold = -88.0;
+    const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
-    const unsigned short pace_max = 1000;
-    // const unsigned short pace_max = 10;
-    // const unsigned short celltype = 0.;
+    // const unsigned short pace_max = 1000;
+    const unsigned short pace_max = p_param->pace_max;
+
+    // const unsigned short celltype = p_param->celltype;
     // const unsigned short last_pace_print = 3;
     // const unsigned short last_drug_check_pace = 250;
     // const unsigned int print_freq = (1./dt) * dtw;
@@ -66,8 +69,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // unsigned short pace_steepest = 0;
     // double conc = 99.0; //mmol
     double conc = 0.0;
-    double type = 0.;
-    bool dutta = true;
+    double type = p_param->celltype;
+    bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;
 
 
@@ -161,7 +164,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                                       double *ikr, double *iks,
                                       double *ik1,
                                       unsigned int sample_size,
-                                      const param_t* p_param)
+                                      param_t *p_param)
   {
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[2000];
@@ -174,7 +177,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                           ical, ito,
                           ikr, iks, 
                           ik1,
-                          time_for_each_sample, dt_for_each_sample, thread_id, sample_size);
+                          time_for_each_sample, dt_for_each_sample, thread_id, sample_size,
+                          p_param);
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);
   }
