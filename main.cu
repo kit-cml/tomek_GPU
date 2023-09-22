@@ -198,6 +198,11 @@ int main(int argc, char **argv)
     static const int CURRENT_SCALING = 1000;
 
     // input variables for cell simulation
+    param_t *p_param;
+	  p_param = new param_t();
+  	p_param->init();
+
+    p_param->show_val();
 
     int num_of_constants = 146;
     int num_of_states = 41;
@@ -261,7 +266,8 @@ int main(int argc, char **argv)
                                               ical, ito,
                                               ikr, iks, 
                                               ik1,
-                                              sample_size);
+                                              sample_size,
+                                              p_param);
                                       //block per grid, threads per block
     // endwin();
     cudaDeviceSynchronize();

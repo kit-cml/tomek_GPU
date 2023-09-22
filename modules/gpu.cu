@@ -128,18 +128,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
 
-        // fprintf(fp_time_series,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-        //  "Time","Vm","dVm/dt","Cai(x1.000.000)(milliM->picoM)",
-        //  "INa(x1.000)(microA->picoA)","INaL(x1.000)(microA->picoA)","ICaL(x1.000)(microA->picoA)",
-        //  "IKs(x1.000)(microA->picoA)","IKr(x1.000)(microA->picoA)","IK1(x1.000)(microA->picoA)",
-        //  "Ito(x1.000)(microA->picoA)");
-       
-        //  p_cell->STATES[V], p_cell->RATES[V], p_cell->STATES[cai]*CALCIUM_SCALING,
-        //           p_cell->ALGEBRAIC[INa]*CURRENT_SCALING, p_cell->ALGEBRAIC[INaL]*CURRENT_SCALING, 
-        //           p_cell->ALGEBRAIC[ICaL]*CURRENT_SCALING, p_cell->ALGEBRAIC[Ito]*CURRENT_SCALING,
-        //           p_cell->ALGEBRAIC[IKr]*CURRENT_SCALING, p_cell->ALGEBRAIC[IKs]*CURRENT_SCALING, 
-        //           p_cell->ALGEBRAIC[IK1]*CURRENT_SCALING
-
         if (pace_count > pace_max-2){
         time[input_counter + sample_id] = tcurr[sample_id];
         states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
@@ -172,7 +160,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                                       double *ical, double *ito,
                                       double *ikr, double *iks,
                                       double *ik1,
-                                      unsigned int sample_size)
+                                      unsigned int sample_size,
+                                      const param_t* p_param)
   {
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[2000];
