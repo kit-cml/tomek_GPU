@@ -17,7 +17,7 @@
   double* ALGEBRAIC,
   int offset);
     __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset);
-	void __device__ ___applyDutta(double *CONSTANTS, int offset);
+	void ___applyDutta(double *CONSTANTS, int offset);
 	// void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset);
 
 #endif
