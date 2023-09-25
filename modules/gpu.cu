@@ -56,10 +56,10 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // const double bcl = 2000; // bcl is basic cycle length
     const double bcl = p_param->bcl;
     
-    const double inet_vm_threshold = p_param->inet_vm_threshold;
+    // const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
-    const unsigned short pace_max = 1000;
-    // const unsigned short pace_max = 10;
+    // const unsigned short pace_max = 1000;
+    const unsigned short pace_max = 10;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
     // const unsigned short last_drug_check_pace = 250;
@@ -127,7 +127,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         }
         // //// progress bar ends ////
 
-        solveAnalytical(d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, dt[sample_id], sample_id);
+        solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
 
         if (pace_count > pace_max-2){
