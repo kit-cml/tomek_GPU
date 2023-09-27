@@ -9,7 +9,7 @@
 	// void initConsts(bool is_dutta);
 	__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, bool is_dutta, int offset);
 	__device__ void computeRates(double TIME, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int offset);
-	__device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset );
+	__device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset);
 	__device__ double set_time_step(double TIME,double time_point,double max_time_step,
   double* CONSTANTS,
   double* RATES,
@@ -17,7 +17,7 @@
   double* ALGEBRAIC,
   int offset);
     __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset);
-	void ___applyDutta(double *CONSTANTS, int offset);
+	__device__ void ___applyDutta(double *CONSTANTS, int offset);
 	// void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset);
 
 #endif

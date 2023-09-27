@@ -900,7 +900,7 @@ RATES[(offset * num_of_rates) + d] = (ALGEBRAIC[(offset * num_of_algebraic) + ds
 RATES[(offset * num_of_rates) + ff] = (ALGEBRAIC[(offset * num_of_algebraic) + fss] - STATES[(offset * num_of_states) + ff])/ALGEBRAIC[(offset * num_of_algebraic) + tff];
 RATES[(offset * num_of_rates) + fs] = (ALGEBRAIC[(offset * num_of_algebraic) + fss] - STATES[(offset * num_of_states) + fs])/ALGEBRAIC[(offset * num_of_algebraic) + tfs];
 RATES[(offset * num_of_rates) + jca] = (ALGEBRAIC[(offset * num_of_algebraic) + fcass] - STATES[(offset * num_of_states) + jca])/CONSTANTS[(offset * num_of_constants) + tjca];
-RATES[(offset * num_of_rates) + nca] =  ALGEBRAIC[(offset * num_of_algebraic) + anca]*CONSTANTS[(offset * num_of_constants) + k2n] -  STATES[(offset * num_of_states) + nca]*ALGEBRAIC[(offset * num_of_algebraic) + km2n];
+RATES[(offset * num_of_rates) + nca] =  ALGEBRAIC[(offset * num_of_algebraic) + anca]*CONSTANTS[(offset * num_of_constants) + k2n] - STATES[(offset * num_of_states) + nca]*ALGEBRAIC[(offset * num_of_algebraic) + km2n];
 RATES[(offset * num_of_rates) + xrf] = (ALGEBRAIC[(offset * num_of_algebraic) + xrss] - STATES[(offset * num_of_states) + xrf])/ALGEBRAIC[(offset * num_of_algebraic) + txrf];
 RATES[(offset * num_of_rates) + xrs] = (ALGEBRAIC[(offset * num_of_algebraic) + xrss] - STATES[(offset * num_of_states) + xrs])/ALGEBRAIC[(offset * num_of_algebraic) + txrs];
 RATES[(offset * num_of_rates) + xs1] = (ALGEBRAIC[(offset * num_of_algebraic) + xs1ss] - STATES[(offset * num_of_states) + xs1])/ALGEBRAIC[(offset * num_of_algebraic) + txs1];
@@ -939,6 +939,7 @@ __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEB
   int num_of_states = 41;
   int num_of_algebraic = 199;
   int num_of_rates = 41;
+  
 // #ifdef EULER
 //   STATES[V] = STATES[V] + RATES[V] * dt;
 //   STATES[CaMKt] = STATES[CaMKt] + RATES[CaMKt] * dt;
@@ -1057,10 +1058,10 @@ __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEB
 __device__ double set_time_step(double TIME,
   double time_point,
   double max_time_step,
-  double* CONSTANTS,
-  double* RATES,
-  double* STATES,
-  double* ALGEBRAIC,
+  double *CONSTANTS,
+  double *RATES,
+  double *STATES,
+  double *ALGEBRAIC,
   int offset) {
   double time_step = 0.005;
   int num_of_constants = 146;

@@ -16,7 +16,7 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
-double ic50[14*2000]; //temporary
+double ic50[14*56000]; //temporary
 unsigned int datapoint_size = 7000;
 
 clock_t START_TIMER;
@@ -198,9 +198,9 @@ int main(int argc, char **argv)
     static const int CURRENT_SCALING = 1000;
 
     // input variables for cell simulation
-    param_t *p_param, *d_p_param;
-	  p_param = new param_t();
-  	p_param->init();
+    // param_t *p_param, *d_p_param;
+	  // p_param = new param_t();
+  	// p_param->init();
 
     // p_param->show_val();
 
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
-    cudaMalloc(&d_p_param,  sizeof(param_t));
+    // cudaMalloc(&d_p_param,  sizeof(param_t));
     // prep for 1 cycle plus a bit (700 * sample_size)
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
     // // Get the maximum number of active blocks per multiprocessor
     // cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, do_drug_sim_analytical, threadsPerBlock);
@@ -268,8 +268,9 @@ int main(int argc, char **argv)
                                               ical, ito,
                                               ikr, iks, 
                                               ik1,
-                                              sample_size,
-                                              d_p_param);
+                                              sample_size
+                                              // d_p_param
+                                              );
                                       //block per grid, threads per block
     // endwin();
     cudaDeviceSynchronize();
@@ -322,15 +323,15 @@ int main(int argc, char **argv)
     printf("writing to file... \n");
     // sample loop
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
-      
+      // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
-      char filename[150] = "./result/sober/";
+      char filename[150] = "./result/testing/";
       sprintf(sample_str, "%d", sample_id);
       strcat(filename,sample_str);
       strcat(filename,".csv");
 
       writer = fopen(filename,"w");
-      fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)"); 
+      fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
         fprintf(writer,"%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
