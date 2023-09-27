@@ -20,21 +20,21 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
                                        double *ical, double *ito,
                                        double *ikr, double *iks, 
                                        double *ik1,
-                                       double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size
-                                      //  param_t *p_param
+                                       double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
+                                       param_t *p_param
                                        )
     {
     
     unsigned int input_counter = 0;
-    // unsigned short cnt;
+    unsigned short cnt;
 
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
-    int num_of_rates = 41;
+    // int num_of_rates = 41;
 
     tcurr[sample_id] = 0.000001;
-    dt[sample_id] = 0.005;
+    dt[sample_id] = p_param->dt;
     double tmax;
     double max_time_step = 1.0, time_point = 25.0;
     double dt_set;
@@ -55,12 +55,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // double dtw = 2.0;
     // const char *drug_name = "bepridil";
     // const double bcl = 2000; // bcl is basic cycle length
-    const double bcl = 2000;
+    const double bcl = p_param->bcl;
     
     // const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
     // const unsigned short pace_max = 1000;
-    const unsigned short pace_max = 10;
+    const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
     // const unsigned short last_drug_check_pace = 250;
@@ -69,8 +69,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // unsigned short pace_steepest = 0;
     // double conc = 99.0; //mmol
     double conc = 0.0;
-    double type = 0.;
-    bool dutta = true;
+    double type = p_param->celltype;
+    bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;
 
 
@@ -111,23 +111,23 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           // printf("timestep corrected in core %d \n", sample_id);
         }
 
-        // //// progress bar starts ////
-        // if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
-        // // printf("Calculating... watching core 0: %.2lf %% done\n",(tcurr[sample_id]/tmax)*100.0);
-        // printf("[");
-        // for (cnt=0; cnt<pace_count/10;cnt++){
-        //   printf("=");
-        // }
-        // for (cnt=pace_count/10; cnt<pace_max/10;cnt++){
-        //   printf("_");
-        // }
-        // printf("] %.2lf %% \n",(tcurr[sample_id]/tmax)*100.0);
-        // //mvaddch(0,pace_count,'=');
-        // //refresh();
-        // //system("clear");
-        // writen = true;
-        // }
-        // // //// progress bar ends ////
+        //// progress bar starts ////
+        if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
+        // printf("Calculating... watching core 0: %.2lf %% done\n",(tcurr[sample_id]/tmax)*100.0);
+        printf("[");
+        for (cnt=0; cnt<pace_count/10;cnt++){
+          printf("=");
+        }
+        for (cnt=pace_count/10; cnt<pace_max/10;cnt++){
+          printf("_");
+        }
+        printf("] %.2lf %% \n",(tcurr[sample_id]/tmax)*100.0);
+        //mvaddch(0,pace_count,'=');
+        //refresh();
+        //system("clear");
+        writen = true;
+        }
+        // //// progress bar ends ////
 
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
@@ -168,8 +168,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                                       double *ical, double *ito,
                                       double *ikr, double *iks,
                                       double *ik1,
-                                      unsigned int sample_size
-                                      // param_t *p_param
+                                      unsigned int sample_size,
+                                      param_t *p_param
                                       )
   {
     unsigned short thread_id;
@@ -184,8 +184,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                           ical, ito,
                           ikr, iks, 
                           ik1,
-                          time_for_each_sample, dt_for_each_sample, thread_id, sample_size
-                          // p_param
+                          time_for_each_sample, dt_for_each_sample, thread_id, sample_size,
+                          p_param
                           );
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);
