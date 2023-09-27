@@ -37,20 +37,34 @@ void toc(clock_t start)
         << std::endl;
 }
   
-int gpu_check( void ) {
+int gpu_check(unsigned int datasize){
     int num_gpus;
     float percent;
+    int id;
     size_t free, total;
     cudaGetDeviceCount( &num_gpus );
     for ( int gpu_id = 0; gpu_id < num_gpus; gpu_id++ ) {
         cudaSetDevice( gpu_id );
-        int id;
         cudaGetDevice( &id );
         cudaMemGetInfo( &free, &total );
-        percent = total/free;
-        printf("GPU No %d, Free Memory: %d, Total Memory: %d (%f percent occupied)\n", id,free,total,percent);
+        percent = (free/(float)total);
+        printf("GPU No %d\nFree Memory: %ld, Total Memory: %ld (%f percent free)\n", id,free,total,percent*100.0);
     }
+    percent = 1.0-(datasize/(float)total);
+    //// this code strangely gave out too small value, so i disable the safety switch for now
+
+    // printf("The program uses GPU No %d and %f percent of its memory\n", id,percent*100.0);
+    // printf("\n");
+    // if (datasize<=free) {
+    //   return 0;
+    // }
+    // else {
+    //   return 1;
+    // }
+
+
     return 0;
+    
 }
 
 // since installing MPI in Windows
@@ -268,11 +282,14 @@ int main(int argc, char **argv)
     // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
 
     tic();
-    printf("Timer started, doing simulation.... \n");
+    printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
     int thread = 100;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
-
+    if(gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1){
+      printf("GPU memory insufficient!\n");
+      return 0;
+    }
     printf("Sample size: %d\n",sample_size);
     printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
     // initscr();
