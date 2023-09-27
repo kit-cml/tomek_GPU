@@ -36,6 +36,22 @@ void toc(clock_t start)
         << (clock() - start) / (double)CLOCKS_PER_SEC << "s"
         << std::endl;
 }
+  
+int gpu_check( void ) {
+    int num_gpus;
+    float percent;
+    size_t free, total;
+    cudaGetDeviceCount( &num_gpus );
+    for ( int gpu_id = 0; gpu_id < num_gpus; gpu_id++ ) {
+        cudaSetDevice( gpu_id );
+        int id;
+        cudaGetDevice( &id );
+        cudaMemGetInfo( &free, &total );
+        percent = total/free;
+        printf("GPU No %d, Free Memory: %d, Total Memory: %d (%f percent occupied)\n", id,free,total,percent);
+    }
+    return 0;
+}
 
 // since installing MPI in Windows
 // is quite a hassle, don't bother
