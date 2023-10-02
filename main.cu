@@ -365,6 +365,7 @@ int main(int argc, char **argv)
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%lf", CONC);
       strcat(filename,conc_str);
+      strcat(filename,"/");
       check = mkdir(filename,0777);
  
       // check if directory is created or not
