@@ -13,6 +13,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <sys/stat.h>
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
@@ -205,6 +206,7 @@ int main(int argc, char **argv)
 // NEW CODE STARTS HERE //
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
+    const double CONC = 99.0;
 
     double *d_ic50;
     double *d_ALGEBRAIC;
@@ -240,7 +242,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples.csv"
+      "./drugs/bepridil/IC50_samples10.csv"
       // "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
@@ -283,7 +285,7 @@ int main(int argc, char **argv)
 
     tic();
     printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
-    int thread = 100;
+    int thread = 10;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1){
@@ -311,7 +313,6 @@ int main(int argc, char **argv)
 
     printf("allocating memory for computation result in the CPU, malloc style \n");
     double *h_states,*h_time,*h_dt,*h_ical,*h_inal,*h_cai_result,*h_ina,*h_ito,*h_ikr,*h_iks,*h_ik1;
-;
 
     h_states = (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for STATES, \n");
@@ -352,14 +353,26 @@ int main(int argc, char **argv)
     
 
     FILE *writer;
+    int check;
 
     printf("writing to file... \n");
     // sample loop
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
+      char conc_str[ENOUGH];
       char filename[150] = "./result/testing/";
       sprintf(sample_str, "%d", sample_id);
+      sprintf(conc_str, "%lf", CONC);
+      strcat(filename,conc_str);
+      check = mkdir(filename,0777);
+ 
+      // check if directory is created or not
+      if (!check)
+          printf("Directory created\n");
+     else {
+          printf("Unable to create directory\n");  
+      }
       strcat(filename,sample_str);
       strcat(filename,".csv");
 
@@ -367,7 +380,7 @@ int main(int argc, char **argv)
       fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+        fprintf(writer,"%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],

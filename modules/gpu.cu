@@ -67,8 +67,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
-    // double conc = 99.0; //mmol
-    double conc = 0.0;
+    double conc = 99.0; //mmol
     double type = p_param->celltype;
     bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;

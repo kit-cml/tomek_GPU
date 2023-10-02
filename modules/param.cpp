@@ -10,7 +10,7 @@ void param_t::init()
   is_print_graph = true;
   is_using_output = false;
   bcl = 2000.;
-  pace_max = 10;
+  pace_max = 1000;
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
