@@ -12,14 +12,14 @@
 }
 
 
- cipa_t& cipa_t::operator=(const cipa_t & source)
-{
-  if( this != &source ) copy(source);
+//  cipa_t& cipa_t::operator=(const cipa_t & source)
+// {
+//   if( this != &source ) copy(source);
 
-  return *this;
-}
+//   return *this;
+// }
 
- void cipa_t::copy(const cipa_t &source)
+__device__ void cipa_t::copy(const cipa_t &source)
 {
   qnet_ap = source.qnet_ap;
   qnet4_ap = source.qnet4_ap;
@@ -58,7 +58,7 @@
   time_series_data.insert( (source.time_series_data).begin(), (source.time_series_data).end() );
 }
 
-void cipa_t::init(const double vm_val)
+__device__ void cipa_t::init(const double vm_val)
 {
   qnet_ap = 0.;
   qnet4_ap = 0.;
