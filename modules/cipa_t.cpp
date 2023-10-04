@@ -1,25 +1,25 @@
 #include "cipa_t.hpp"
 #include <cuda_runtime.h>
 
-__device__ cipa_t::cipa_t()
+ cipa_t::cipa_t()
 {
 
 }
 
-__device__ cipa_t::cipa_t( const cipa_t &source )
+ cipa_t::cipa_t( const cipa_t &source )
 {
   copy(source);
 }
 
 
-__device__ cipa_t& cipa_t::operator=(const cipa_t & source)
+ cipa_t& cipa_t::operator=(const cipa_t & source)
 {
   if( this != &source ) copy(source);
 
   return *this;
 }
 
-__device__ void cipa_t::copy(const cipa_t &source)
+ void cipa_t::copy(const cipa_t &source)
 {
   qnet_ap = source.qnet_ap;
   qnet4_ap = source.qnet4_ap;

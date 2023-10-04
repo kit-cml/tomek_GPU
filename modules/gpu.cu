@@ -33,7 +33,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
-    int num_of_rates = 41;
+    // int num_of_rates = 41;
 
     // cipa_t cipa_result, temp_result;
 
@@ -76,20 +76,20 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;
 
-    // eligible AP shape means the Vm_peak > 0.
-    bool is_eligible_AP;
-    // Vm value at 30% repol, 50% repol, and 90% repol, respectively.
-    double vm_repol30, vm_repol50, vm_repol90;
-    double t_peak_capture = 0.0;
+    // // eligible AP shape means the Vm_peak > 0.
+    // bool is_eligible_AP;
+    // // Vm value at 30% repol, 50% repol, and 90% repol, respectively.
+    // double vm_repol30, vm_repol50, vm_repol90;
+    // double t_peak_capture = 0.0;
 
-    // qnet_ap/inet_ap values
-	  double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
-	  double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl, qinward_cl;
+    // // qnet_ap/inet_ap values
+	  // double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
+	  // double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl, qinward_cl;
 
-    char buffer[255];
+    // char buffer[255];
 
-    static const int CALCIUM_SCALING = 1000000;
-	  static const int CURRENT_SCALING = 1000;
+    // static const int CALCIUM_SCALING = 1000000;
+	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, dutta, sample_id);

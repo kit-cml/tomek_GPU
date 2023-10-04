@@ -9,7 +9,7 @@
 using std::multimap;
 using std::string;
 
-__device__ struct cipa_t{
+ struct cipa_t{
   double qnet_ap;
   double qnet4_ap;
   double inal_auc_ap;
@@ -37,9 +37,9 @@ __device__ struct cipa_t{
   cipa_t();
   cipa_t( const cipa_t &source );
   cipa_t& operator=(const cipa_t & source);
-  __device__ void copy(const cipa_t &source);
-  __device__ void init(const double vm_val);
-  __device__ void clear_time_result();
+   void copy(const cipa_t &source);
+   void init(const double vm_val);
+   void clear_time_result();
 
 
 };
