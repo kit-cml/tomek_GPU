@@ -37,9 +37,9 @@ __device__ struct cipa_t{
   cipa_t();
   cipa_t( const cipa_t &source );
   cipa_t& operator=(const cipa_t & source);
-  void copy(const cipa_t &source);
-  void init(const double vm_val);
-  void clear_time_result();
+  __device__ void copy(const cipa_t &source);
+  __device__ void init(const double vm_val);
+  __device__ void clear_time_result();
 
 
 };

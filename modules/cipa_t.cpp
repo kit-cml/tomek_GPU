@@ -12,7 +12,7 @@ __device__ cipa_t::cipa_t( const cipa_t &source )
 }
 
 
-cipa_t& cipa_t::operator=(const cipa_t & source)
+__device__ cipa_t& cipa_t::operator=(const cipa_t & source)
 {
   if( this != &source ) copy(source);
 
