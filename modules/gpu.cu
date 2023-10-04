@@ -7,6 +7,8 @@
 #include "glob_funct.hpp"
 #include "glob_type.hpp"
 #include "gpu_glob_type.cuh"
+#include "gpu.cuh"
+#include "cipa_t.hpp"
 
 /*
 all kernel function has been moved. Unlike the previous GPU code, now we seperate everything into each modules.
@@ -32,6 +34,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_states = 41;
     int num_of_algebraic = 199;
     // int num_of_rates = 41;
+
+    cipa_t cipa_result, temp_result;
 
     tcurr[sample_id] = 0.000001;
     dt[sample_id] = p_param->dt;
@@ -63,7 +67,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
-    // const unsigned short last_drug_check_pace = 250;
+    const unsigned short last_drug_check_pace = 250;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
@@ -132,7 +136,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         // __syncthreads();
 
-        if (pace_count > pace_max-2){
+        if (pace_count >= pace_max-last_drug_check_pace){
           // printf("in\n");
         time[input_counter + sample_id] = tcurr[sample_id];
         states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];

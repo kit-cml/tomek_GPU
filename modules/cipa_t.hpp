@@ -4,10 +4,12 @@
 #include <map>
 #include <string>
 
+#include <cuda_runtime.h>
+
 using std::multimap;
 using std::string;
 
-struct cipa_t{
+__device__ struct cipa_t{
   double qnet_ap;
   double qnet4_ap;
   double inal_auc_ap;

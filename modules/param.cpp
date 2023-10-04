@@ -10,7 +10,7 @@ void param_t::init()
   is_print_graph = true;
   is_using_output = false;
   bcl = 2000.;
-  pace_max = 1000;
+  pace_max = 10;
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
@@ -36,5 +36,5 @@ void param_t::show_val()
   mpi_printf( 0, "%s -- %lf\n", "Inet_Vm_Threshold", inet_vm_threshold);
   mpi_printf( 0, "%s -- %lf\n", "Writing_Step", dt_write);
   mpi_printf( 0, "%s -- %s\n", "Drug_Name", drug_name);
-  mpi_printf( 0, "%s -- %s\n", "Concentrations", concs);
+  mpi_printf( 0, "%s -- %s\n\n\n", "Concentrations", concs);
 }
