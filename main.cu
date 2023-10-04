@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 	  p_param = new param_t();
   	p_param->init();
 
-    // p_param->show_val();
+    p_param->show_val();
 
     int num_of_constants = 146;
     int num_of_states = 41;
@@ -354,6 +354,7 @@ int main(int argc, char **argv)
 
     FILE *writer;
     int check;
+    bool folder_created = false;
 
     printf("writing to file... \n");
     // sample loop
@@ -366,14 +367,17 @@ int main(int argc, char **argv)
       sprintf(conc_str, "%lf", CONC);
       strcat(filename,conc_str);
       strcat(filename,"/");
-      check = mkdir(filename,0777);
- 
-      // check if directory is created or not
-      if (!check)
+      if (folder_created == false){
+        check = mkdir(filename,0777);
+        // check if directory is created or not
+        if (!check)
           printf("Directory created\n");
-     else {
+        else {
           printf("Unable to create directory\n");  
+        folder_created = true;
       }
+      }
+      
       strcat(filename,sample_str);
       strcat(filename,".csv");
 
