@@ -216,7 +216,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
          //temporary writing method
         if (pace_count > pace_max-2){
 
-        time[input_counter + sample_id] = tcurr[sample_id];
+        time[input_counter + sample_id] = tcurr[sample_id]- (pace_count * bcl);
         states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
         
         out_dt[input_counter + sample_id] = dt[sample_id];
