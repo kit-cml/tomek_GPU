@@ -43,6 +43,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     double max_time_step = 1.0, time_point = 25.0;
     double dt_set;
 
+    int datapoint_at_this_moment;
+
     bool writen = false;
 
     // files for storing results
@@ -199,6 +201,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 			
 			// save temporary result
 			if(pace_count >= pace_max-last_drug_check_pace){
+        datapoint_at_this_moment = tcurr[sample_id];
 				temp_result.cai_data.insert( std::pair<double, double> (tcurr[sample_id], d_STATES[(sample_id * num_of_states) +cai]) );
 				temp_result.vm_data.insert( std::pair<double, double> (tcurr[sample_id], d_STATES[(sample_id * num_of_states) +V]) );
 				temp_result.dvmdt_data.insert( std::pair<double, double> (tcurr[sample_id], d_RATES[(sample_id * num_of_rates) +V]) );
