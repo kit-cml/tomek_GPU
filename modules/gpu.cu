@@ -86,6 +86,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // Vm value at 30% repol, 50% repol, and 90% repol, respectively.
     double vm_repol30, vm_repol50, vm_repol90;
     double t_peak_capture = 0.0;
+    unsigned short pace_steepest = 0;
 
     // qnet_ap/inet_ap values
 	  double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
@@ -126,12 +127,49 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
           dt[sample_id] = dt_set;
+          // printf("dt : %lf\n",dt_set);
         }
-        else {
+        else{
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
+          // new part starts
+          // if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
+          //   temp_result->qnet_ap = qnet_ap;
+          //   temp_result->qnet4_ap = qnet4_ap;
+          //   temp_result->inal_auc_ap = inal_auc_ap;
+          //   temp_result->ical_auc_ap = ical_auc_ap;
+          //   temp_result->qnet_cl = qnet_cl;
+          //   temp_result->qnet4_cl = qnet4_cl;
+          //   temp_result->inal_auc_cl = inal_auc_cl;
+          //   temp_result->ical_auc_cl = ical_auc_cl;
+          //   // fprintf(fp_vmdebug, "%hu,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf\n", pace_count,t_peak_capture,temp_result.vm_peak,vm_repol30,vm_repol50,vm_repol90,temp_result.dvmdt_repol);
+          //   // replace result with steeper repolarization AP or first pace from the last 250 paces
+          //   // if( temp_result->dvmdt_repol > cipa_result.dvmdt_repol ) {
+          //     pace_steepest = pace_count;
+          //     // cipa_result = temp_result;
+          //   // }
+          // };
+          // inet_ap = 0.;
+          // qnet_ap = 0.;
+          // inet4_ap = 0.;
+          // qnet4_ap = 0.;
+          // inal_auc_ap = 0.;
+          // ical_auc_ap = 0.;
+          // inet_cl = 0.;
+          // qnet_cl = 0.;
+          // inet4_cl = 0.;
+          // qnet4_cl = 0.;
+          // inal_auc_cl = 0.;
+          // ical_auc_cl = 0.;
+          // t_peak_capture = 0.;
+          // // temp_result->init( p_cell->STATES[V]);	
           pace_count++;
+          is_eligible_AP = false;
+          // new part ends
+		
+          printf("pace count: %d\n",pace_count);
           writen = false;
         }
+        
 
         //// progress bar starts ////
         if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
@@ -163,30 +201,35 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
       // new codes start here
 			if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)) && 
 				tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && 
-				abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1){
-				if( d_STATES[(sample_id * num_of_states) +V] > temp_result->vm_peak ){
-					temp_result->vm_peak = d_STATES[(sample_id * num_of_states) +V];
-					if(temp_result->vm_peak > 0){
-						vm_repol30 = temp_result->vm_peak - (0.3 * (temp_result->vm_peak - temp_result->vm_valley));
-						vm_repol50 = temp_result->vm_peak - (0.5 * (temp_result->vm_peak - temp_result->vm_valley));
-						vm_repol90 = temp_result->vm_peak - (0.9 * (temp_result->vm_peak - temp_result->vm_valley));
-						is_eligible_AP = true;
-						t_peak_capture = tcurr[sample_id];
-					}
-					else is_eligible_AP = false;
-				}
+				abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1)
+        {
+          if( d_STATES[(sample_id * num_of_states) +V] > temp_result->vm_peak )
+          {
+            temp_result->vm_peak = d_STATES[(sample_id * num_of_states) +V];
+            if(temp_result->vm_peak > 0)
+            {
+              vm_repol30 = temp_result->vm_peak - (0.3 * (temp_result->vm_peak - temp_result->vm_valley));
+              vm_repol50 = temp_result->vm_peak - (0.5 * (temp_result->vm_peak - temp_result->vm_valley));
+              vm_repol90 = temp_result->vm_peak - (0.9 * (temp_result->vm_peak - temp_result->vm_valley));
+              is_eligible_AP = true;
+              t_peak_capture = tcurr[sample_id];
+            }
+            else is_eligible_AP = false;
+          }
 			}
-			else if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && is_eligible_AP ){
+			else if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && is_eligible_AP )
+      {
 				if( d_RATES[(sample_id * num_of_rates) +V] > temp_result->dvmdt_repol &&
 					d_STATES[(sample_id * num_of_states) +V] <= vm_repol30 &&
-					d_STATES[(sample_id * num_of_states) +V] >= vm_repol90 ){
-					temp_result->dvmdt_repol = d_RATES[(sample_id * num_of_rates) +V];
-				}
-				
+					d_STATES[(sample_id * num_of_states) +V] >= vm_repol90 )
+          {
+					  temp_result->dvmdt_repol = d_RATES[(sample_id * num_of_rates) +V];
+				  }
 			}
 			
 			// calculate AP shape
-			if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90){
+			if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90)
+      {
 				// inet_ap/qnet_ap under APD.
 				inet_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]);
 				inet4_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]);

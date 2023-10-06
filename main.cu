@@ -244,7 +244,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples10.csv"
+      "./drugs/bepridil/IC50_optimal.csv"
       // "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
@@ -265,6 +265,7 @@ int main(int argc, char **argv)
 
     // prep for 1 cycle plus a bit (7000 * sample_size)
     cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
+
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
@@ -397,7 +398,7 @@ int main(int argc, char **argv)
       fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%.2f,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        fprintf(writer,"%lf,%.lf,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],
