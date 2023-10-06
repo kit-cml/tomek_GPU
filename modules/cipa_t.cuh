@@ -6,8 +6,8 @@
 
 #include <cuda_runtime.h>
 
-using std::multimap;
-using std::string;
+// using std::multimap;
+// using std::string;
 // case 1, what if we limit the datapoints to just 7000 as usual?
 __device__ struct cipa_t{
   double qnet_ap;
@@ -45,7 +45,7 @@ __device__ struct cipa_t{
   double cai_time[7000];
 
   double ires_data[7000];
-  double inet_time[7000];
+  double ires_time[7000];
 
   double inet_data[7000];
   double inet_time[7000];
@@ -59,17 +59,17 @@ __device__ struct cipa_t{
   double qnet4_data[7000];
   double qnet4_time[7000];
 
-  double time_series_data[7000];
-  double time_series_time[7000];
+  // double time_series_data[7000];
+  // double time_series_time[7000];
 
 
   
-  __device__ cipa_t();
-  __device__ cipa_t( const cipa_t &source );
-  cipa_t& operator=(const cipa_t & source);
-  __device__ void copy(const cipa_t &source);
-  __device__ void init(const double vm_val);
-  __device__ void clear_time_result();
+  // __device__ cipa_t();
+  // __device__ cipa_t( const cipa_t &source );
+  // cipa_t& operator=(const cipa_t & source);
+  // __device__ void copy(const cipa_t &source);
+  // __device__ void init(const double vm_val);
+  // __device__ void clear_time_result();
 
 
 };

@@ -5,6 +5,7 @@
 #include "modules/glob_funct.hpp"
 #include "modules/glob_type.hpp"
 #include "modules/gpu.cuh"
+#include "modules/cipa_t.cuh"
 
 #include <cstdio>
 #include <cstdlib>
@@ -17,7 +18,7 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
-double ic50[14*56000]; //temporary
+double ic50[14*7000]; //temporary
 unsigned int datapoint_size = 7000;
 
 clock_t START_TIMER;
@@ -225,6 +226,7 @@ int main(int argc, char **argv)
     double *ikr;
     double *iks;
     double *ik1;
+    cipa_t *temp_result;
 
     static const int CALCIUM_SCALING = 1000000;
     static const int CURRENT_SCALING = 1000;
@@ -258,8 +260,11 @@ int main(int argc, char **argv)
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
+
     cudaMalloc(&d_p_param,  sizeof(param_t));
+
     // prep for 1 cycle plus a bit (7000 * sample_size)
+    cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
@@ -304,10 +309,12 @@ int main(int argc, char **argv)
                                               ikr, iks, 
                                               ik1,
                                               sample_size,
+                                              temp_result,
                                               d_p_param
                                               );
                                       //block per grid, threads per block
     // endwin();
+    
     cudaDeviceSynchronize();
     
 
@@ -370,12 +377,13 @@ int main(int argc, char **argv)
       if (folder_created == false){
         check = mkdir(filename,0777);
         // check if directory is created or not
-        if (!check)
+        if (!check){
           printf("Directory created\n");
+          }
         else {
           printf("Unable to create directory\n");  
-        folder_created = true;
       }
+      folder_created = true;
       }
       
       strcat(filename,sample_str);
