@@ -301,7 +301,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[2000];
     double dt_for_each_sample[2000];
-    printf("in\n");
+    // printf("in\n");
     
     // printf("Calculating %d\n",thread_id);
     kernel_DoDrugSim(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 

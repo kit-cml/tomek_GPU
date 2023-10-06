@@ -290,7 +290,11 @@ int main(int argc, char **argv)
 
     tic();
     printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
-    int thread = 10;
+    int thread;
+    if (sample_size>=100){
+      thread = 100;
+    }
+    else thread = sample_size;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1){
