@@ -242,8 +242,8 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples10.csv"
-      // "./drugs/bepridil/IC50_optimal.csv"
+      // "./drugs/bepridil/IC50_samples10.csv"
+      "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
     int sample_size = get_IC50_data_from_file(buffer, ic50);
@@ -285,7 +285,11 @@ int main(int argc, char **argv)
 
     tic();
     printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
-    int thread = 10;
+    int thread;
+    if(sample_size<100){
+      thread = sample_size;
+    }
+    else thread = 100;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1){
@@ -362,7 +366,7 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[150] = "./result/testing/";
+      char filename[150] = "./result/testing2/";
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%lf", CONC);
       strcat(filename,conc_str);

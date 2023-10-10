@@ -122,6 +122,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         }
         else {
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
+          printf("pace count: %d\n",pace_count);
           pace_count++;
           writen = false;
         }
