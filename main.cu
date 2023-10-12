@@ -18,7 +18,7 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
-double ic50[14*7000]; //temporary
+double ic50[14*2000]; //temporary
 unsigned int datapoint_size = 7000;
 
 clock_t START_TIMER;
@@ -280,6 +280,7 @@ int main(int argc, char **argv)
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
