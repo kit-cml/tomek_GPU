@@ -80,6 +80,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     double type = p_param->celltype;
     bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;
+    double top_dvmdt = -999.0;
 
     // eligible AP shape means the Vm_peak > 0.
     bool is_eligible_AP;
@@ -146,9 +147,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             // fprintf(fp_vmdebug, "%hu,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf\n", pace_count,t_peak_capture,temp_result.vm_peak,vm_repol30,vm_repol50,vm_repol90,temp_result.dvmdt_repol);
             // replace result with steeper repolarization AP or first pace from the last 250 paces
             // if( temp_result->dvmdt_repol > cipa_result.dvmdt_repol ) {
+            //   pace_steepest = pace_count;
+            //   cipa_result = temp_result;
+            //   }
+            if( temp_result->dvmdt_repol > top_dvmdt ) {
               pace_steepest = pace_count;
-              // cipa_result = temp_result;
-            // }
+              top_dvmdt = temp_result->dvmdt_repol;
+              }
           };
           inet_ap = 0.;
           qnet_ap = 0.;
@@ -168,8 +173,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           is_eligible_AP = false;
           // new part ends
 		
-          printf("pace count: %d t: %lf\n",pace_count, tcurr[sample_id]);
-          writen = false;
+          // printf("pace count: %d t: %lf, steepest: %d, v: %lf vm repol 30: %lf\n",pace_count, tcurr[sample_id], pace_steepest, d_STATES[(sample_id * num_of_states) +V], vm_repol30);
+          // writen = false;
         }
         
 
@@ -194,7 +199,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         // //// progress bar ends ////
 
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
-        tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
+        // tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         // __syncthreads();
         // printf("solved analytical\n"); 
         // it goes here, so it means, basically, floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl) is always true
@@ -207,11 +212,18 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 			    // Find peak vm around 2 msecs and  40 msecs after stimulation
 			    // and when the sodium current reach 0
           // new codes start here
+          printf("a: %d, b: %d, c: %d, eligible ap: %d\n",
+          tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)),
+          tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)),
+          abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1,
+          is_eligible_AP
+          );
+          
 			    if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)) && 
 				      tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && 
 				      abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1)
           {
-            printf("check 1\n");
+            // printf("check 1\n");
             if( d_STATES[(sample_id * num_of_states) +V] > temp_result->vm_peak )
             {
               temp_result->vm_peak = d_STATES[(sample_id * num_of_states) +V];
@@ -222,7 +234,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
                 vm_repol90 = temp_result->vm_peak - (0.9 * (temp_result->vm_peak - temp_result->vm_valley));
                 is_eligible_AP = true;
                 t_peak_capture = tcurr[sample_id];
-                printf("check 2\n");
+                // printf("check 2\n");
               }
               else is_eligible_AP = false;
             }
@@ -230,6 +242,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 			    else if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && is_eligible_AP )
           {
             printf("check 3\n");
+            printf("rates: %lf, states: %lf, dvmdt_repol: %lf\nvm30: %lf, vm90: %lf\n",
+            d_RATES[(sample_id * num_of_rates) +V],
+            d_STATES[(sample_id * num_of_states) +V],
+            temp_result->dvmdt_repol, 
+            vm_repol30,
+            vm_repol90
+            );
 				    if( d_RATES[(sample_id * num_of_rates) +V] > temp_result->dvmdt_repol &&
 					      d_STATES[(sample_id * num_of_states) +V] <= vm_repol30 &&
 					      d_STATES[(sample_id * num_of_states) +V] >= vm_repol90 )
@@ -241,7 +260,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 			    // calculate AP shape
 			    if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90)
           {
-            printf("check 5 (eligible)\n");
+            // printf("check 5 (eligible)\n");
           // inet_ap/qnet_ap under APD.
           inet_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]);
           inet4_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]);
@@ -259,9 +278,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
           // save temporary result
-          if(pace_count >= pace_max-last_drug_check_pace)
+          if(is_eligible_AP && pace_count >= pace_max-last_drug_check_pace)
           {
-            printf("check 6 (write result)\n");
+            // printf("check 6 (write result)\n");
             datapoint_at_this_moment = (int)tcurr[sample_id] - (pace_count * bcl);
             temp_result->cai_data[datapoint_at_this_moment] =  d_STATES[(sample_id * num_of_states) +cai] ;
             temp_result->cai_time[datapoint_at_this_moment] =  tcurr[sample_id];
@@ -296,14 +315,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
             //time series ends
           
-            // snprintf( buffer, sizeof(buffer), "%.2lf,%.2lf,%.0lf,%.0lf,%.0lf,%.0lf,%0.lf,%.0lf,%.0lf,%.0lf",
-            // 		d_STATES[(sample_id * num_of_states) +V], d_RATES[(sample_id * num_of_rates) +V], d_STATES[(sample_id * num_of_states) +cai]*CALCIUM_SCALING,
-            // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*CURRENT_SCALING, 
-            // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]*CURRENT_SCALING,
-            // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]*CURRENT_SCALING, 
-            // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]*CURRENT_SCALING);
-            // temp_result.time_series_data.insert( std::pair<double, string> (tcurr[sample_id], string(buffer)) );
-          }
+          //   // snprintf( buffer, sizeof(buffer), "%.2lf,%.2lf,%.0lf,%.0lf,%.0lf,%.0lf,%0.lf,%.0lf,%.0lf,%.0lf",
+          //   // 		d_STATES[(sample_id * num_of_states) +V], d_RATES[(sample_id * num_of_rates) +V], d_STATES[(sample_id * num_of_states) +cai]*CALCIUM_SCALING,
+          //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*CURRENT_SCALING, 
+          //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]*CURRENT_SCALING,
+          //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]*CURRENT_SCALING, 
+          //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]*CURRENT_SCALING);
+          //   // temp_result.time_series_data.insert( std::pair<double, string> (tcurr[sample_id], string(buffer)) );
+          // }
           // new code ends here (last 250 pace operation)
             
           // tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
@@ -331,13 +350,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
              // input_counter = input_counter + sample_size;
             
-             // } // temporary guard ends here
+             } // temporary guard ends here
 
 		    } // end the last 250 pace operations
-    
+        tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
+        //printf("t after addition: %lf\n", tcurr[sample_id]);
 
        
-  } // while loop ends here 
+    } // while loop ends here 
     // __syncthreads();
 }
 
