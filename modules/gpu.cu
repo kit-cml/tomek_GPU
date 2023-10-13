@@ -67,7 +67,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     cipa_result->vm_peak = -999;
     cipa_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
     // INIT ENDS
-
+    bool is_peak = false;
     // to search max dvmdt repol
 
     tcurr[sample_id] = 0.000001;
@@ -102,7 +102,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
-    const unsigned short last_drug_check_pace = 25;
+    const unsigned short last_drug_check_pace = 250;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
@@ -198,7 +198,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
               cipa_result->dvmdt_repol = temp_result->dvmdt_repol;
               cipa_result->vm_peak = temp_result->vm_peak;
               cipa_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+              input_counter = 0;
+              is_peak = true;
               }
+            else{
+              is_peak = false;
+            }
           };
           inet_ap = 0.;
           qnet_ap = 0.;
@@ -339,7 +344,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
-          if(pace_count >= pace_max-last_drug_check_pace)
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak = true))
           {
             // printf("check 6 (write result)\n");
             //datapoint_at_this_moment = (int)tcurr[sample_id] - (pace_count * bcl);
