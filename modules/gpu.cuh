@@ -11,7 +11,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                                       double *ikr, double *iks,
                                       double *ik1,
                                       unsigned int sample_size,
-                                      cipa_t *temp_result,
+                                      cipa_t *temp_result, cipa_t *cipa_result,
                                       param_t *p_param
                                       );
 
@@ -22,7 +22,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
                                        double *ikr, double *iks, 
                                        double *ik1,
                                        double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
-                                       cipa_t *temp_result,
+                                       cipa_t *temp_result, cipa_t *cipa_result,
                                        param_t *p_param
                                        );
 

@@ -23,13 +23,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
                                        double *ikr, double *iks, 
                                        double *ik1,
                                        double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
-                                       cipa_t *temp_result,
+                                       cipa_t *temp_result, cipa_t *cipa_result,
                                        param_t *p_param
                                        )
     {
     
     unsigned int input_counter = 0;
-    unsigned short cnt;
 
     int num_of_constants = 146;
     int num_of_states = 41;
@@ -39,6 +38,37 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
     // cipa_t cipa_result, 
     // cipa_t temp_result;
+    // INIT STARTS
+    temp_result->qnet_ap = 0.;
+    temp_result->qnet4_ap = 0.;
+    temp_result->inal_auc_ap = 0.;
+    temp_result->ical_auc_ap = 0.;
+    
+    temp_result->qnet_cl = 0.;
+    temp_result->qnet4_cl = 0.;
+    temp_result->inal_auc_cl = 0.;
+    temp_result->ical_auc_cl = 0.;
+    
+    temp_result->dvmdt_repol = -999;
+    temp_result->vm_peak = -999;
+    temp_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+
+    cipa_result->qnet_ap = 0.;
+    cipa_result->qnet4_ap = 0.;
+    cipa_result->inal_auc_ap = 0.;
+    cipa_result->ical_auc_ap = 0.;
+    
+    cipa_result->qnet_cl = 0.;
+    cipa_result->qnet4_cl = 0.;
+    cipa_result->inal_auc_cl = 0.;
+    cipa_result->ical_auc_cl = 0.;
+    
+    cipa_result->dvmdt_repol = -999;
+    cipa_result->vm_peak = -999;
+    cipa_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    // INIT ENDS
+
+    // to search max dvmdt repol
 
     tcurr[sample_id] = 0.000001;
     dt[sample_id] = p_param->dt;
@@ -48,7 +78,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
     int datapoint_at_this_moment;
 
-    bool writen = false;
+    // bool writen = false;
 
     // files for storing results
     // time-series result
@@ -72,7 +102,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
-    const unsigned short last_drug_check_pace = 250;
+    const unsigned short last_drug_check_pace = 25;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
@@ -80,7 +110,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     double type = p_param->celltype;
     bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;
-    double top_dvmdt = -999.0;
+    // double top_dvmdt = -999.0;
 
     // eligible AP shape means the Vm_peak > 0.
     bool is_eligible_AP;
@@ -91,9 +121,10 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
     // qnet_ap/inet_ap values
 	  double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
-	  double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl, qinward_cl;
+	  double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl;
+    // qinward_cl;
 
-    char buffer[255];
+    // char buffer[255];
 
     // static const int CALCIUM_SCALING = 1000000;
 	  // static const int CURRENT_SCALING = 1000;
@@ -150,9 +181,23 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             //   pace_steepest = pace_count;
             //   cipa_result = temp_result;
             //   }
-            if( temp_result->dvmdt_repol > top_dvmdt ) {
+            if( temp_result->dvmdt_repol > cipa_result->dvmdt_repol ) {
               pace_steepest = pace_count;
-              top_dvmdt = temp_result->dvmdt_repol;
+              printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result->dvmdt_repol);
+              // cipa_result = temp_result;
+              cipa_result->qnet_ap = temp_result->qnet_ap;
+              cipa_result->qnet4_ap = temp_result -> qnet4_ap;
+              cipa_result->inal_auc_ap = temp_result-> inal_auc_ap;
+              cipa_result->ical_auc_ap = temp_result->ical_auc_ap;
+              
+              cipa_result->qnet_cl = temp_result->qnet_cl;
+              cipa_result->qnet4_cl = temp_result->qnet4_cl;
+              cipa_result->inal_auc_cl = temp_result->inal_auc_cl;
+              cipa_result->ical_auc_cl = temp_result->ical_auc_cl;
+              
+              cipa_result->dvmdt_repol = temp_result->dvmdt_repol;
+              cipa_result->vm_peak = temp_result->vm_peak;
+              cipa_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
               }
           };
           inet_ap = 0.;
@@ -168,12 +213,28 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           inal_auc_cl = 0.;
           ical_auc_cl = 0.;
           t_peak_capture = 0.;
+
           // temp_result->init( p_cell->STATES[V]);	
+          temp_result->qnet_ap = 0.;
+          temp_result->qnet4_ap = 0.;
+          temp_result->inal_auc_ap = 0.;
+          temp_result->ical_auc_ap = 0.;
+          
+          temp_result->qnet_cl = 0.;
+          temp_result->qnet4_cl = 0.;
+          temp_result->inal_auc_cl = 0.;
+          temp_result->ical_auc_cl = 0.;
+          
+          temp_result->dvmdt_repol = -999;
+          temp_result->vm_peak = -999;
+          temp_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+          // end of init
+
           pace_count++;
           is_eligible_AP = false;
           // new part ends
 		
-          // printf("pace count: %d t: %lf, steepest: %d, v: %lf vm repol 30: %lf\n",pace_count, tcurr[sample_id], pace_steepest, d_STATES[(sample_id * num_of_states) +V], vm_repol30);
+          printf("pace count: %d t: %lf, steepest: %d, v: %lf vm repol 30: %lf\n",pace_count, tcurr[sample_id], pace_steepest, d_STATES[(sample_id * num_of_states) +V], vm_repol30);
           // writen = false;
         }
         
@@ -212,12 +273,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 			    // Find peak vm around 2 msecs and  40 msecs after stimulation
 			    // and when the sodium current reach 0
           // new codes start here
-          printf("a: %d, b: %d, c: %d, eligible ap: %d\n",
-          tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)),
-          tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)),
-          abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1,
-          is_eligible_AP
-          );
+          // printf("a: %d, b: %d, c: %d, eligible ap: %d\n",
+          // tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)),
+          // tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)),
+          // abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1,
+          // is_eligible_AP
+          // );
           
 			    if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)) && 
 				      tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && 
@@ -241,14 +302,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 			    }
 			    else if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && is_eligible_AP )
           {
-            printf("check 3\n");
-            printf("rates: %lf, states: %lf, dvmdt_repol: %lf\nvm30: %lf, vm90: %lf\n",
-            d_RATES[(sample_id * num_of_rates) +V],
-            d_STATES[(sample_id * num_of_states) +V],
-            temp_result->dvmdt_repol, 
-            vm_repol30,
-            vm_repol90
-            );
+            // printf("check 3\n");
+            // printf("rates: %lf, dvmdt_repol: %lf\n states: %lf vm30: %lf, vm90: %lf\n",
+            // d_RATES[(sample_id * num_of_rates) +V],
+            // temp_result->dvmdt_repol, 
+            // d_STATES[(sample_id * num_of_states) +V],
+            // vm_repol30,
+            // vm_repol90
+            // );
 				    if( d_RATES[(sample_id * num_of_rates) +V] > temp_result->dvmdt_repol &&
 					      d_STATES[(sample_id * num_of_states) +V] <= vm_repol30 &&
 					      d_STATES[(sample_id * num_of_states) +V] >= vm_repol90 )
@@ -277,11 +338,11 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           inal_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*dt[sample_id]);
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
-          // save temporary result
-          if(is_eligible_AP && pace_count >= pace_max-last_drug_check_pace)
+          // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
+          if(pace_count >= pace_max-last_drug_check_pace)
           {
             // printf("check 6 (write result)\n");
-            datapoint_at_this_moment = (int)tcurr[sample_id] - (pace_count * bcl);
+            //datapoint_at_this_moment = (int)tcurr[sample_id] - (pace_count * bcl);
             temp_result->cai_data[datapoint_at_this_moment] =  d_STATES[(sample_id * num_of_states) +cai] ;
             temp_result->cai_time[datapoint_at_this_moment] =  tcurr[sample_id];
 
@@ -370,7 +431,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                                       double *ikr, double *iks,
                                       double *ik1,
                                       unsigned int sample_size,
-                                      cipa_t *temp_result,
+                                      cipa_t *temp_result, cipa_t *cipa_result,
                                       param_t *p_param
                                       )
   {
@@ -388,7 +449,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                           ikr, iks, 
                           ik1,
                           time_for_each_sample, dt_for_each_sample, thread_id, sample_size,
-                          temp_result,
+                          temp_result, cipa_result,
                           p_param
                           );
                           // __syncthreads();

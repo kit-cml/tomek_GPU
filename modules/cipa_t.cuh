@@ -9,7 +9,7 @@
 // using std::multimap;
 // using std::string;
 // case 1, what if we limit the datapoints to just 7000 as usual?
-__device__ struct cipa_t{
+__global__ struct cipa_t{
   double qnet_ap;
   double qnet4_ap;
   double inal_auc_ap;

@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     double *ikr;
     double *iks;
     double *ik1;
-    cipa_t *temp_result;
+    cipa_t *temp_result, *cipa_result;
 
     static const int CALCIUM_SCALING = 1000000;
     static const int CURRENT_SCALING = 1000;
@@ -265,6 +265,7 @@ int main(int argc, char **argv)
 
     // prep for 1 cycle plus a bit (7000 * sample_size)
     cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
+    cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
 
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
@@ -315,7 +316,7 @@ int main(int argc, char **argv)
                                               ikr, iks, 
                                               ik1,
                                               sample_size,
-                                              temp_result,
+                                              temp_result, cipa_result,
                                               d_p_param
                                               );
                                       //block per grid, threads per block
