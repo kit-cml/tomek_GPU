@@ -36,36 +36,34 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_rates = 41;
 
 
-    // cipa_t cipa_result, 
-    // cipa_t temp_result;
     // INIT STARTS
-    temp_result->qnet_ap = 0.;
-    temp_result->qnet4_ap = 0.;
-    temp_result->inal_auc_ap = 0.;
-    temp_result->ical_auc_ap = 0.;
+    temp_result[sample_id].qnet_ap = 0.;
+    temp_result[sample_id].qnet4_ap = 0.;
+    temp_result[sample_id].inal_auc_ap = 0.;
+    temp_result[sample_id].ical_auc_ap = 0.;
     
-    temp_result->qnet_cl = 0.;
-    temp_result->qnet4_cl = 0.;
-    temp_result->inal_auc_cl = 0.;
-    temp_result->ical_auc_cl = 0.;
+    temp_result[sample_id].qnet_cl = 0.;
+    temp_result[sample_id].qnet4_cl = 0.;
+    temp_result[sample_id].inal_auc_cl = 0.;
+    temp_result[sample_id].ical_auc_cl = 0.;
     
-    temp_result->dvmdt_repol = -999;
-    temp_result->vm_peak = -999;
-    temp_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    temp_result[sample_id].dvmdt_repol = -999;
+    temp_result[sample_id].vm_peak = -999;
+    temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
 
-    cipa_result->qnet_ap = 0.;
-    cipa_result->qnet4_ap = 0.;
-    cipa_result->inal_auc_ap = 0.;
-    cipa_result->ical_auc_ap = 0.;
+    cipa_result[sample_id].qnet_ap = 0.;
+    cipa_result[sample_id].qnet4_ap = 0.;
+    cipa_result[sample_id].inal_auc_ap = 0.;
+    cipa_result[sample_id].ical_auc_ap = 0.;
     
-    cipa_result->qnet_cl = 0.;
-    cipa_result->qnet4_cl = 0.;
-    cipa_result->inal_auc_cl = 0.;
-    cipa_result->ical_auc_cl = 0.;
+    cipa_result[sample_id].qnet_cl = 0.;
+    cipa_result[sample_id].qnet4_cl = 0.;
+    cipa_result[sample_id].inal_auc_cl = 0.;
+    cipa_result[sample_id].ical_auc_cl = 0.;
     
-    cipa_result->dvmdt_repol = -999;
-    cipa_result->vm_peak = -999;
-    cipa_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    cipa_result[sample_id].dvmdt_repol = -999;
+    cipa_result[sample_id].vm_peak = -999;
+    cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
     // INIT ENDS
     bool is_peak = false;
     // to search max dvmdt repol
@@ -76,7 +74,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     double max_time_step = 1.0, time_point = 25.0;
     double dt_set;
 
-    int datapoint_at_this_moment;
+    int cipa_datapoint = 0;
 
     // bool writen = false;
 
@@ -167,38 +165,37 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
           // new part starts
           if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
-            temp_result->qnet_ap = qnet_ap;
-            temp_result->qnet4_ap = qnet4_ap;
-            temp_result->inal_auc_ap = inal_auc_ap;
-            temp_result->ical_auc_ap = ical_auc_ap;
-            temp_result->qnet_cl = qnet_cl;
-            temp_result->qnet4_cl = qnet4_cl;
-            temp_result->inal_auc_cl = inal_auc_cl;
-            temp_result->ical_auc_cl = ical_auc_cl;
+            temp_result[sample_id].qnet_ap = qnet_ap;
+            temp_result[sample_id].qnet4_ap = qnet4_ap;
+            temp_result[sample_id].inal_auc_ap = inal_auc_ap;
+            temp_result[sample_id].ical_auc_ap = ical_auc_ap;
+            temp_result[sample_id].qnet_cl = qnet_cl;
+            temp_result[sample_id].qnet4_cl = qnet4_cl;
+            temp_result[sample_id].inal_auc_cl = inal_auc_cl;
+            temp_result[sample_id].ical_auc_cl = ical_auc_cl;
             // fprintf(fp_vmdebug, "%hu,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf\n", pace_count,t_peak_capture,temp_result.vm_peak,vm_repol30,vm_repol50,vm_repol90,temp_result.dvmdt_repol);
             // replace result with steeper repolarization AP or first pace from the last 250 paces
             // if( temp_result->dvmdt_repol > cipa_result.dvmdt_repol ) {
             //   pace_steepest = pace_count;
             //   cipa_result = temp_result;
             //   }
-            if( temp_result->dvmdt_repol > cipa_result->dvmdt_repol ) {
+            if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
               pace_steepest = pace_count;
-              printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result->dvmdt_repol);
+              // printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
               // cipa_result = temp_result;
-              cipa_result->qnet_ap = temp_result->qnet_ap;
-              cipa_result->qnet4_ap = temp_result -> qnet4_ap;
-              cipa_result->inal_auc_ap = temp_result-> inal_auc_ap;
-              cipa_result->ical_auc_ap = temp_result->ical_auc_ap;
+              cipa_result[sample_id].qnet_ap = temp_result[sample_id].qnet_ap;
+              cipa_result[sample_id].qnet4_ap = temp_result[sample_id].qnet4_ap;
+              cipa_result[sample_id].inal_auc_ap = temp_result[sample_id].inal_auc_ap;
+              cipa_result[sample_id].ical_auc_ap = temp_result[sample_id].ical_auc_ap;
               
-              cipa_result->qnet_cl = temp_result->qnet_cl;
-              cipa_result->qnet4_cl = temp_result->qnet4_cl;
-              cipa_result->inal_auc_cl = temp_result->inal_auc_cl;
-              cipa_result->ical_auc_cl = temp_result->ical_auc_cl;
+              cipa_result[sample_id].qnet_cl = temp_result[sample_id].qnet_cl;
+              cipa_result[sample_id].qnet4_cl = temp_result[sample_id].qnet4_cl;
+              cipa_result[sample_id].inal_auc_cl = temp_result[sample_id].inal_auc_cl;
+              cipa_result[sample_id].ical_auc_cl = temp_result[sample_id].ical_auc_cl;
               
-              cipa_result->dvmdt_repol = temp_result->dvmdt_repol;
-              cipa_result->vm_peak = temp_result->vm_peak;
-              cipa_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
-              input_counter = 0;
+              cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
+              cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
+              cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
               is_peak = true;
               }
             else{
@@ -220,26 +217,29 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           t_peak_capture = 0.;
 
           // temp_result->init( p_cell->STATES[V]);	
-          temp_result->qnet_ap = 0.;
-          temp_result->qnet4_ap = 0.;
-          temp_result->inal_auc_ap = 0.;
-          temp_result->ical_auc_ap = 0.;
+          temp_result[sample_id].qnet_ap = 0.;
+          temp_result[sample_id].qnet4_ap = 0.;
+          temp_result[sample_id].inal_auc_ap = 0.;
+          temp_result[sample_id].ical_auc_ap = 0.;
           
-          temp_result->qnet_cl = 0.;
-          temp_result->qnet4_cl = 0.;
-          temp_result->inal_auc_cl = 0.;
-          temp_result->ical_auc_cl = 0.;
+          temp_result[sample_id].qnet_cl = 0.;
+          temp_result[sample_id].qnet4_cl = 0.;
+          temp_result[sample_id].inal_auc_cl = 0.;
+          temp_result[sample_id].ical_auc_cl = 0.;
           
-          temp_result->dvmdt_repol = -999;
-          temp_result->vm_peak = -999;
-          temp_result->vm_valley = d_STATES[(sample_id * num_of_states) +V];
+          temp_result[sample_id].dvmdt_repol = -999;
+          temp_result[sample_id].vm_peak = -999;
+          temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
           // end of init
 
           pace_count++;
+          input_counter = 0; // at first, we reset the input counter since we re gonna only take one, but I remember we don't have this kind of thing previously, so do we need this still?
+          cipa_datapoint = 0; // new pace? reset variables related to saving the values,
+              
           is_eligible_AP = false;
           // new part ends
 		
-          printf("pace count: %d t: %lf, steepest: %d, v: %lf vm repol 30: %lf\n",pace_count, tcurr[sample_id], pace_steepest, d_STATES[(sample_id * num_of_states) +V], vm_repol30);
+          printf("pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf\n",pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol);
           // writen = false;
         }
         
@@ -290,14 +290,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 				      abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1)
           {
             // printf("check 1\n");
-            if( d_STATES[(sample_id * num_of_states) +V] > temp_result->vm_peak )
+            if( d_STATES[(sample_id * num_of_states) +V] > temp_result[sample_id].vm_peak )
             {
-              temp_result->vm_peak = d_STATES[(sample_id * num_of_states) +V];
-              if(temp_result->vm_peak > 0)
+              temp_result[sample_id].vm_peak = d_STATES[(sample_id * num_of_states) +V];
+              if(temp_result[sample_id].vm_peak > 0)
               {
-                vm_repol30 = temp_result->vm_peak - (0.3 * (temp_result->vm_peak - temp_result->vm_valley));
-                vm_repol50 = temp_result->vm_peak - (0.5 * (temp_result->vm_peak - temp_result->vm_valley));
-                vm_repol90 = temp_result->vm_peak - (0.9 * (temp_result->vm_peak - temp_result->vm_valley));
+                vm_repol30 = temp_result[sample_id].vm_peak - (0.3 * (temp_result[sample_id].vm_peak - temp_result[sample_id].vm_valley));
+                vm_repol50 = temp_result[sample_id].vm_peak - (0.5 * (temp_result[sample_id].vm_peak - temp_result[sample_id].vm_valley));
+                vm_repol90 = temp_result[sample_id].vm_peak - (0.9 * (temp_result[sample_id].vm_peak - temp_result[sample_id].vm_valley));
                 is_eligible_AP = true;
                 t_peak_capture = tcurr[sample_id];
                 // printf("check 2\n");
@@ -315,11 +315,11 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             // vm_repol30,
             // vm_repol90
             // );
-				    if( d_RATES[(sample_id * num_of_rates) +V] > temp_result->dvmdt_repol &&
+				    if( d_RATES[(sample_id * num_of_rates) +V] > temp_result[sample_id].dvmdt_repol &&
 					      d_STATES[(sample_id * num_of_states) +V] <= vm_repol30 &&
 					      d_STATES[(sample_id * num_of_states) +V] >= vm_repol90 )
               {
-					      temp_result->dvmdt_repol = d_RATES[(sample_id * num_of_rates) +V];
+					      temp_result[sample_id].dvmdt_repol = d_RATES[(sample_id * num_of_rates) +V];
                 printf("check 4\n");
 				      }
           }
@@ -344,18 +344,18 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
-          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak = true))
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true))
           {
             // printf("check 6 (write result)\n");
-            //datapoint_at_this_moment = (int)tcurr[sample_id] - (pace_count * bcl);
-            temp_result->cai_data[datapoint_at_this_moment] =  d_STATES[(sample_id * num_of_states) +cai] ;
-            temp_result->cai_time[datapoint_at_this_moment] =  tcurr[sample_id];
+            // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
+            temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
+            temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
 
-            temp_result->vm_data[datapoint_at_this_moment] = d_STATES[(sample_id * num_of_states) +V];
-            temp_result->vm_time[datapoint_at_this_moment] = tcurr[sample_id];
+            temp_result[sample_id].vm_data[cipa_datapoint] = d_STATES[(sample_id * num_of_states) +V];
+            temp_result[sample_id].vm_time[cipa_datapoint] = tcurr[sample_id];
 
-            temp_result->dvmdt_data[datapoint_at_this_moment] = d_RATES[(sample_id * num_of_rates) +V];
-            temp_result->dvmdt_time[datapoint_at_this_moment] = tcurr[sample_id];
+            temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
+            temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
             // time series result
 
@@ -378,6 +378,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
 
             input_counter = input_counter + sample_size;
+            cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
 
             //time series ends
           
@@ -444,6 +445,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[2000];
     double dt_for_each_sample[2000];
+    // cipa_t temp_per_sample[2000];
+    // cipa_t cipa_per_sample[2000];
     // printf("in\n");
     
     // printf("Calculating %d\n",thread_id);

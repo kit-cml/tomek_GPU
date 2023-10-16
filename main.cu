@@ -244,7 +244,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_optimal.csv"
+      "./drugs/bepridil/IC50_samples.csv"
       // "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
