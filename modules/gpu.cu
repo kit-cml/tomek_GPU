@@ -163,6 +163,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
         }
         else{
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
+
           // new part starts
           if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
             temp_result[sample_id].qnet_ap = qnet_ap;
@@ -422,7 +423,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 		    } // end the last 250 pace operations
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         //printf("t after addition: %lf\n", tcurr[sample_id]);
-
        
     } // while loop ends here 
     // __syncthreads();

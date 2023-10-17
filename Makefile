@@ -82,3 +82,4 @@ $(PROGNAME) : $(OBJECTS) Makefile
 clean :
 	@echo "Clean."
 	rm -rf *.o bin/$(PROGNAME)
+	rm -rf **/*.o
