@@ -16,7 +16,7 @@ void param_t::init()
   // dt = 0.1;
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
-  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples10.csv");
+  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
   snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
   snprintf(concs, sizeof(concs), "%s", "99.0");
 }

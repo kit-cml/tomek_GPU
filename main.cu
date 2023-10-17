@@ -5,6 +5,7 @@
 #include "modules/glob_funct.hpp"
 #include "modules/glob_type.hpp"
 #include "modules/gpu.cuh"
+#include "modules/cipa_t.cuh"
 
 #include <cstdio>
 #include <cstdlib>
@@ -17,7 +18,7 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
-double ic50[14*56000]; //temporary
+double ic50[14*2000]; //temporary
 unsigned int datapoint_size = 7000;
 
 clock_t START_TIMER;
@@ -225,6 +226,7 @@ int main(int argc, char **argv)
     double *ikr;
     double *iks;
     double *ik1;
+    cipa_t *temp_result, *cipa_result;
 
     static const int CALCIUM_SCALING = 1000000;
     static const int CURRENT_SCALING = 1000;
@@ -242,8 +244,8 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      // "./drugs/bepridil/IC50_samples10.csv"
-      "./drugs/bepridil/IC50_optimal.csv"
+      "./drugs/bepridil/IC50_samples.csv"
+      // "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
     int sample_size = get_IC50_data_from_file(buffer, ic50);
@@ -258,8 +260,13 @@ int main(int argc, char **argv)
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
+
     cudaMalloc(&d_p_param,  sizeof(param_t));
+
     // prep for 1 cycle plus a bit (7000 * sample_size)
+    cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
+    cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
+
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
@@ -274,6 +281,7 @@ int main(int argc, char **argv)
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
@@ -286,10 +294,10 @@ int main(int argc, char **argv)
     tic();
     printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
     int thread;
-    if(sample_size<100){
-      thread = sample_size;
+    if (sample_size>=100){
+      thread = 100;
     }
-    else thread = 100;
+    else thread = sample_size;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1){
@@ -308,10 +316,12 @@ int main(int argc, char **argv)
                                               ikr, iks, 
                                               ik1,
                                               sample_size,
+                                              temp_result, cipa_result,
                                               d_p_param
                                               );
                                       //block per grid, threads per block
     // endwin();
+    
     cudaDeviceSynchronize();
     
 
@@ -366,7 +376,7 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[150] = "./result/testing2/";
+      char filename[150] = "./result/peak250/";
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%lf", CONC);
       strcat(filename,conc_str);
@@ -374,12 +384,13 @@ int main(int argc, char **argv)
       if (folder_created == false){
         check = mkdir(filename,0777);
         // check if directory is created or not
-        if (!check)
+        if (!check){
           printf("Directory created\n");
+          }
         else {
           printf("Unable to create directory\n");  
-        folder_created = true;
       }
+      folder_created = true;
       }
       
       strcat(filename,sample_str);
@@ -389,7 +400,7 @@ int main(int argc, char **argv)
       fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%.2f,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        fprintf(writer,"%lf,%.lf,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],
