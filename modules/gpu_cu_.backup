@@ -24,6 +24,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
                                        double *ik1,
                                        double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
                                        cipa_t *temp_result, cipa_t *cipa_result,
+                                       double *temp_time,double *temp_states,double *temp_out_dt,double *temp_cai_result,double *temp_ina,double *temp_inal,double *temp_ical,double *temp_ito,double *temp_ikr,double *temp_iks,double *temp_ik1,
                                        param_t *p_param
                                        )
     {
@@ -34,6 +35,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     int num_of_states = 41;
     int num_of_algebraic = 199;
     int num_of_rates = 41;
+
+    
 
 
     // INIT STARTS
@@ -100,7 +103,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
-    const unsigned short last_drug_check_pace = 250;
+    const unsigned short last_drug_check_pace = 25;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
@@ -123,7 +126,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // qinward_cl;
 
     // char buffer[255];
-
+    
     // static const int CALCIUM_SCALING = 1000000;
 	  // static const int CURRENT_SCALING = 1000;
 
@@ -181,7 +184,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             //   }
             if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
               pace_steepest = pace_count;
-              // printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
+              printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
               // cipa_result = temp_result;
               cipa_result[sample_id].qnet_ap = temp_result[sample_id].qnet_ap;
               cipa_result[sample_id].qnet4_ap = temp_result[sample_id].qnet4_ap;
@@ -196,10 +199,37 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
               cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
               cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
               cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+              
+              //time series result capture starts here
+
+              time[input_counter + sample_id] = temp_time[input_counter + sample_id];
+              states[input_counter + sample_id] = temp_states[input_counter + sample_id];
+              
+              out_dt[input_counter + sample_id] = temp_out_dt[input_counter + sample_id];
+              
+              cai_result[input_counter + sample_id] =  temp_cai_result[input_counter + sample_id];
+
+              ina[input_counter + sample_id] = temp_ina[input_counter + sample_id];
+              inal[input_counter + sample_id] = temp_inal[input_counter + sample_id];
+
+              ical[input_counter + sample_id] = temp_ical[input_counter + sample_id];
+              ito[input_counter + sample_id] = temp_ito[input_counter + sample_id];
+
+              ikr[input_counter + sample_id] = temp_ikr[input_counter + sample_id];
+              iks[input_counter + sample_id] = temp_iks[input_counter + sample_id];
+
+              ik1[input_counter + sample_id] = temp_ik1[input_counter + sample_id];
+
+              input_counter = input_counter + sample_size;
+              cipa_datapoint = cipa_datapoint + 1; 
+              printf("check 8 (write result)\n");
+              //ends here
               is_peak = true;
               }
             else{
               is_peak = false;
+              input_counter = 0; 
+              cipa_datapoint = 0;
             }
           };
           inet_ap = 0.;
@@ -239,7 +269,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           is_eligible_AP = false;
           // new part ends
 		
-          printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol,t_peak_capture);
+          printf("pace count: %d core: %d, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",pace_count, sample_id, pace_steepest, cipa_result[sample_id].dvmdt_repol, t_peak_capture);
           // writen = false;
         }
         
@@ -344,9 +374,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
-          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) )
           {
-            // printf("input_counter: %d\n",input_counter);
+            
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
             temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
@@ -356,35 +386,37 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
+            // printf("check 6 (write result)\n");
 
             // time series result
 
-            time[input_counter + sample_id] = tcurr[sample_id];
-            states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
+            temp_time[input_counter + sample_id] = tcurr[sample_id];
+            temp_states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
             
-            out_dt[input_counter + sample_id] = dt[sample_id];
+            temp_out_dt[input_counter + sample_id] = dt[sample_id];
             
-            cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
+            temp_cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
 
-            ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
-            inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
+            temp_ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
+            temp_inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
 
-            ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)] ;
-            ito[input_counter + sample_id] = d_ALGEBRAIC[Ito + (sample_id * num_of_algebraic)] ;
+            temp_ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)] ;
+            temp_ito[input_counter + sample_id] = d_ALGEBRAIC[Ito + (sample_id * num_of_algebraic)] ;
 
-            ikr[input_counter + sample_id] = d_ALGEBRAIC[IKr + (sample_id * num_of_algebraic)] ;
-            iks[input_counter + sample_id] = d_ALGEBRAIC[IKs + (sample_id * num_of_algebraic)] ;
+            temp_ikr[input_counter + sample_id] = d_ALGEBRAIC[IKr + (sample_id * num_of_algebraic)] ;
+            temp_iks[input_counter + sample_id] = d_ALGEBRAIC[IKs + (sample_id * num_of_algebraic)] ;
 
-            ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
+            temp_ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
+            printf("check 7 (write result)\n");
 
             input_counter = input_counter + sample_size;
-            cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
+            cipa_datapoint = cipa_datapoint + 1; // this used to cause the resource usage got so mega and crashed in running
 
             //time series ends
           
           //   // snprintf( buffer, sizeof(buffer), "%.2lf,%.2lf,%.0lf,%.0lf,%.0lf,%.0lf,%0.lf,%.0lf,%.0lf,%.0lf",
           //   // 		d_STATES[(sample_id * num_of_states) +V], d_RATES[(sample_id * num_of_rates) +V], d_STATES[(sample_id * num_of_states) +cai]*CALCIUM_SCALING,
-          //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*CURRENT_SCALING, 
+          //   // 		d_ALGEBRAIC[(sample _id * num_of_algebraic) +INa]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*CURRENT_SCALING, 
           //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]*CURRENT_SCALING,
           //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]*CURRENT_SCALING, d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]*CURRENT_SCALING, 
           //   // 		d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]*CURRENT_SCALING);
@@ -438,13 +470,18 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                                       double *ik1,
                                       unsigned int sample_size,
                                       cipa_t *temp_result, cipa_t *cipa_result,
+                                      double *temp_time,double *temp_states,double *temp_out_dt,double *temp_cai_result,double *temp_ina,double *temp_inal,double *temp_ical,double *temp_ito,double *temp_ikr,double *temp_iks,double *temp_ik1,
                                       param_t *p_param
                                       )
   {
     unsigned short thread_id;
+    const unsigned int datapoint_size = 7000;
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[2000];
     double dt_for_each_sample[2000];
+
+
+
     // cipa_t temp_per_sample[2000];
     // cipa_t cipa_per_sample[2000];
     // printf("in\n");
@@ -458,6 +495,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
                           ik1,
                           time_for_each_sample, dt_for_each_sample, thread_id, sample_size,
                           temp_result, cipa_result,
+                          temp_time,temp_states, temp_out_dt, temp_cai_result, temp_ina, temp_inal, temp_ical, temp_ito, temp_ikr, temp_iks, temp_ik1,
                           p_param
                           );
                           // __syncthreads();
