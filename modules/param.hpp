@@ -7,6 +7,7 @@ struct param_t
   bool is_dutta; // TRUE if using Dutta scaling
   bool is_print_graph; // TRUE if we want to print graph
   bool is_using_output; // TRUE if using last output file
+  bool is_cvar;
   double bcl; // basic cycle length
   unsigned short pace_max; // maximum pace
   unsigned short celltype;  // cell types

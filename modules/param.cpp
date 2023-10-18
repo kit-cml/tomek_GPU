@@ -9,6 +9,7 @@ void param_t::init()
   is_dutta = true;
   is_print_graph = true;
   is_using_output = false;
+  is_cvar = true;
   bcl = 2000.;
   pace_max = 1000;
   celltype = 0.;
