@@ -300,6 +300,10 @@ int main(int argc, char **argv)
 
     if(p_param->is_cvar == true){
       printf("Reading: %d Conductance Variability samples\n",sample_limit);
+      snprintf(buffer, sizeof(buffer),
+      "./drugs/10000_pop.csv"
+      );
+      get_cvar_data_from_file(buffer, cvar);
     }
    
     printf("preparing GPU memory space \n");
