@@ -18,6 +18,7 @@
   int offset);
     __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset);
 	__device__ void ___applyDutta(double *CONSTANTS, int offset);
+	__device__ void ___applyCvar(double *CONSTANTS, double *cvar, int offset);
 	// void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset);
 
 #endif

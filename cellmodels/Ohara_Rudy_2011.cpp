@@ -635,6 +635,36 @@ CONSTANTS[ICaL + (offset * num_of_constants)] *= 1.007;
 CONSTANTS[INaL + (offset * num_of_constants)] *= 2.661;
 }
 
+/*==============*/
+/* Added by ALI */
+/*==============*/
+__device__ void ___applyCvar(double *CONSTANTS, double *cvar, int offset)
+{
+  int num_of_constants = 146;
+
+  CONSTANTS[(offset * num_of_constants) +GNa] *= cvar[0];		// GNa
+  CONSTANTS[(offset * num_of_constants) +GNaL] *= cvar[1];		// GNaL
+  CONSTANTS[(offset * num_of_constants) +Gto] *= cvar[2];		// Gto
+  CONSTANTS[(offset * num_of_constants) +GKr] *= cvar[3];		// GKr
+  CONSTANTS[(offset * num_of_constants) +GKs] *= cvar[4];		// GKs
+  CONSTANTS[(offset * num_of_constants) +GK1] *= cvar[5];		// GK1
+  CONSTANTS[(offset * num_of_constants) +Gncx] *= cvar[6];		// GNaCa
+  CONSTANTS[(offset * num_of_constants) +GKb] *= cvar[7];		// GKb
+  CONSTANTS[(offset * num_of_constants) +PCa] *= cvar[8];		// PCa
+  CONSTANTS[(offset * num_of_constants) +Pnak] *= cvar[9];		// INaK
+  CONSTANTS[(offset * num_of_constants) +PNab] *= cvar[10];		// PNab
+  CONSTANTS[(offset * num_of_constants) +PCab] *= cvar[11];		// PCab
+  CONSTANTS[(offset * num_of_constants) +GpCa] *= cvar[12];		// GpCa
+  CONSTANTS[(offset * num_of_constants) +KmCaMK] *= cvar[17];	// KCaMK
+
+  // Additional constants
+  CONSTANTS[(offset * num_of_constants) +Jrel_scale] *= cvar[13];	// SERCA_Total (release)
+  CONSTANTS[(offset * num_of_constants) +Jup_scale] *= cvar[14];	// RyR_Total (uptake)
+  CONSTANTS[(offset * num_of_constants) +Jtr_scale] *= cvar[15];	// Trans_Total (NSR to JSR translocation)
+  CONSTANTS[(offset * num_of_constants) +Jleak_scale] *= cvar[16];	// Leak_Total (Ca leak from NSR)
+  //CONSTANTS[KCaMK_scale] *= cvar[17];	// KCaMK
+}
+
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset)
 {
 int num_of_constants = 146;
