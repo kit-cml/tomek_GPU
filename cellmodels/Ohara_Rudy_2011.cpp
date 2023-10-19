@@ -659,10 +659,10 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int offset)
 
   // Additional constants
   CONSTANTS[(offset * num_of_constants) +Jrel_scale] *= cvar[13 + (offset*18)];	// SERCA_Total (release)
-  CONSTANTS[(offset * num_of_constants) +Jup_scale] *= cvar[14] + (offset*18);	// RyR_Total (uptake)
+  CONSTANTS[(offset * num_of_constants) +Jup_scale] *= cvar[14 + (offset*18)];	// RyR_Total (uptake)
   CONSTANTS[(offset * num_of_constants) +Jtr_scale] *= cvar[15 + (offset*18)];	// Trans_Total (NSR to JSR translocation)
   CONSTANTS[(offset * num_of_constants) +Jleak_scale] *= cvar[16 + (offset*18)];	// Leak_Total (Ca leak from NSR)
-  //CONSTANTS[KCaMK_scale] *= cvar[17];	// KCaMK
+  // CONSTANTS[(offset * num_of_constants) +KCaMK_scale] *= cvar[17 + (offset*18)];	// KCaMK
 }
 
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset)
@@ -692,6 +692,7 @@ CONSTANTS[PCa+(offset * num_of_constants)] = CONSTANTS[PCa+(offset * num_of_cons
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, double *cvar, bool is_dutta, bool is_cvar,  int offset)
 {
   // int num_of_constants = 146;
+  // printf("ic50:%d %lf, %lf, %lf\n",offset,ic50[0 + (offset*14)],ic50[1 + (offset*14)],ic50[2 + (offset*14)]);
 
 	___initConsts(CONSTANTS, STATES, type, offset); // initconst kan minta 
 	// // mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);

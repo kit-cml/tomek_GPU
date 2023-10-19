@@ -137,7 +137,7 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   FILE *fp_drugs;
 //   drug_t ic50;
   char *token;
-  
+  char buffer_ic50[255];
   unsigned short idx;
 
   if( (fp_drugs = fopen(file_name, "r")) == NULL){
@@ -147,10 +147,10 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   }
   idx = 0;
   int sample_size = 0;
-  fgets(buffer, sizeof(buffer), fp_drugs); // skip header
-  while( fgets(buffer, sizeof(buffer), fp_drugs) != NULL )
+  fgets(buffer_ic50, sizeof(buffer_ic50), fp_drugs); // skip header
+  while( fgets(buffer_ic50, sizeof(buffer_ic50), fp_drugs) != NULL )
   { // begin line reading
-    token = strtok( buffer, "," );
+    token = strtok( buffer_ic50, "," );
     while( token != NULL )
     { // begin data tokenizing
       ic50[idx++] = strtod(token, NULL);
@@ -163,43 +163,39 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   return sample_size;
 }
 
-void get_cvar_data_from_file(const char* file_name, double *cvar)
+int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *cvar)
 {
   // buffer for writing in snprintf() function
-  // char buffer[255];
+  char buffer_cvar[255];
   FILE *fp_cvar;
   // cvar_t cvar;
   char *token;
   // std::array<double,18> temp_array;
   unsigned short idx;
 
-  // if( (fp_cvar = fopen(file_name, "r")) == NULL){
-  //   printf("Cannot open file %s in %s at rank %d\n", 
-  //     file_name, mympi::host_name, mympi::rank);
-  //   return cvar;
-  // }
   if( (fp_cvar = fopen(file_name, "r")) == NULL){
     printf("Cannot open file %s\n",
       file_name);
   }
   idx = 0;
   int sample_size = 0;
-  fgets(buffer, sizeof(buffer), fp_cvar); // skip header
-  while( fgets(buffer, sizeof(buffer), fp_cvar) != NULL && (sample_size<sample_limit))
+  fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar); // skip header
+  while( (fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar) != NULL) /*&& (sample_size<limit)*/)
   { // begin line reading
-    token = strtok( buffer, "," );
-    idx = 0;
+    token = strtok( buffer_cvar, "," );
     while( token != NULL )
     { // begin data tokenizing
       cvar[idx++] = strtod(token, NULL);
+      // printf("%lf\n",cvar[idx]);
       token = strtok(NULL, ",");
     } // end data tokenizing
+    // printf("\n");
     sample_size++;
     // cvar.push_back(temp_array);
   } // end line reading
 
   fclose(fp_cvar);
-  // return cvar;
+  return sample_size;
 }
 
 
@@ -287,7 +283,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples.csv"
+      "./drugs/bepridil/IC50_samples10.csv"
       // "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
@@ -299,11 +295,13 @@ int main(int argc, char **argv)
     printf("Sample size: %d\n",sample_size);
 
     if(p_param->is_cvar == true){
-      printf("Reading: %d Conductance Variability samples\n",sample_limit);
-      snprintf(buffer, sizeof(buffer),
-      "./drugs/10000_pop.csv"
+      char buffer_cvar[255];
+      snprintf(buffer_cvar, sizeof(buffer_cvar),
+      // "./drugs/10000_pop.csv"
+      "./drugs/optimized_pop_10k.csv"
       );
-      get_cvar_data_from_file(buffer, cvar);
+      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
+      printf("Reading: %d Conductance Variability samples\n",cvar_sample);
     }
    
     printf("preparing GPU memory space \n");

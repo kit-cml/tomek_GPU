@@ -11,7 +11,8 @@ void param_t::init()
   is_using_output = false;
   is_cvar = true;
   bcl = 2000.;
-  pace_max = 1000;
+  pace_max = 10;
+  find_steepest_start = 5;
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
@@ -29,6 +30,7 @@ void param_t::show_val()
   mpi_printf( 0, "%s -- %s\n", "Hill File", hill_file );
   mpi_printf( 0, "%s -- %hu\n", "Celltype", celltype);
   mpi_printf( 0, "%s -- %s\n", "Is_Dutta", is_dutta ? "true" : "false" );
+  mpi_printf( 0, "%s -- %s\n", "Is_Cvar", is_cvar ? "true" : "false" );
   mpi_printf( 0, "%s -- %s\n", "Is_Print_Graph", is_print_graph ? "true" : "false" );
   mpi_printf( 0, "%s -- %s\n", "Is_Using_Output", is_using_output ? "true" : "false" );
   mpi_printf( 0, "%s -- %lf\n", "Basic_Cycle_Length", bcl);

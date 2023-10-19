@@ -100,7 +100,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
-    const unsigned short last_drug_check_pace = 250;
+    const unsigned short last_drug_check_pace = p_param->find_steepest_start;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
