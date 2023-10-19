@@ -11,8 +11,8 @@ void param_t::init()
   is_using_output = false;
   is_cvar = true;
   bcl = 2000.;
-  pace_max = 10;
-  find_steepest_start = 5;
+  pace_max = 1000;
+  find_steepest_start = 250;
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
