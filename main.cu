@@ -342,16 +342,12 @@ int main(int argc, char **argv)
     bool folder_created = false;
 
     printf("writing to file... \n");
-    // sample loop
-    for (int sample_id = 0; sample_id<sample_size; sample_id++){
-      // printf("writing sample %d... \n",sample_id);
-      char sample_str[ENOUGH];
-      char conc_str[ENOUGH];
-      char filename[150] = "./result/state_only/";
-      sprintf(sample_str, "%d", sample_id);
-      sprintf(conc_str, "%lf", CONC);
-      strcat(filename,conc_str);
-      strcat(filename,"/");
+    char sample_str[ENOUGH];
+    char conc_str[ENOUGH];
+    char filename[150] = "./result/state_only/";
+    sprintf(conc_str, "%lf", CONC);
+    strcat(filename,conc_str);
+    strcat(filename,"/");
       if (folder_created == false){
         check = mkdir(filename,0777);
         // check if directory is created or not
@@ -364,9 +360,10 @@ int main(int argc, char **argv)
       folder_created = true;
       }
       
-      strcat(filename,sample_str);
-      strcat(filename,".csv");
-
+    strcat(filename,sample_str);
+    strcat(filename,".csv");
+    // sample loop
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
       writer = fopen(filename,"w");
       // fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<num_of_states-1; datapoint++){
@@ -378,7 +375,7 @@ int main(int argc, char **argv)
       fprintf(writer,"%lf\n", // write last data
         h_states[ (sample_id * num_of_states) + num_of_states-1]
         );
-        
+
       fclose(writer);
     }
     toc();
