@@ -400,22 +400,22 @@ int main(int argc, char **argv)
       fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%.lf,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        fprintf(writer,"%lf,%.lf,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],
-        (int)h_cai_result[ sample_id + (datapoint * sample_size)]*CALCIUM_SCALING, 
+        h_cai_result[ sample_id + (datapoint * sample_size)]*CALCIUM_SCALING, 
         
-        (int)h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-        (int)h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
 
-        (int)h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
-        (int)h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,  
+        h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,  
 
-        (int)h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-        (int)h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
 
-        (int)h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING
+        h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING
         );
       }
       fclose(writer);
