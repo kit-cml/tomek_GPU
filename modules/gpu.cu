@@ -363,7 +363,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             time[input_counter + sample_id] = tcurr[sample_id];
             states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
             
-            out_dt[input_counter + sample_id] = dt[sample_id];
+            out_dt[input_counter + sample_id] = d_RATES[V + (sample_id * num_of_states)];
             
             cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
 

@@ -410,12 +410,12 @@ int main(int argc, char **argv)
         h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
 
         h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
-        h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,  
-
-        h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
         h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
 
-        h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING
+        h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+
+        h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING  
         );
       }
       fclose(writer);
