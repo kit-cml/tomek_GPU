@@ -215,17 +215,19 @@ int main(int argc, char **argv)
     double *d_RATES;
     double *d_STATES;
 
-    double *time;
-    double *dt;
-    double *states;
-    double *ical;
-    double *inal;
-    double *cai_result;
-    double *ina;
-    double *ito;
-    double *ikr;
-    double *iks;
-    double *ik1;
+    double *d_STATES_RESULT;
+
+    // double *time;
+    // double *dt;
+    // double *states;
+    // double *ical;
+    // double *inal;
+    // double *cai_result;
+    // double *ina;
+    // double *ito;
+    // double *ikr;
+    // double *iks;
+    // double *ik1;
     cipa_t *temp_result, *cipa_result;
 
     // input variables for cell simulation
@@ -264,17 +266,18 @@ int main(int argc, char **argv)
     cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
     cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
 
-    cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
-    cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
-    cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&cai_result, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&ina, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&ito, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&ikr, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
-    cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
+    // cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
+    // cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&cai_result, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ina, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ito, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ikr, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&d_STATES_RESULT, num_of_states * sample_size * sizeof(double));
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
@@ -307,11 +310,12 @@ int main(int argc, char **argv)
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                                              time, states, dt, cai_result,
-                                              ina, inal, 
-                                              ical, ito,
-                                              ikr, iks, 
-                                              ik1,
+                                              d_STATES_RESULT,
+                                              // time, states, dt, cai_result,
+                                              // ina, inal, 
+                                              // ical, ito,
+                                              // ikr, iks, 
+                                              // ik1,
                                               sample_size,
                                               temp_result, cipa_result,
                                               d_p_param
@@ -331,7 +335,7 @@ int main(int argc, char **argv)
     ////// copy the data back to CPU, and write them into file ////////
     printf("copying the data back to the CPU \n");
     
-    cudaMemcpy(h_states, d_STATES, sample_size * num_of_states *  sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_states, d_STATES_RESULT, sample_size * num_of_states *  sizeof(double), cudaMemcpyDeviceToHost);
 
     FILE *writer;
     int check;
@@ -365,12 +369,16 @@ int main(int argc, char **argv)
 
       writer = fopen(filename,"w");
       // fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
-      for (int datapoint = 0; datapoint<num_of_states; datapoint++){
+      for (int datapoint = 0; datapoint<num_of_states-1; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
         fprintf(writer,"%lf,", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_states[ (sample_id * num_of_states) + datapoint]
         );
       }
+      fprintf(writer,"%lf\n", // write last data
+        h_states[ (sample_id * num_of_states) + num_of_states-1]
+        );
+        
       fclose(writer);
     }
     toc();
