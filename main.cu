@@ -228,9 +228,6 @@ int main(int argc, char **argv)
     double *ik1;
     cipa_t *temp_result, *cipa_result;
 
-    static const int CALCIUM_SCALING = 1000000;
-    static const int CURRENT_SCALING = 1000;
-
     // input variables for cell simulation
     param_t *p_param, *d_p_param;
 	  p_param = new param_t();
@@ -326,45 +323,15 @@ int main(int argc, char **argv)
     
 
     printf("allocating memory for computation result in the CPU, malloc style \n");
-    double *h_states,*h_time,*h_dt,*h_ical,*h_inal,*h_cai_result,*h_ina,*h_ito,*h_ikr,*h_iks,*h_ik1;
+    double *h_states;
 
-    h_states = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for STATES, \n");
-    h_time = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for time, \n");
-    h_dt = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for dt, \n");
-    h_cai_result= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for Cai, \n");
-     h_ina= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for iNa, \n");
-     h_ito= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for ito, \n");
-     h_ikr= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for ikr, \n");
-     h_iks= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for iks, \n");
-     h_ik1= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for ik1, \n");
-     h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocated for ICaL, \n");
-    h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    printf("...allocating for INaL, all set!\n");
+    h_states = (double *)malloc(num_of_states * sample_size * sizeof(double));
+    printf("...allocating for all states, all set!\n");
 
     ////// copy the data back to CPU, and write them into file ////////
     printf("copying the data back to the CPU \n");
-    cudaMemcpy(h_states, states, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_time, time, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_dt, dt, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_ical, ical, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_inal, inal, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_cai_result, cai_result, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_ina, ina, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_ito, ito, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     
+    cudaMemcpy(h_states, d_STATES, sample_size * num_of_states *  sizeof(double), cudaMemcpyDeviceToHost);
 
     FILE *writer;
     int check;
@@ -376,7 +343,7 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[150] = "./result/peak250/";
+      char filename[150] = "./result/state_only/";
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%lf", CONC);
       strcat(filename,conc_str);
@@ -397,25 +364,11 @@ int main(int argc, char **argv)
       strcat(filename,".csv");
 
       writer = fopen(filename,"w");
-      fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
-      for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
+      // fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
+      for (int datapoint = 0; datapoint<num_of_states; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%.lf,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
-        h_time[ sample_id + (datapoint * sample_size)],
-        h_states[ sample_id + (datapoint * sample_size)],
-        h_dt[ sample_id + (datapoint * sample_size)],
-        (int)h_cai_result[ sample_id + (datapoint * sample_size)]*CALCIUM_SCALING, 
-        
-        (int)h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-        (int)h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-
-        (int)h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
-        (int)h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,  
-
-        (int)h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-        (int)h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-
-        (int)h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING
+        fprintf(writer,"%lf,", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        h_states[ (sample_id * num_of_states) + datapoint]
         );
       }
       fclose(writer);
