@@ -180,7 +180,7 @@ int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *c
   idx = 0;
   int sample_size = 0;
   fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar); // skip header
-  while( (fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar) != NULL) /*&& (sample_size<limit)*/)
+  while( (fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar) != NULL) && (sample_size<limit))
   { // begin line reading
     token = strtok( buffer_cvar, "," );
     while( token != NULL )
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
     int num_of_rates = 41;
 
     snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples10.csv"
+      "./drugs/bepridil/IC50_samples.csv"
       // "./drugs/bepridil/IC50_optimal.csv"
       // "./IC50_samples.csv"
       );
@@ -297,8 +297,8 @@ int main(int argc, char **argv)
     if(p_param->is_cvar == true){
       char buffer_cvar[255];
       snprintf(buffer_cvar, sizeof(buffer_cvar),
-      // "./drugs/10000_pop.csv"
-      "./drugs/optimized_pop_10k.csv"
+      "./drugs/10000_pop.csv"
+      // "./drugs/optimized_pop_10k.csv"
       );
       int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
       printf("Reading: %d Conductance Variability samples\n",cvar_sample);
