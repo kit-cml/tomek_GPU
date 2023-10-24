@@ -20,7 +20,7 @@
 char buffer[255];
 
 const unsigned int datapoint_size = 7000;
-const unsigned int sample_limit = 2000;
+const unsigned int sample_limit = 10000;
 double ic50[14*sample_limit]; //temporary
 double cvar[18*sample_limit];
 
@@ -296,6 +296,7 @@ int main(int argc, char **argv)
     // else if(sample_size > 2000)
     //     printf("Too much input! Maximum sample data is 2000!\n");
     printf("Sample size: %d\n",sample_size);
+    printf("Set GPU Number: %d\n",p_param->gpu_index);
 
     cudaSetDevice(p_param->gpu_index);
 
@@ -348,7 +349,7 @@ int main(int argc, char **argv)
     // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
 
     tic();
-    printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
+    printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
     int thread;
     if (sample_size>=100){
       thread = 100;
