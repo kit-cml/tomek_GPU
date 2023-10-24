@@ -342,12 +342,12 @@ int main(int argc, char **argv)
     bool folder_created = false;
 
     printf("writing to file... \n");
-    char sample_str[ENOUGH];
+    // char sample_str[ENOUGH];
     char conc_str[ENOUGH];
     char filename[150] = "./result/state_only/";
     sprintf(conc_str, "%lf", CONC);
     strcat(filename,conc_str);
-    strcat(filename,"/");
+    // strcat(filename,"/");
       if (folder_created == false){
         check = mkdir(filename,0777);
         // check if directory is created or not
@@ -360,11 +360,11 @@ int main(int argc, char **argv)
       folder_created = true;
       }
       
-    strcat(filename,sample_str);
+    // strcat(filename,sample_str);
     strcat(filename,".csv");
     // sample loop
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
-      writer = fopen(filename,"w");
+      writer = fopen(filename,"a");
       // fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<num_of_states-1; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
