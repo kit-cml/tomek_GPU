@@ -443,8 +443,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
   {
     unsigned short thread_id;
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    double time_for_each_sample[2000];
-    double dt_for_each_sample[2000];
+    double time_for_each_sample[10000];
+    double dt_for_each_sample[10000];
     // cipa_t temp_per_sample[2000];
     // cipa_t cipa_per_sample[2000];
     // printf("in\n");

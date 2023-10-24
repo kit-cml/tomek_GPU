@@ -309,6 +309,7 @@ int main(int argc, char **argv)
       return 0;
     }
     printf("Sample size: %d\n",sample_size);
+    cudaSetDevice(p_param->gpu_index);
     printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
