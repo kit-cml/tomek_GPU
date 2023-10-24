@@ -6,16 +6,21 @@
 void param_t::init()
 {
   simulation_mode = 0;
+  // max_samples = 10000;
   is_dutta = true;
+  gpu_index = 0;
   is_print_graph = true;
   is_using_output = false;
   is_cvar = true;
   bcl = 2000.;
   pace_max = 1000;
+
   find_steepest_start = 250;
+
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
+  conc = 99.0;
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
   snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
@@ -39,5 +44,5 @@ void param_t::show_val()
   mpi_printf( 0, "%s -- %lf\n", "Inet_Vm_Threshold", inet_vm_threshold);
   mpi_printf( 0, "%s -- %lf\n", "Writing_Step", dt_write);
   mpi_printf( 0, "%s -- %s\n", "Drug_Name", drug_name);
-  mpi_printf( 0, "%s -- %s\n\n\n", "Concentrations", concs);
+  // mpi_printf( 0, "%s -- %s\n\n\n", "Concentrations", concs);
 }

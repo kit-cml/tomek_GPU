@@ -18,6 +18,7 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
+
 const unsigned int datapoint_size = 7000;
 const unsigned int sample_limit = 2000;
 double ic50[14*sample_limit]; //temporary
@@ -245,7 +246,14 @@ int main(int argc, char **argv)
 // NEW CODE STARTS HERE //
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
-    const double CONC = 99.0;
+
+
+    // input variables for cell simulation
+    param_t *p_param, *d_p_param;
+	  p_param = new param_t();
+  	p_param->init();
+
+    const double CONC = p_param->conc;
 
     double *d_ic50;
     double *d_cvar;
@@ -270,11 +278,6 @@ int main(int argc, char **argv)
     static const int CALCIUM_SCALING = 1000000;
     static const int CURRENT_SCALING = 1000;
 
-    // input variables for cell simulation
-    param_t *p_param, *d_p_param;
-	  p_param = new param_t();
-  	p_param->init();
-
     p_param->show_val();
 
     int num_of_constants = 146;
@@ -282,17 +285,19 @@ int main(int argc, char **argv)
     int num_of_algebraic = 199;
     int num_of_rates = 41;
 
-    snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples.csv"
-      // "./drugs/bepridil/IC50_optimal.csv"
-      // "./IC50_samples.csv"
-      );
-    int sample_size = get_IC50_data_from_file(buffer, ic50);
+    // snprintf(buffer, sizeof(buffer),
+    //   "./drugs/bepridil/IC50_samples.csv"
+    //   // "./drugs/bepridil/IC50_optimal.csv"
+    //   // "./IC50_samples.csv"
+    //   );
+    int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50);
     if(sample_size == 0)
         printf("Something problem with the IC50 file!\n");
     // else if(sample_size > 2000)
     //     printf("Too much input! Maximum sample data is 2000!\n");
     printf("Sample size: %d\n",sample_size);
+
+    cudaSetDevice(p_param->gpu_index);
 
     if(p_param->is_cvar == true){
       char buffer_cvar[255];
@@ -303,7 +308,7 @@ int main(int argc, char **argv)
       int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
       printf("Reading: %d Conductance Variability samples\n",cvar_sample);
     }
-   
+
     printf("preparing GPU memory space \n");
     cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
@@ -451,22 +456,22 @@ int main(int argc, char **argv)
       fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%.lf,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        fprintf(writer,"%lf,%.lf,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],
-        (int)h_cai_result[ sample_id + (datapoint * sample_size)]*CALCIUM_SCALING, 
+        h_cai_result[ sample_id + (datapoint * sample_size)]*CALCIUM_SCALING, 
         
-        (int)h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-        (int)h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
 
-        (int)h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
-        (int)h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,  
+        h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
 
-        (int)h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
-        (int)h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
 
-        (int)h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING
+        h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING  
         );
       }
       fclose(writer);
