@@ -104,7 +104,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
-    double conc = 99.0; //mmol
+    double conc = p_param->conc; //mmol
     double type = p_param->celltype;
     double epsilon = 10E-14;
     // double top_dvmdt = -999.0;
@@ -442,8 +442,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
   {
     unsigned short thread_id;
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    double time_for_each_sample[2000];
-    double dt_for_each_sample[2000];
+    double time_for_each_sample[10000];
+    double dt_for_each_sample[10000];
     // cipa_t temp_per_sample[2000];
     // cipa_t cipa_per_sample[2000];
     // printf("in\n");
