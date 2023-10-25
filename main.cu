@@ -21,8 +21,7 @@ char buffer[255];
 
 const unsigned int datapoint_size = 7000;
 const unsigned int sample_limit = 10000;
-double ic50[14*sample_limit]; //temporary
-double cvar[18*sample_limit];
+
 
 clock_t START_TIMER;
 
@@ -252,6 +251,13 @@ int main(int argc, char **argv)
     param_t *p_param, *d_p_param;
 	  p_param = new param_t();
   	p_param->init();
+
+    double *ic50; //temporary
+    double *cvar;
+
+    ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+
 
     const double CONC = p_param->conc;
 
