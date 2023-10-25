@@ -139,7 +139,7 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
 //   drug_t ic50;
   char *token;
   char buffer_ic50[255];
-  unsigned short idx;
+  unsigned int idx;
 
   if( (fp_drugs = fopen(file_name, "r")) == NULL){
     printf("Cannot open file %s\n",
@@ -172,7 +172,7 @@ int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *c
   // cvar_t cvar;
   char *token;
   // std::array<double,18> temp_array;
-  unsigned short idx;
+  unsigned int idx;
 
   if( (fp_cvar = fopen(file_name, "r")) == NULL){
     printf("Cannot open file %s\n",
