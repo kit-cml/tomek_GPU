@@ -13,19 +13,19 @@ void param_t::init()
   is_using_output = false;
   is_cvar = true;
   bcl = 2000.;
-  pace_max = 1000;
+  pace_max = 10;
 
-  find_steepest_start = 250;
+  find_steepest_start = 5;
 
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
-  conc = 99.0;
+  conc = 66.0;
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
   snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
   snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
-  snprintf(concs, sizeof(concs), "%s", "99.0");
+  snprintf(concs, sizeof(concs), "%s", "66.0");
 }
 
 void param_t::show_val()

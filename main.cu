@@ -269,6 +269,7 @@ int main(int argc, char **argv)
     double *d_STATES;
 
     double *d_STATES_RESULT;
+    double *d_all_states;
 
     // double *time;
     // double *dt;
@@ -335,6 +336,7 @@ int main(int argc, char **argv)
     // cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
     // cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&d_STATES_RESULT, num_of_states * sample_size * sizeof(double));
+    cudaMalloc(&d_all_states, (num_of_states+1) * sample_size * p_param->find_steepest_start * sizeof(double));
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
@@ -370,7 +372,7 @@ int main(int argc, char **argv)
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                                              d_STATES_RESULT,
+                                              d_STATES_RESULT, d_all_states,
                                               // time, states, dt, cai_result,
                                               // ina, inal, 
                                               // ical, ito,
@@ -387,15 +389,17 @@ int main(int argc, char **argv)
     
 
     printf("allocating memory for computation result in the CPU, malloc style \n");
-    double *h_states;
+    double *h_states, *h_all_states;
 
     h_states = (double *)malloc(num_of_states * sample_size * sizeof(double));
+    h_all_states = (double *)malloc( (num_of_states+1) * sample_size * p_param->find_steepest_start * sizeof(double));
     printf("...allocating for all states, all set!\n");
 
     ////// copy the data back to CPU, and write them into file ////////
     printf("copying the data back to the CPU \n");
     
     cudaMemcpy(h_states, d_STATES_RESULT, sample_size * num_of_states *  sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_all_states, d_all_states, (num_of_states+1) * sample_size * p_param->find_steepest_start  *  sizeof(double), cudaMemcpyDeviceToHost);
 
     FILE *writer;
     int check;
@@ -434,10 +438,53 @@ int main(int argc, char **argv)
 
         );
       }
-      fprintf(writer,"%lf\n", // write last data
+        fprintf(writer,"%lf\n", // write last data
         h_states[ (sample_id * num_of_states) + num_of_states-1]
         );
 
+      fclose(writer);
+    }
+
+    // FILE *writer;
+    // int check;
+    // bool folder_created = false;
+
+    printf("writing to file... \n");
+    // sample loop
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
+      char sample_str[ENOUGH];
+      char conc_str[ENOUGH];
+      char filename[150] = "./result/state_only/";
+      sprintf(sample_str, "%d", sample_id);
+      sprintf(conc_str, "%lf", CONC);
+      strcat(filename,conc_str);
+      strcat(filename,"/");
+      if (folder_created == false){
+        check = mkdir(filename,0777);
+        // check if directory is created or not
+        if (!check){
+          printf("Directory created\n");
+          }
+        else {
+          printf("Unable to create directory\n");  
+      }
+      folder_created = true;
+      }
+      
+      strcat(filename,sample_str);
+      strcat(filename,".csv");
+
+      writer = fopen(filename,"w");
+      for (int pacing = 0; pacing< p_param->find_steepest_start; pacing++){ //pace loop
+       // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
+        for(int datapoint = 0; datapoint < num_of_rates; datapoint++){ // each data loop
+        fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states)+1)+ datapoint + (sample_size * pacing)]);
+        } 
+        // fprintf(writer,"%lf",h_all_states[((sample_id * num_of_states)+1)+ num_of_states + (sample_size * pacing)]);
+        fprintf(writer,"\n");
+
+      }
       fclose(writer);
     }
     toc();

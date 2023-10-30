@@ -17,7 +17,7 @@ differences are related to GPU offset calculations
 */
 
 __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
-                                        double *d_STATES_RESULT, 
+                                        double *d_STATES_RESULT, double *d_all_states,
                                       //  double *time, double *states, double *out_dt,  double *cai_result, 
                                       //  double *ina, double *inal,
                                       //  double *ical, double *ito,
@@ -244,7 +244,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           is_eligible_AP = false;
           // new part ends
 		
-          printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol,t_peak_capture);
+          printf("core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_STATES_RESULT[(sample_id * num_of_states) + 0], d_STATES_RESULT[(sample_id * num_of_states) + 1], d_STATES_RESULT[(sample_id * num_of_states) + 2]);
           // writen = false;
         }
         
@@ -348,6 +348,17 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           inal_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*dt[sample_id]);
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
+          if((pace_count >= pace_max-last_drug_check_pace) && (pace_count<pace_max) ){
+            int counter;
+            for(counter=0; counter<num_of_states; counter++){
+              d_all_states[(sample_id * num_of_states) + counter + (sample_size*(pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter];
+            }
+            // d_all_states[(sample_id * num_of_states) + counter+1 + (sample_size*(pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter] = pace_count;
+
+
+            printf("all state core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_all_states[(sample_id * num_of_states) + 0], d_all_states[(sample_id * num_of_states) + 1], d_all_states[(sample_id * num_of_states) + 2]);
+          }
+
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
           if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           {
@@ -361,8 +372,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
-
+           
             if(init_states_captured == false){
+              // printf("writinggg\n");
               for(int counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
               }
@@ -407,7 +419,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
 
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
-                                      double *d_STATES_RESULT, 
+                                      double *d_STATES_RESULT, double *d_all_states,
                                       // double *time, double *states, double *out_dt,  double *cai_result, 
                                       // double *ina, double *inal, 
                                       // double *ical, double *ito,
@@ -428,7 +440,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
     
     // printf("Calculating %d\n",thread_id);
     kernel_DoDrugSim(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                          d_STATES_RESULT, 
+                          d_STATES_RESULT, d_all_states,
                           // time, states, out_dt, cai_result,
                           // ina, inal, 
                           // ical, ito,
