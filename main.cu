@@ -19,7 +19,7 @@
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
 
-const unsigned int datapoint_size = 7700;
+const unsigned int datapoint_size = 7900;
 const unsigned int sample_limit = 10000;
 
 
