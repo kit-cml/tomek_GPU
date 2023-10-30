@@ -5,9 +5,11 @@ struct param_t
 {
   unsigned short simulation_mode; // toggle between sample-based or full-pace simulations
   bool is_dutta; // TRUE if using Dutta scaling
+  unsigned short gpu_index;
   bool is_print_graph; // TRUE if we want to print graph
   bool is_using_output; // TRUE if using last output file
   double bcl; // basic cycle length
+  // unsigned int max_samples;
   unsigned short pace_max; // maximum pace
   unsigned short celltype;  // cell types
   double dt;        // time step
@@ -16,6 +18,7 @@ struct param_t
   char hill_file[1024];
   char drug_name[100];
   char concs[100];
+  float conc;
   void init();
   void show_val();
 };

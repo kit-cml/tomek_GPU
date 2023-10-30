@@ -18,8 +18,10 @@
 
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
-double ic50[14*2000]; //temporary
+
 unsigned int datapoint_size = 7000;
+const unsigned int sample_limit = 10000;
+double ic50[14 * sample_limit]; //temporary
 
 clock_t START_TIMER;
 
@@ -207,7 +209,14 @@ int main(int argc, char **argv)
 // NEW CODE STARTS HERE //
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
-    const double CONC = 99.0;
+
+
+    // input variables for cell simulation
+    param_t *p_param, *d_p_param;
+	  p_param = new param_t();
+  	p_param->init();
+
+    const double CONC = p_param->conc;
 
     double *d_ic50;
     double *d_ALGEBRAIC;
@@ -230,6 +239,7 @@ int main(int argc, char **argv)
     // double *ik1;
     cipa_t *temp_result, *cipa_result;
 
+
     // input variables for cell simulation
     param_t *p_param, *d_p_param;
 	  p_param = new param_t();
@@ -242,18 +252,18 @@ int main(int argc, char **argv)
     int num_of_algebraic = 199;
     int num_of_rates = 41;
 
-    snprintf(buffer, sizeof(buffer),
-      "./drugs/bepridil/IC50_samples.csv"
-      // "./drugs/bepridil/IC50_optimal.csv"
-      // "./IC50_samples.csv"
-      );
-    int sample_size = get_IC50_data_from_file(buffer, ic50);
+    // snprintf(buffer, sizeof(buffer),
+    //   "./drugs/bepridil/IC50_samples.csv"
+    //   // "./drugs/bepridil/IC50_optimal.csv"
+    //   // "./IC50_samples.csv"
+    //   );
+    int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50);
     if(sample_size == 0)
         printf("Something problem with the IC50 file!\n");
     // else if(sample_size > 2000)
     //     printf("Too much input! Maximum sample data is 2000!\n");
     printf("Sample size: %d\n",sample_size);
-   
+    cudaSetDevice(p_param->gpu_index);
     printf("preparing GPU memory space \n");
     cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
@@ -305,6 +315,7 @@ int main(int argc, char **argv)
       return 0;
     }
     printf("Sample size: %d\n",sample_size);
+    cudaSetDevice(p_param->gpu_index);
     printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
@@ -368,8 +379,10 @@ int main(int argc, char **argv)
       // fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<num_of_states-1; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
+
         fprintf(writer,"%lf,", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_states[ (sample_id * num_of_states) + datapoint]
+
         );
       }
       fprintf(writer,"%lf\n", // write last data

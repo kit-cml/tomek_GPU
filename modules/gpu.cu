@@ -105,7 +105,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
-    double conc = 99.0; //mmol
+    double conc = p_param->conc; //mmol
     double type = p_param->celltype;
     bool dutta = p_param->is_dutta;
     double epsilon = 10E-14;
@@ -374,7 +374,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
             // time[input_counter + sample_id] = tcurr[sample_id];
             // states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
             
-            // out_dt[input_counter + sample_id] = dt[sample_id];
+            // out_dt[input_counter + sample_id] = d_RATES[V + (sample_id * num_of_states)];
+
             
             // cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
 
@@ -419,8 +420,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
   {
     unsigned short thread_id;
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    double time_for_each_sample[2000];
-    double dt_for_each_sample[2000];
+    double time_for_each_sample[10000];
+    double dt_for_each_sample[10000];
     // cipa_t temp_per_sample[2000];
     // cipa_t cipa_per_sample[2000];
     // printf("in\n");

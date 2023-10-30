@@ -11,3 +11,4 @@ bin/drug_sim
 *.out
 bin/result/*/*.csv
 bin/result/*/*/*.csv
+bin/result/parse.ipynb
