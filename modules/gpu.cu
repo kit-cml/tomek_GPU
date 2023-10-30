@@ -16,7 +16,7 @@ all modules here are optimised for GPU and slightly different than the original 
 differences are related to GPU offset calculations
 */
 
-__device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
+__device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
                                         double *d_STATES_RESULT, 
                                       //  double *time, double *states, double *out_dt,  double *cai_result, 
                                       //  double *ina, double *inal,
@@ -101,7 +101,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
     const unsigned short pace_max = p_param->pace_max;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
-    const unsigned short last_drug_check_pace = 250;
+    const unsigned short last_drug_check_pace = p_param->find_steepest_start;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
@@ -131,7 +131,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, dutta, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, dutta, p_param->is_cvar, sample_id);
     
 
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
@@ -406,7 +406,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_CONSTANTS, double *d_
 
 
 
-__global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
+__global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
                                       double *d_STATES_RESULT, 
                                       // double *time, double *states, double *out_dt,  double *cai_result, 
                                       // double *ina, double *inal, 
@@ -427,7 +427,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_CONSTANTS, doubl
     // printf("in\n");
     
     // printf("Calculating %d\n",thread_id);
-    kernel_DoDrugSim(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+    kernel_DoDrugSim(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
                           d_STATES_RESULT, 
                           // time, states, out_dt, cai_result,
                           // ina, inal, 

@@ -19,9 +19,9 @@
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
 
-unsigned int datapoint_size = 7000;
+// unsigned int datapoint_size = 7000;
 const unsigned int sample_limit = 10000;
-double ic50[14 * sample_limit]; //temporary
+
 
 clock_t START_TIMER;
 
@@ -163,6 +163,42 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   return sample_size;
 }
 
+int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *cvar)
+{
+  // buffer for writing in snprintf() function
+  char buffer_cvar[255];
+  FILE *fp_cvar;
+  // cvar_t cvar;
+  char *token;
+  // std::array<double,18> temp_array;
+  unsigned int idx;
+
+  if( (fp_cvar = fopen(file_name, "r")) == NULL){
+    printf("Cannot open file %s\n",
+      file_name);
+  }
+  idx = 0;
+  int sample_size = 0;
+  fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar); // skip header
+  while( (fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar) != NULL) && (sample_size<limit))
+  { // begin line reading
+    token = strtok( buffer_cvar, "," );
+    while( token != NULL )
+    { // begin data tokenizing
+      cvar[idx++] = strtod(token, NULL);
+      // printf("%lf\n",cvar[idx]);
+      token = strtok(NULL, ",");
+    } // end data tokenizing
+    // printf("\n");
+    sample_size++;
+    // cvar.push_back(temp_array);
+  } // end line reading
+
+  fclose(fp_cvar);
+  return sample_size;
+}
+
+
 
 int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 {
@@ -216,9 +252,17 @@ int main(int argc, char **argv)
 	  p_param = new param_t();
   	p_param->init();
 
+    double *ic50; //temporary
+    double *cvar;
+
+    ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+
+
     const double CONC = p_param->conc;
 
     double *d_ic50;
+    double *d_cvar;
     double *d_ALGEBRAIC;
     double *d_CONSTANTS;
     double *d_RATES;
@@ -239,14 +283,6 @@ int main(int argc, char **argv)
     // double *ik1;
     cipa_t *temp_result, *cipa_result;
 
-
-    // input variables for cell simulation
-    param_t *p_param, *d_p_param;
-	  p_param = new param_t();
-  	p_param->init();
-
-    p_param->show_val();
-
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
@@ -265,6 +301,17 @@ int main(int argc, char **argv)
     printf("Sample size: %d\n",sample_size);
     cudaSetDevice(p_param->gpu_index);
     printf("preparing GPU memory space \n");
+
+    if(p_param->is_cvar == true){
+      char buffer_cvar[255];
+      snprintf(buffer_cvar, sizeof(buffer_cvar),
+      "./drugs/10000_pop.csv"
+      // "./drugs/optimized_pop_10k.csv"
+      );
+      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
+      printf("Reading: %d Conductance Variability samples\n",cvar_sample);
+    }
+
     cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
@@ -291,8 +338,10 @@ int main(int argc, char **argv)
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
     
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
     // // Get the maximum number of active blocks per multiprocessor
@@ -310,7 +359,7 @@ int main(int argc, char **argv)
     else thread = sample_size;
     int block = int(ceil(sample_size/thread));
     // int block = (sample_size + thread - 1) / thread;
-    if(gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1){
+    if(gpu_check(15 * sample_size * sizeof(double) + sizeof(param_t)) == 1){
       printf("GPU memory insufficient!\n");
       return 0;
     }
@@ -320,7 +369,7 @@ int main(int argc, char **argv)
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
-    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
                                               d_STATES_RESULT,
                                               // time, states, dt, cai_result,
                                               // ina, inal, 
