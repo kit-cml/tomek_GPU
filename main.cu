@@ -429,6 +429,7 @@ int main(int argc, char **argv)
     // sample loop
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       writer = fopen(filename,"a");
+      fprintf(writer,"%d,",sample_id);
       // fprintf(writer, "Time,Vm,dVm/dt,Cai(x1.000.000)(milliM->picoM),INa(x1.000)(microA->picoA),INaL(x1.000)(microA->picoA),ICaL(x1.000)(microA->picoA),IKs(x1.000)(microA->picoA),IKr(x1.000)(microA->picoA),IK1(x1.000)(microA->picoA),Ito(x1.000)(microA->picoA)\n"); 
       for (int datapoint = 0; datapoint<num_of_states-1; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
@@ -439,7 +440,7 @@ int main(int argc, char **argv)
         );
       }
         fprintf(writer,"%lf\n", // write last data
-        h_states[ (sample_id * num_of_states) + num_of_states-1]
+        h_states[(sample_id * num_of_states) + num_of_states-1]
         );
 
       fclose(writer);
@@ -476,12 +477,12 @@ int main(int argc, char **argv)
       strcat(filename,".csv");
 
       writer = fopen(filename,"w");
-      for (int pacing = 0; pacing< p_param->find_steepest_start; pacing++){ //pace loop
+      for (int pacing = 0; pacing < p_param->find_steepest_start; pacing++){ //pace loop
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
         for(int datapoint = 0; datapoint < num_of_rates; datapoint++){ // each data loop
-        fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states)+1)+ datapoint + (sample_size * pacing)]);
+        fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states))+ datapoint + (sample_size * pacing)]);
         } 
-        // fprintf(writer,"%lf",h_all_states[((sample_id * num_of_states)+1)+ num_of_states + (sample_size * pacing)]);
+        fprintf(writer,"%d",p_param->find_steepest_start + pacing);
         fprintf(writer,"\n");
 
       }

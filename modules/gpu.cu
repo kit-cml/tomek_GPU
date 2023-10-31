@@ -354,9 +354,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
               d_all_states[(sample_id * num_of_states) + counter + (sample_size*(pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter];
             }
             // d_all_states[(sample_id * num_of_states) + counter+1 + (sample_size*(pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter] = pace_count;
-
-
-            printf("all state core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_all_states[(sample_id * num_of_states) + 0], d_all_states[(sample_id * num_of_states) + 1], d_all_states[(sample_id * num_of_states) + 2]);
+            // printf("all state core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_all_states[(sample_id * num_of_states) + 0], d_all_states[(sample_id * num_of_states) + 1], d_all_states[(sample_id * num_of_states) + 2]);
           }
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
