@@ -102,6 +102,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
     const unsigned short last_drug_check_pace = p_param->find_steepest_start;
+    int pace_write = 0;
     // const unsigned int print_freq = (1./dt) * dtw;
     // unsigned short pace_count = 0;
     // unsigned short pace_steepest = 0;
@@ -244,7 +245,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           is_eligible_AP = false;
           // new part ends
 		
-          printf("core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_STATES_RESULT[(sample_id * num_of_states) + 0], d_STATES_RESULT[(sample_id * num_of_states) + 1], d_STATES_RESULT[(sample_id * num_of_states) + 2]);
+          printf("core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_STATES_RESULT[(sample_id * (num_of_states+1)) + 0], d_STATES_RESULT[(sample_id * (num_of_states+1)) + 1], d_STATES_RESULT[(sample_id * (num_of_states+1)) + 2]);
           // writen = false;
         }
         
@@ -279,7 +280,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
         if (pace_count >= pace_max-last_drug_check_pace)
         {
-          // printf("last 250 ops\n");
+          // printf("last 250 ops, pace: %d\n", pace_count);
 			    // Find peak vm around 2 msecs and  40 msecs after stimulation
 			    // and when the sodium current reach 0
           // new codes start here
@@ -351,8 +352,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           if((pace_count >= pace_max-last_drug_check_pace) && (pace_count<pace_max) ){
             int counter;
             for(counter=0; counter<num_of_states; counter++){
-              d_all_states[(sample_id * num_of_states) + counter + (sample_size*(pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter];
+              d_all_states[(sample_id * num_of_states) + counter + (sample_size * ((pace_max - pace_count - last_drug_check_pace)*(-1)))] = d_STATES[(sample_id * num_of_states) + counter];
+              // d_all_states[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+              // printf("%lf\n", d_all_states[(sample_id * num_of_states) + counter]);
             }
+            // counter = counter + pace_count * sample_size;
+            // pace_write = pace_write + sample_size ;
             // d_all_states[(sample_id * num_of_states) + counter+1 + (sample_size*(pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter] = pace_count;
             // printf("all state core: %d pace: %d states: %lf %lf %lf\n",sample_id, pace_count, d_all_states[(sample_id * num_of_states) + 0], d_all_states[(sample_id * num_of_states) + 1], d_all_states[(sample_id * num_of_states) + 2]);
           }
@@ -373,9 +378,11 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
            
             if(init_states_captured == false){
               // printf("writinggg\n");
-              for(int counter=0; counter<num_of_states; counter++){
-                d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+              int counter;
+              for(counter=0; counter<num_of_states; counter++){
+                d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];
               }
+              d_STATES_RESULT[(sample_id * (num_of_states+1)) + num_of_states ] = pace_count;
               init_states_captured = true;
             }
 
