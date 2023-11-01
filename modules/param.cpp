@@ -20,10 +20,12 @@ void param_t::init()
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
+
   conc = 66.0;
+  
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
-  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
+  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples10000.csv");
   snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
   snprintf(concs, sizeof(concs), "%s", "66.0");
 }

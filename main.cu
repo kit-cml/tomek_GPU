@@ -486,7 +486,7 @@ int main(int argc, char **argv)
         // fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states))+ datapoint]);
         } 
         // fprintf(writer,"%d",p_param->find_steepest_start + pacing);
-        fprintf(writer,"\n");
+        fprintf(writer,"%d\n",pacing + (p_param->pace_max - p_param->find_steepest_start)+1 );
 
       }
       fclose(writer);
