@@ -444,9 +444,9 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[150] = "./result/peak250/";
+      char filename[500] = "./result/peak250/";
       sprintf(sample_str, "%d", sample_id);
-      sprintf(conc_str, "%lf", CONC);
+      sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
       strcat(filename,"/");
       if (folder_created == false){
@@ -496,7 +496,7 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[500] = "./result/";
+      char filename[500] = "./result/peak250/";
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
