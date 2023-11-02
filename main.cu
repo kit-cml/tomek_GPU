@@ -390,14 +390,17 @@ int main(int argc, char **argv)
 
     printf("allocating memory for computation result in the CPU, malloc style \n");
     double *h_states, *h_all_states;
+    cipa_t *h_cipa_result;
 
     h_states = (double *)malloc((num_of_states+1) * sample_size * sizeof(double));
     h_all_states = (double *)malloc( (num_of_states) * sample_size * p_param->find_steepest_start * sizeof(double));
+    h_cipa_result = (cipa_t *)malloc(sample_size * sizeof(cipa_t));
     printf("...allocating for all states, all set!\n");
 
     ////// copy the data back to CPU, and write them into file ////////
     printf("copying the data back to the CPU \n");
-    
+
+    cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_states, d_STATES_RESULT, sample_size * (num_of_states+1) *  sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_all_states, d_all_states, (num_of_states) * sample_size  * p_param->find_steepest_start  *  sizeof(double), cudaMemcpyDeviceToHost);
 
@@ -489,6 +492,55 @@ int main(int argc, char **argv)
         fprintf(writer,"%d\n",pacing + (p_param->pace_max - p_param->find_steepest_start)+1 );
 
       }
+      fclose(writer);
+    }
+
+    printf("writing each preprocessing value... \n");
+    // sample loop
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
+      char sample_str[ENOUGH];
+      char conc_str[ENOUGH];
+      char filename[500] = "./result/";
+      sprintf(sample_str, "%d", sample_id);
+      sprintf(conc_str, "%.2f", CONC);
+      strcat(filename,conc_str);
+      strcat(filename,"/");
+      // printf("creating %s... \n", filename);
+      if (folder_created == false){
+        check = mkdir(filename,0777);
+        // check if directory is created or not
+        if (!check){
+          printf("Directory created\n");
+          }
+        else {
+          printf("Unable to create directory\n");  
+      }
+      folder_created = true;
+      }
+      
+      strcat(filename,sample_str);
+      strcat(filename,"_postpro.csv");
+
+      writer = fopen(filename,"w");
+      fprintf(writer, "qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
+      fprintf(writer,"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        h_cipa_result[sample_id].qnet_ap,
+        h_cipa_result[sample_id].qnet4_ap,
+        h_cipa_result[sample_id].inal_auc_ap,
+        h_cipa_result[sample_id].ical_auc_ap,
+        
+        h_cipa_result[sample_id].qnet_cl,
+        h_cipa_result[sample_id].qnet4_cl,
+
+        h_cipa_result[sample_id].inal_auc_cl,
+        h_cipa_result[sample_id].ical_auc_cl,
+
+        h_cipa_result[sample_id].dvmdt_repol,
+        h_cipa_result[sample_id].vm_peak,
+
+        h_cipa_result[sample_id].vm_valley
+        );
       fclose(writer);
     }
     toc();
