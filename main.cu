@@ -431,7 +431,7 @@ int main(int argc, char **argv)
     cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     
-    cudaMemcpy(h_cipa_result, cipa_result, datapoint_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
 
     FILE *writer;
