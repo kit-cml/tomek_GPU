@@ -444,7 +444,7 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[500] = "./result/peak250/";
+      char filename[500] = "./result/";
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
@@ -494,7 +494,7 @@ int main(int argc, char **argv)
     // sample loop
     char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[500] = "./result/peak250/";
+      char filename[500] = "./result/";
       // sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
