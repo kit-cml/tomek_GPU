@@ -414,6 +414,7 @@ int main(int argc, char **argv)
      h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for ICaL, \n");
     h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+
     h_cipa_result = (cipa_t *)malloc( sample_size * sizeof(cipa_t));
     printf("...allocating for INaL and postprocessing, all set!\n");
 
@@ -430,6 +431,8 @@ int main(int argc, char **argv)
     cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+
+    cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
     cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
@@ -490,6 +493,7 @@ int main(int argc, char **argv)
     }
 
 
+
     printf("writing each preprocessing value... \n");
     // sample loop
     char sample_str[ENOUGH];
@@ -539,6 +543,7 @@ int main(int argc, char **argv)
 
         h_cipa_result[sample_id].vm_valley
         );
+
     }
      fclose(writer);
 
