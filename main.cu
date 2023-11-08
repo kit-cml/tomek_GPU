@@ -492,12 +492,10 @@ int main(int argc, char **argv)
 
     printf("writing each preprocessing value... \n");
     // sample loop
-    for (int sample_id = 0; sample_id<sample_size; sample_id++){
-      // printf("writing sample %d... \n",sample_id);
-      char sample_str[ENOUGH];
+    char sample_str[ENOUGH];
       char conc_str[ENOUGH];
       char filename[500] = "./result/peak250/";
-      sprintf(sample_str, "%d", sample_id);
+      // sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
       strcat(filename,"/");
@@ -514,12 +512,17 @@ int main(int argc, char **argv)
       folder_created = true;
       }
       
-      strcat(filename,sample_str);
-      strcat(filename,"_biomarkers.csv");
+      // strcat(filename,sample_str);
+    strcat(filename,"_biomarkers.csv");
 
-      writer = fopen(filename,"w");
-      fprintf(writer, "qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
-      fprintf(writer,"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+    writer = fopen(filename,"a");
+
+    fprintf(writer, "qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
+      
+      fprintf(writer,"%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        sample_id,
         h_cipa_result[sample_id].qnet_ap,
         h_cipa_result[sample_id].qnet4_ap,
         h_cipa_result[sample_id].inal_auc_ap,
@@ -536,9 +539,8 @@ int main(int argc, char **argv)
 
         h_cipa_result[sample_id].vm_valley
         );
-      fclose(writer);
     }
-    
+     fclose(writer);
 
     toc();
     
