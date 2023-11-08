@@ -444,7 +444,7 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[500] = "./result/single_pace_test/";
+      char filename[500] = "./result/";
       sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
