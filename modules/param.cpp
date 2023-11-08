@@ -11,15 +11,19 @@ void param_t::init()
   gpu_index = 0;
   is_print_graph = true;
   is_using_output = false;
+  is_cvar = true;
   bcl = 2000.;
   pace_max = 1000;
+
+  find_steepest_start = 250;
+
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
   conc = 99.0;
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
-  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
+  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples10000.csv");
   snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
   snprintf(concs, sizeof(concs), "%s", "99.0");
 }
@@ -31,6 +35,7 @@ void param_t::show_val()
   mpi_printf( 0, "%s -- %s\n", "Hill File", hill_file );
   mpi_printf( 0, "%s -- %hu\n", "Celltype", celltype);
   mpi_printf( 0, "%s -- %s\n", "Is_Dutta", is_dutta ? "true" : "false" );
+  mpi_printf( 0, "%s -- %s\n", "Is_Cvar", is_cvar ? "true" : "false" );
   mpi_printf( 0, "%s -- %s\n", "Is_Print_Graph", is_print_graph ? "true" : "false" );
   mpi_printf( 0, "%s -- %s\n", "Is_Using_Output", is_using_output ? "true" : "false" );
   mpi_printf( 0, "%s -- %lf\n", "Basic_Cycle_Length", bcl);
