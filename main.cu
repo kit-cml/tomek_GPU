@@ -376,10 +376,10 @@ int main(int argc, char **argv)
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC, 
                                               d_STATES_RESULT, d_all_states,
                                               time, states, dt, cai_result,
-                                              // ina, inal, 
-                                              // ical, ito,
-                                              // ikr, iks, 
-                                              // ik1,
+                                              ina, inal, 
+                                              ical, ito,
+                                              ikr, iks, 
+                                              ik1,
                                               sample_size,
                                               temp_result, cipa_result,
                                               d_p_param
@@ -425,8 +425,14 @@ int main(int argc, char **argv)
     cudaMemcpy(h_states, states, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_time, time, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_dt, dt, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ical, ical, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_inal, inal, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_cai_result, cai_result, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-
+    cudaMemcpy(h_ina, ina, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ito, ito, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     
     FILE *writer;
     int check;
@@ -501,6 +507,13 @@ int main(int argc, char **argv)
     double *dt;
     double *states;
     double *cai_result;
+    double *ical;
+    double *inal;
+    double *ina;
+    double *ito;
+    double *ikr;
+    double *iks;
+    double *ik1;
 
     double *d_STATES_RESULT;
     double *d_all_states;
@@ -581,10 +594,10 @@ int main(int argc, char **argv)
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC, 
                                               d_STATES_RESULT, d_all_states,
                                               time, states, dt, cai_result,
-                                              // ina, inal, 
-                                              // ical, ito,
-                                              // ikr, iks, 
-                                              // ik1,
+                                              ina, inal, 
+                                              ical, ito,
+                                              ikr, iks, 
+                                              ik1,
                                               sample_size,
                                               temp_result, cipa_result,
                                               d_p_param

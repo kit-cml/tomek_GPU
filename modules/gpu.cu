@@ -420,10 +420,10 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
 __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_STATES_cache, double *d_RATES, double *d_ALGEBRAIC, 
                                        double *time, double *states, double *out_dt,  double *cai_result, 
-                                      //  double *ina, double *inal,
-                                      //  double *ical, double *ito,
-                                      //  double *ikr, double *iks, 
-                                      //  double *ik1,
+                                       double *ina, double *inal,
+                                       double *ical, double *ito,
+                                       double *ikr, double *iks, 
+                                       double *ik1,
                                        double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
                                        cipa_t *temp_result, cipa_t *cipa_result,
                                        param_t *p_param
@@ -770,16 +770,16 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             
             cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
 
-            // ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
-            // inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
+            ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
+            inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
 
-            // ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)] ;
-            // ito[input_counter + sample_id] = d_ALGEBRAIC[Ito + (sample_id * num_of_algebraic)] ;
+            ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)] ;
+            ito[input_counter + sample_id] = d_ALGEBRAIC[Ito + (sample_id * num_of_algebraic)] ;
 
-            // ikr[input_counter + sample_id] = d_ALGEBRAIC[IKr + (sample_id * num_of_algebraic)] ;
-            // iks[input_counter + sample_id] = d_ALGEBRAIC[IKs + (sample_id * num_of_algebraic)] ;
+            ikr[input_counter + sample_id] = d_ALGEBRAIC[IKr + (sample_id * num_of_algebraic)] ;
+            iks[input_counter + sample_id] = d_ALGEBRAIC[IKs + (sample_id * num_of_algebraic)] ;
 
-            // ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
+            ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
 
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
@@ -796,10 +796,10 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_STATES_cache, double *d_RATES, double *d_ALGEBRAIC, 
                                       double *d_STATES_RESULT, double *d_all_states,
                                       double *time, double *states, double *out_dt,  double *cai_result, 
-                                      // double *ina, double *inal, 
-                                      // double *ical, double *ito,
-                                      // double *ikr, double *iks,
-                                      // double *ik1,
+                                      double *ina, double *inal, 
+                                      double *ical, double *ito,
+                                      double *ikr, double *iks,
+                                      double *ik1,
                                       unsigned int sample_size,
                                       cipa_t *temp_result, cipa_t *cipa_result,
                                       param_t *p_param
@@ -831,10 +831,10 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
     {
       kernel_DoDrugSim_single(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC,
                           time, states, out_dt, cai_result,
-                          // ina, inal, 
-                          // ical, ito,
-                          // ikr, iks, 
-                          // ik1,
+                          ina, inal, 
+                          ical, ito,
+                          ikr, iks, 
+                          ik1,
                           time_for_each_sample, dt_for_each_sample, thread_id, sample_size,
                           temp_result, cipa_result,
                           p_param
