@@ -71,58 +71,12 @@ int gpu_check(unsigned int datasize){
     
 }
 
-// since installing MPI in Windows
-// is quite a hassle, don't bother
-// to use it in Windows.
-// #ifndef _WIN32
-// 	#include <mpi.h>
-// #endif
-
-// constants to avoid magic values
-// static const char *RESULT_FOLDER_PATH = "result";
-// static const double CONTROL_CONC = 0.;
-
 
 // get the IC50 data from file
 drug_t get_IC50_data_from_file(const char* file_name);
 // return error and message based on the IC50 data
 int check_IC50_content(const drug_t* ic50, const param_t* p_param);
 
-// define MPI data structure for qinward_t to be broadcasted
-// #ifndef _WIN32
-// MPI_Datatype create_mpi_qinward_t();
-// #endif
-
-// drug_t get_IC50_data_from_file(const char* file_name)
-// {
-//   FILE *fp_drugs;
-//   drug_t ic50;
-//   char *token, buffer[255];
-//   row_data temp_array;
-//   unsigned short idx;
-
-//   if( (fp_drugs = fopen(file_name, "r")) == NULL){
-//     printf("Cannot open file %s in %s at rank %d\n",
-//       file_name, mympi::host_name, mympi::rank);
-//     return ic50;
-//   }
-
-//   fgets(buffer, sizeof(buffer), fp_drugs); // skip header
-//   while( fgets(buffer, sizeof(buffer), fp_drugs) != NULL )
-//   { // begin line reading
-//     token = strtok( buffer, "," );
-//     idx = 0;
-//     while( token != NULL )
-//     { // begin data tokenizing
-//       temp_array.data[idx++] = strtod(token, NULL);
-//       token = strtok(NULL, ",");
-//     } // end data tokenizing
-//     ic50.push_back(temp_array);
-//   } // end line reading
-
-//   fclose(fp_drugs);
-//   return ic50;
-// }
 
 int get_IC50_data_from_file(const char* file_name, double *ic50)
 {
@@ -186,7 +140,6 @@ int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *c
     while( token != NULL )
     { // begin data tokenizing
       cvar[idx++] = strtod(token, NULL);
-      // printf("%lf\n",cvar[idx]);
       token = strtok(NULL, ",");
     } // end data tokenizing
     // printf("\n");
@@ -198,6 +151,42 @@ int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *c
   return sample_size;
 }
 
+int get_init_data_from_file(const char* file_name, double *init_states)
+{
+  // buffer for writing in snprintf() function
+  char buffer_cache[1023];
+  FILE *fp_cache;
+  // cvar_t cvar;
+  char *token;
+  // std::array<double,18> temp_array;
+  unsigned long idx;
+
+  if( (fp_cache = fopen(file_name, "r")) == NULL){
+    printf("Cannot open file %s\n",
+      file_name);
+  }
+  idx = 0;
+  unsigned int sample_size = 0;
+  // fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar); // skip header
+  while( (fgets(buffer_cache, sizeof(buffer_cache), fp_cache) != NULL) )
+  { // begin line reading
+    token = strtok( buffer_cache, "," );
+    while( token != NULL )
+    { // begin data tokenizing
+      init_states[idx++] = strtod(token, NULL);
+      // if(idx < 82){
+      //     printf("%d: %lf\n",idx-1,init_states[idx-1]);
+      // }
+      token = strtok(NULL, ",");
+    } // end data tokenizing
+    // printf("\n");
+    sample_size++;
+    // cvar.push_back(temp_array);
+  } // end line reading
+
+  fclose(fp_cache);
+  return sample_size;
+}
 
 
 int check_IC50_content(const drug_t* ic50, const param_t* p_param)
@@ -230,18 +219,6 @@ int main(int argc, char **argv)
 	// enable real-time output in stdout
 	setvbuf( stdout, NULL, _IONBF, 0 );
 	
-// #ifndef _WIN32
-// 	MPI_Init( &argc, &argv );
-// 	MPI_Comm_size( MPI_COMM_WORLD, &mympi::size );
-// 	MPI_Comm_rank( MPI_COMM_WORLD, &mympi::rank );
-// 	MPI_Get_processor_name(mympi::host_name, &mympi::host_name_len);
-// #else
-// 	mympi::size = 1;
-// 	mympi::rank = 0;
-// 	snprintf(mympi::host_name,sizeof(mympi::host_name),"%s","host");
-// 	mympi::host_name_len = 4;
-// #endif
-
 // NEW CODE STARTS HERE //
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
@@ -258,25 +235,41 @@ int main(int argc, char **argv)
     ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
     cvar = (double *)malloc(18 * sample_limit * sizeof(double));
 
+    int num_of_constants = 146;
+    int num_of_states = 41;
+    int num_of_algebraic = 199;
+    int num_of_rates = 41;
+
 
     const double CONC = p_param->conc;
 
+    // if we are in write time series mode
+    if(p_param->is_time_series == 1){
+
+    printf("Using cached initial state from previous result!!!! \n\n");
+
+    const unsigned int datapoint_size = 7500;  
+    double *cache;
+    cache = (double *)malloc((num_of_states+2) * sample_limit * sizeof(double));
+    
     double *d_ic50;
     double *d_cvar;
     double *d_ALGEBRAIC;
     double *d_CONSTANTS;
     double *d_RATES;
     double *d_STATES;
+    double *d_STATES_cache;
 
+    // actually not used but for now, this is only for satisfiying the GPU regulator parameters
     double *d_STATES_RESULT;
     double *d_all_states;
 
-    // double *time;
-    // double *dt;
-    // double *states;
+    double *time;
+    double *dt;
+    double *states;
     // double *ical;
     // double *inal;
-    // double *cai_result;
+    double *cai_result;
     // double *ina;
     // double *ito;
     // double *ikr;
@@ -284,10 +277,219 @@ int main(int argc, char **argv)
     // double *ik1;
     cipa_t *temp_result, *cipa_result;
 
-    int num_of_constants = 146;
-    int num_of_states = 41;
-    int num_of_algebraic = 199;
-    int num_of_rates = 41;
+    int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50);
+    if(sample_size == 0)
+        printf("Something problem with the IC50 file!\n");
+    // else if(sample_size > 2000)
+    //     printf("Too much input! Maximum sample data is 2000!\n");
+    printf("Sample size: %d\n",sample_size);
+    cudaSetDevice(p_param->gpu_index);
+    printf("preparing GPU memory space \n");
+
+    if(p_param->is_cvar == true){
+      char buffer_cvar[255];
+      snprintf(buffer_cvar, sizeof(buffer_cvar),
+      "./drugs/10000_pop.csv"
+      // "./drugs/optimized_pop_10k.csv"
+      );
+      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
+      printf("Reading: %d Conductance Variability samples\n",cvar_sample);
+    }
+
+      // char buffer_cvar[255];
+      // snprintf(buffer_cvar, sizeof(buffer_cvar),
+      // "./result/66_00.csv"
+      // // "./drugs/optimized_pop_10k.csv"
+      // );
+      int cache_num = get_init_data_from_file(p_param->cache_file,cache);
+      printf("Found cache for %d samples\n",cache_num);
+      // note to self:
+      // num of states+2 gave you at the very end of the file (pace number)
+      // the very beginning -> the core number
+    //   for (int z = 0; z <  num_of_states; z++) {printf("%lf\n", cache[z+1]);}
+    //   printf("\n");
+    //   for (int z = 0; z <  num_of_states; z++) {printf("%lf\n", cache[ 1*(num_of_states+2) + (z+2)]);}
+    //   printf("\n");
+    //   for (int z = 0; z <  num_of_states; z++) {printf("%lf\n", cache[ 2*(num_of_states+2) + (z+3)]);}
+    // return 0 ;
+
+    cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
+    cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
+    cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
+    cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
+    cudaMalloc(&d_STATES_cache, (num_of_states+2) * sample_size * sizeof(double));
+
+    cudaMalloc(&d_p_param,  sizeof(param_t));
+
+    // prep for 1 cycle plus a bit (7000 * sample_size)
+    cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
+    cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
+
+    cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
+    cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
+    cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
+    cudaMalloc(&cai_result, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ina, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ito, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ikr, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&d_STATES_RESULT, (num_of_states+1) * sample_size * sizeof(double));
+    // cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double));
+
+    printf("Copying sample files to GPU memory space \n");
+    cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+    
+    cudaMemcpy(d_STATES_cache, cache, (num_of_states+2) * sample_size * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
+
+    // // Get the maximum number of active blocks per multiprocessor
+    // cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, do_drug_sim_analytical, threadsPerBlock);
+
+    // // Calculate the total number of blocks
+    // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
+
+    tic();
+    printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
+    int thread;
+    if (sample_size>=100){
+      thread = 100;
+    }
+    else thread = sample_size;
+    int block = int(ceil(sample_size/thread));
+    // int block = (sample_size + thread - 1) / thread;
+    if(gpu_check(15 * sample_size * sizeof(double) + sizeof(param_t)) == 1){
+      printf("GPU memory insufficient!\n");
+      return 0;
+    }
+    printf("Sample size: %d\n",sample_size);
+    cudaSetDevice(p_param->gpu_index);
+    printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
+    // initscr();
+    // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
+
+    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC, 
+                                              d_STATES_RESULT, d_all_states,
+                                              time, states, dt, cai_result,
+                                              // ina, inal, 
+                                              // ical, ito,
+                                              // ikr, iks, 
+                                              // ik1,
+                                              sample_size,
+                                              temp_result, cipa_result,
+                                              d_p_param
+                                              );
+                                      //block per grid, threads per block
+    // endwin();
+    
+    cudaDeviceSynchronize();
+    
+
+    printf("allocating memory for computation result in the CPU, malloc style \n");
+    printf("allocating memory for computation result in the CPU, malloc style \n");
+    double *h_states,*h_time,*h_dt,*h_cai_result;
+    cipa_t *h_cipa_result;
+
+    h_states = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for STATES, \n");
+    h_time = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for time, \n");
+    h_dt = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for dt, \n");
+    h_cai_result= (double *)malloc(datapoint_size * sample_size * sizeof(double));
+    printf("...allocated for Cai, \n");
+    ////// copy the data back to CPU, and write them into file ////////
+    printf("copying the data back to the CPU \n");
+
+    cudaMemcpy(h_states, states, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_time, time, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_dt, dt, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_cai_result, cai_result, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+
+    
+    FILE *writer;
+    int check;
+    bool folder_created = false;
+
+    printf("writing to file... \n");
+    // sample loop
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
+      char sample_str[ENOUGH];
+      char conc_str[ENOUGH];
+      char filename[150] = "./result/single_pace_test/";
+      sprintf(sample_str, "%d", sample_id);
+      sprintf(conc_str, "%lf", CONC);
+      strcat(filename,conc_str);
+      strcat(filename,"/");
+      if (folder_created == false){
+        check = mkdir(filename,0777);
+        // check if directory is created or not
+        if (!check){
+          printf("Directory created\n");
+          }
+        else {
+          printf("Unable to create directory\n");  
+      }
+      folder_created = true;
+      }
+      
+      strcat(filename,sample_str);
+      strcat(filename,"_pace.csv");
+
+      writer = fopen(filename,"w");
+      fprintf(writer, "Time,Vm,dVm/dt,Cai\n"); 
+      for (int datapoint = 1; datapoint<datapoint_size; datapoint++){
+       // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
+        fprintf(writer,"%lf,%.4f,%.4f,%.4f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        h_time[ sample_id + (datapoint * sample_size)],
+        h_states[ sample_id + (datapoint * sample_size)],
+        h_dt[ sample_id + (datapoint * sample_size)],
+        h_cai_result[ sample_id + (datapoint * sample_size)]
+        
+        // h_ina[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+        // h_inal[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+
+        // h_ical[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        // h_iks[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING, 
+
+        // h_ikr[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+        // h_ik1[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING,
+
+        // h_ito[ sample_id + (datapoint * sample_size)]*CURRENT_SCALING  
+        );
+      }
+      fclose(writer);
+    }
+    toc();
+    
+    return 0;
+  }
+
+    // find cache mode
+    else{
+    double *d_ic50;
+    double *d_cvar;
+    double *d_ALGEBRAIC;
+    double *d_CONSTANTS;
+    double *d_RATES;
+    double *d_STATES;
+    // not used, only to satisfy the parameters of the GPU regulator's function
+    double *d_STATES_cache;
+    double *time;
+    double *dt;
+    double *states;
+    double *cai_result;
+
+    double *d_STATES_RESULT;
+    double *d_all_states;
+
+    cipa_t *temp_result, *cipa_result;
 
     // snprintf(buffer, sizeof(buffer),
     //   "./drugs/bepridil/IC50_samples.csv"
@@ -324,17 +526,6 @@ int main(int argc, char **argv)
     cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
     cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
 
-    // cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
-    // cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
-    // cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&cai_result, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&ina, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&ito, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&ikr, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
-    // cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&d_STATES_RESULT, (num_of_states+1) * sample_size * sizeof(double));
     cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double));
 
@@ -371,9 +562,9 @@ int main(int argc, char **argv)
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
-    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC, 
                                               d_STATES_RESULT, d_all_states,
-                                              // time, states, dt, cai_result,
+                                              time, states, dt, cai_result,
                                               // ina, inal, 
                                               // ical, ito,
                                               // ikr, iks, 
@@ -546,5 +737,7 @@ int main(int argc, char **argv)
     toc();
     
     return 0;
-	
+
+    }
+   	
 }
