@@ -627,12 +627,12 @@ CONSTANTS[(offset * num_of_constants) + Pnak] = (CONSTANTS[(offset * num_of_cons
 __device__ void ___applyDutta(double *CONSTANTS, int offset)
 {
 int num_of_constants = 146;
-
-CONSTANTS[IKs + (offset * num_of_constants)] *= 1.870;
-CONSTANTS[IKr + (offset * num_of_constants)] *= 1.013;
-CONSTANTS[IK1 + (offset * num_of_constants)] *= 1.698;
-CONSTANTS[ICaL + (offset * num_of_constants)] *= 1.007;
-CONSTANTS[INaL + (offset * num_of_constants)] *= 2.661;
+//sisanya ganti jadi G (GKs for example)
+CONSTANTS[GKs + (offset * num_of_constants)] *= 1.870;
+CONSTANTS[GKr + (offset * num_of_constants)] *= 1.013;
+CONSTANTS[GK1 + (offset * num_of_constants)] *= 1.698;
+CONSTANTS[PCa + (offset * num_of_constants)] *= 1.007; //pca
+CONSTANTS[GNaL + (offset * num_of_constants)] *= 2.661;
 }
 
 /*==============*/

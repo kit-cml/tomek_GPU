@@ -433,6 +433,8 @@ int main(int argc, char **argv)
     cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
+
+    cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
     FILE *writer;
     int check;
@@ -488,6 +490,56 @@ int main(int argc, char **argv)
       }
       fclose(writer);
     }
+
+     printf("writing each preprocessing value... \n");
+    // sample loop
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
+      char sample_str[ENOUGH];
+      char conc_str[ENOUGH];
+      char filename[500] = "./result/";
+      sprintf(sample_str, "%d", sample_id);
+      sprintf(conc_str, "%.2f", CONC);
+      strcat(filename,conc_str);
+      strcat(filename,"/");
+      // printf("creating %s... \n", filename);
+      if (folder_created == false){
+        check = mkdir(filename,0777);
+        // check if directory is created or not
+        if (!check){
+          printf("Directory created\n");
+          }
+        else {
+          printf("Unable to create directory\n");  
+      }
+      folder_created = true;
+      }
+      
+      strcat(filename,sample_str);
+      strcat(filename,"_biomarkers.csv");
+
+      writer = fopen(filename,"w");
+      fprintf(writer, "qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
+      fprintf(writer,"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        h_cipa_result[sample_id].qnet_ap,
+        h_cipa_result[sample_id].qnet4_ap,
+        h_cipa_result[sample_id].inal_auc_ap,
+        h_cipa_result[sample_id].ical_auc_ap,
+        
+        h_cipa_result[sample_id].qnet_cl,
+        h_cipa_result[sample_id].qnet4_cl,
+
+        h_cipa_result[sample_id].inal_auc_cl,
+        h_cipa_result[sample_id].ical_auc_cl,
+
+        h_cipa_result[sample_id].dvmdt_repol,
+        h_cipa_result[sample_id].vm_peak,
+
+        h_cipa_result[sample_id].vm_valley
+        );
+      fclose(writer);
+    }
+
     toc();
     
     return 0;
