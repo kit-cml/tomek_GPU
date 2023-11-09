@@ -513,7 +513,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     // double top_dvmdt = -999.0;
 
     // eligible AP shape means the Vm_peak > 0.
-    bool is_eligible_AP;
+    bool is_eligible_AP = true;
     // Vm value at 30% repol, 50% repol, and 90% repol, respectively.
     double vm_repol30, vm_repol50, vm_repol90;
     double t_peak_capture = 0.0;
@@ -619,7 +619,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               is_peak = true;
               }
             else{
-              is_peak = false;
+              // is_peak = false;
             }
           };
           inet_ap = 0.;
@@ -656,7 +656,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           input_counter = 0; // at first, we reset the input counter since we re gonna only take one, but I remember we don't have this kind of thing previously, so do we need this still?
           cipa_datapoint = 0; // new pace? reset variables related to saving the values,
               
-          is_eligible_AP = false;
+          is_eligible_AP = true;
           // new part ends
 		
           // printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol,t_peak_capture);
@@ -707,7 +707,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
                 t_peak_capture = tcurr[sample_id];
                 // printf("check 2\n");
               }
-              else is_eligible_AP = false;
+              // else is_eligible_AP = false;
             }
 			    }
 			    else if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && is_eligible_AP )
@@ -749,9 +749,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
-         
-            // printf("input_counter: %d\n",input_counter);
-            // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
+
+          if(cipa_datapoint<p_param->sampling_limit){ // temporary solution to limit the datapoint :(
+
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
             temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
 
@@ -783,6 +783,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
+          }
+          
 
 	
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];

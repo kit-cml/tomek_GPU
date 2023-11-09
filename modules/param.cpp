@@ -13,24 +13,26 @@ void param_t::init()
   is_using_output = false;
   is_cvar = true;
   bcl = 2000.;
-  pace_max = 10;
+  pace_max = 1000;
+
+  sampling_limit = 6000;
 
   is_time_series = true;
 
-  find_steepest_start = 5;
+  find_steepest_start = 250;
 
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
 
-  conc = 66.0;
+  conc = 12948.0;
   
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
-  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
-  snprintf(cache_file, sizeof(cache_file), "%s", "./result/66.00.csv");
-  snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
-  snprintf(concs, sizeof(concs), "%s", "66.0");
+  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/quinidine/IC50_samples10000.csv");
+  snprintf(cache_file, sizeof(cache_file), "%s", "./result/12948.00.csv");
+  snprintf(drug_name, sizeof(drug_name), "%s", "quinidine");
+  snprintf(concs, sizeof(concs), "%s", "12948.0");
 }
 
 void param_t::show_val()
