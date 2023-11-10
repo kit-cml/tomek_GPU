@@ -19,9 +19,9 @@
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
 
-unsigned int datapoint_size = 7000;
+const unsigned int datapoint_size = 7900;
 const unsigned int sample_limit = 10000;
-double ic50[14 * sample_limit]; //temporary
+
 
 clock_t START_TIMER;
 
@@ -137,8 +137,8 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   FILE *fp_drugs;
 //   drug_t ic50;
   char *token;
-  
-  unsigned short idx;
+  char buffer_ic50[255];
+  unsigned int idx;
 
   if( (fp_drugs = fopen(file_name, "r")) == NULL){
     printf("Cannot open file %s\n",
@@ -147,10 +147,10 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   }
   idx = 0;
   int sample_size = 0;
-  fgets(buffer, sizeof(buffer), fp_drugs); // skip header
-  while( fgets(buffer, sizeof(buffer), fp_drugs) != NULL )
+  fgets(buffer_ic50, sizeof(buffer_ic50), fp_drugs); // skip header
+  while( fgets(buffer_ic50, sizeof(buffer_ic50), fp_drugs) != NULL )
   { // begin line reading
-    token = strtok( buffer, "," );
+    token = strtok( buffer_ic50, "," );
     while( token != NULL )
     { // begin data tokenizing
       ic50[idx++] = strtod(token, NULL);
@@ -162,6 +162,42 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   fclose(fp_drugs);
   return sample_size;
 }
+
+int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *cvar)
+{
+  // buffer for writing in snprintf() function
+  char buffer_cvar[255];
+  FILE *fp_cvar;
+  // cvar_t cvar;
+  char *token;
+  // std::array<double,18> temp_array;
+  unsigned int idx;
+
+  if( (fp_cvar = fopen(file_name, "r")) == NULL){
+    printf("Cannot open file %s\n",
+      file_name);
+  }
+  idx = 0;
+  int sample_size = 0;
+  fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar); // skip header
+  while( (fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar) != NULL) && (sample_size<limit))
+  { // begin line reading
+    token = strtok( buffer_cvar, "," );
+    while( token != NULL )
+    { // begin data tokenizing
+      cvar[idx++] = strtod(token, NULL);
+      // printf("%lf\n",cvar[idx]);
+      token = strtok(NULL, ",");
+    } // end data tokenizing
+    // printf("\n");
+    sample_size++;
+    // cvar.push_back(temp_array);
+  } // end line reading
+
+  fclose(fp_cvar);
+  return sample_size;
+}
+
 
 
 int check_IC50_content(const drug_t* ic50, const param_t* p_param)
@@ -216,9 +252,17 @@ int main(int argc, char **argv)
 	  p_param = new param_t();
   	p_param->init();
 
+    double *ic50; //temporary
+    double *cvar;
+
+    ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+
+
     const double CONC = p_param->conc;
 
     double *d_ic50;
+    double *d_cvar;
     double *d_ALGEBRAIC;
     double *d_CONSTANTS;
     double *d_RATES;
@@ -258,7 +302,20 @@ int main(int argc, char **argv)
     // else if(sample_size > 2000)
     //     printf("Too much input! Maximum sample data is 2000!\n");
     printf("Sample size: %d\n",sample_size);
+    printf("Set GPU Number: %d\n",p_param->gpu_index);
+
     cudaSetDevice(p_param->gpu_index);
+
+    if(p_param->is_cvar == true){
+      char buffer_cvar[255];
+      snprintf(buffer_cvar, sizeof(buffer_cvar),
+      "./drugs/10000_pop.csv"
+      // "./drugs/optimized_pop_10k.csv"
+      );
+      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
+      printf("Reading: %d Conductance Variability samples\n",cvar_sample);
+    }
+
     printf("preparing GPU memory space \n");
     cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
@@ -285,8 +342,10 @@ int main(int argc, char **argv)
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
     
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
     // // Get the maximum number of active blocks per multiprocessor
@@ -296,7 +355,7 @@ int main(int argc, char **argv)
     // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
 
     tic();
-    printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
+    printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
     int thread;
     if (sample_size>=100){
       thread = 100;
@@ -314,7 +373,7 @@ int main(int argc, char **argv)
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
-    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+    kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
                                               time, states, dt, cai_result,
                                               ina, inal, 
                                               ical, ito,
@@ -355,8 +414,8 @@ int main(int argc, char **argv)
      h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for ICaL, \n");
     h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    h_cipa_result = (cipa_t *)malloc(  sample_size * sizeof(cipa_t));
-    printf("...allocating for INaL and postpro result, all set!\n");
+    h_cipa_result = (cipa_t *)malloc( sample_size * sizeof(cipa_t));
+    printf("...allocating for INaL and postprocessing, all set!\n");
 
     ////// copy the data back to CPU, and write them into file ////////
     printf("copying the data back to the CPU \n");
@@ -371,7 +430,7 @@ int main(int argc, char **argv)
     cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-
+    
     cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
 
@@ -385,9 +444,9 @@ int main(int argc, char **argv)
       // printf("writing sample %d... \n",sample_id);
       char sample_str[ENOUGH];
       char conc_str[ENOUGH];
-      char filename[150] = "./result/peak250/";
+      char filename[500] = "./result/";
       sprintf(sample_str, "%d", sample_id);
-      sprintf(conc_str, "%lf", CONC);
+      sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
       strcat(filename,"/");
       if (folder_created == false){
@@ -430,14 +489,13 @@ int main(int argc, char **argv)
       fclose(writer);
     }
 
-     printf("writing each preprocessing value... \n");
+
+    printf("writing each biomarkers value... \n");
     // sample loop
-    for (int sample_id = 0; sample_id<sample_size; sample_id++){
-      // printf("writing sample %d... \n",sample_id);
-      char sample_str[ENOUGH];
+    char sample_str[ENOUGH];
       char conc_str[ENOUGH];
       char filename[500] = "./result/";
-      sprintf(sample_str, "%d", sample_id);
+      // sprintf(sample_str, "%d", sample_id);
       sprintf(conc_str, "%.2f", CONC);
       strcat(filename,conc_str);
       strcat(filename,"/");
@@ -454,12 +512,17 @@ int main(int argc, char **argv)
       folder_created = true;
       }
       
-      strcat(filename,sample_str);
-      strcat(filename,"_biomarkers.csv");
+      // strcat(filename,sample_str);
+    strcat(filename,"_biomarkers.csv");
 
-      writer = fopen(filename,"w");
-      fprintf(writer, "qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
-      fprintf(writer,"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+    writer = fopen(filename,"a");
+
+    fprintf(writer, "sample,qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
+      
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        sample_id,
         h_cipa_result[sample_id].qnet_ap,
         h_cipa_result[sample_id].qnet4_ap,
         h_cipa_result[sample_id].inal_auc_ap,
@@ -476,8 +539,8 @@ int main(int argc, char **argv)
 
         h_cipa_result[sample_id].vm_valley
         );
-      fclose(writer);
     }
+     fclose(writer);
 
     toc();
     
