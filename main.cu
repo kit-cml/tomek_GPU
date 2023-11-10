@@ -414,7 +414,6 @@ int main(int argc, char **argv)
      h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for ICaL, \n");
     h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-
     h_cipa_result = (cipa_t *)malloc( sample_size * sizeof(cipa_t));
     printf("...allocating for INaL and postprocessing, all set!\n");
 
@@ -431,8 +430,6 @@ int main(int argc, char **argv)
     cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-
-    cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
     cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
@@ -493,8 +490,7 @@ int main(int argc, char **argv)
     }
 
 
-
-    printf("writing each preprocessing value... \n");
+    printf("writing each biomarkers value... \n");
     // sample loop
     char sample_str[ENOUGH];
       char conc_str[ENOUGH];
@@ -525,7 +521,7 @@ int main(int argc, char **argv)
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       // printf("writing sample %d... \n",sample_id);
       
-      fprintf(writer,"%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         sample_id,
         h_cipa_result[sample_id].qnet_ap,
         h_cipa_result[sample_id].qnet4_ap,
@@ -543,7 +539,6 @@ int main(int argc, char **argv)
 
         h_cipa_result[sample_id].vm_valley
         );
-
     }
      fclose(writer);
 
