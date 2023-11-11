@@ -11,7 +11,7 @@ void param_t::init()
   gpu_index = 0;
   is_print_graph = true;
   is_using_output = false;
-  is_cvar = true;
+  is_cvar = false;
   bcl = 2000.;
   pace_max = 1000;
 
@@ -20,7 +20,9 @@ void param_t::init()
   celltype = 0.;
   dt = 0.005;
   // dt = 0.1;
+
   conc = 99.0;
+  
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
   snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples10000.csv");
