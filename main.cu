@@ -512,35 +512,35 @@ int main(int argc, char **argv)
       folder_created = true;
       }
       
-    //   // strcat(filename,sample_str);
-    // strcat(filename,"_biomarkers.csv");
+      // strcat(filename,sample_str);
+    strcat(filename,"_biomarkers.csv");
 
-    // writer = fopen(filename,"a");
+    writer = fopen(filename,"a");
 
-    // fprintf(writer, "sample,qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
-    // for (int sample_id = 0; sample_id<sample_size; sample_id++){
-    //   // printf("writing sample %d... \n",sample_id);
+    fprintf(writer, "sample,qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
+    for (int sample_id = 0; sample_id<sample_size; sample_id++){
+      // printf("writing sample %d... \n",sample_id);
       
-    //   fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
-    //     sample_id,
-    //     h_cipa_result[sample_id].qnet_ap,
-    //     h_cipa_result[sample_id].qnet4_ap,
-    //     h_cipa_result[sample_id].inal_auc_ap,
-    //     h_cipa_result[sample_id].ical_auc_ap,
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        sample_id,
+        h_cipa_result[sample_id].qnet_ap,
+        h_cipa_result[sample_id].qnet4_ap,
+        h_cipa_result[sample_id].inal_auc_ap,
+        h_cipa_result[sample_id].ical_auc_ap,
         
-    //     h_cipa_result[sample_id].qnet_cl,
-    //     h_cipa_result[sample_id].qnet4_cl,
+        h_cipa_result[sample_id].qnet_cl,
+        h_cipa_result[sample_id].qnet4_cl,
 
-    //     h_cipa_result[sample_id].inal_auc_cl,
-    //     h_cipa_result[sample_id].ical_auc_cl,
+        h_cipa_result[sample_id].inal_auc_cl,
+        h_cipa_result[sample_id].ical_auc_cl,
 
-    //     h_cipa_result[sample_id].dvmdt_repol,
-    //     h_cipa_result[sample_id].vm_peak,
+        h_cipa_result[sample_id].dvmdt_repol,
+        h_cipa_result[sample_id].vm_peak,
 
-    //     h_cipa_result[sample_id].vm_valley
-    //     );
-    // }
-    //  fclose(writer);
+        h_cipa_result[sample_id].vm_valley
+        );
+    }
+     fclose(writer);
 
     toc();
     

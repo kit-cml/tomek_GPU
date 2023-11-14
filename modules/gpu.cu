@@ -584,73 +584,23 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
 
           // new part starts
-          if( is_eligible_AP && pace_count >= pace_max) {
-            temp_result[sample_id].qnet_ap = qnet_ap;
-            temp_result[sample_id].qnet4_ap = qnet4_ap;
-            temp_result[sample_id].inal_auc_ap = inal_auc_ap;
-            temp_result[sample_id].ical_auc_ap = ical_auc_ap;
-            temp_result[sample_id].qnet_cl = qnet_cl;
-            temp_result[sample_id].qnet4_cl = qnet4_cl;
-            temp_result[sample_id].inal_auc_cl = inal_auc_cl;
-            temp_result[sample_id].ical_auc_cl = ical_auc_cl;
-            // fprintf(fp_vmdebug, "%hu,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf\n", pace_count,t_peak_capture,temp_result.vm_peak,vm_repol30,vm_repol50,vm_repol90,temp_result.dvmdt_repol);
-            // replace result with steeper repolarization AP or first pace from the last 250 paces
-            // if( temp_result->dvmdt_repol > cipa_result.dvmdt_repol ) {
-            //   pace_steepest = pace_count;
-            //   cipa_result = temp_result;
-            //   }
-            if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
-              pace_steepest = pace_count;
-              // printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
               // cipa_result = temp_result;
-              cipa_result[sample_id].qnet_ap = temp_result[sample_id].qnet_ap;
-              cipa_result[sample_id].qnet4_ap = temp_result[sample_id].qnet4_ap;
-              cipa_result[sample_id].inal_auc_ap = temp_result[sample_id].inal_auc_ap;
-              cipa_result[sample_id].ical_auc_ap = temp_result[sample_id].ical_auc_ap;
+
+              cipa_result[sample_id].qnet_ap = qnet_ap;
+              cipa_result[sample_id].qnet4_ap = qnet4_ap;
+              cipa_result[sample_id].inal_auc_ap = inal_auc_ap;
+              cipa_result[sample_id].ical_auc_ap = ical_auc_ap;
               
-              cipa_result[sample_id].qnet_cl = temp_result[sample_id].qnet_cl;
-              cipa_result[sample_id].qnet4_cl = temp_result[sample_id].qnet4_cl;
-              cipa_result[sample_id].inal_auc_cl = temp_result[sample_id].inal_auc_cl;
-              cipa_result[sample_id].ical_auc_cl = temp_result[sample_id].ical_auc_cl;
+              cipa_result[sample_id].qnet_cl = qnet_cl;
+              cipa_result[sample_id].qnet4_cl = qnet4_cl;
+              cipa_result[sample_id].inal_auc_cl = inal_auc_cl;
+              cipa_result[sample_id].ical_auc_cl = ical_auc_cl;
               
               cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
               cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
               cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
               is_peak = true;
-              }
-            else{
-              // is_peak = false;
-            }
-          };
-          inet_ap = 0.;
-          qnet_ap = 0.;
-          inet4_ap = 0.;
-          qnet4_ap = 0.;
-          inal_auc_ap = 0.;
-          ical_auc_ap = 0.;
-          inet_cl = 0.;
-          qnet_cl = 0.;
-          inet4_cl = 0.;
-          qnet4_cl = 0.;
-          inal_auc_cl = 0.;
-          ical_auc_cl = 0.;
-          t_peak_capture = 0.;
-
-          // temp_result->init( p_cell->STATES[V]);	
-          temp_result[sample_id].qnet_ap = 0.;
-          temp_result[sample_id].qnet4_ap = 0.;
-          temp_result[sample_id].inal_auc_ap = 0.;
-          temp_result[sample_id].ical_auc_ap = 0.;
-          
-          temp_result[sample_id].qnet_cl = 0.;
-          temp_result[sample_id].qnet4_cl = 0.;
-          temp_result[sample_id].inal_auc_cl = 0.;
-          temp_result[sample_id].ical_auc_cl = 0.;
-          
-          temp_result[sample_id].dvmdt_repol = -999;
-          temp_result[sample_id].vm_peak = -999;
-          temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
-          // end of init
+            
 
           pace_count++;
           input_counter = 0; // at first, we reset the input counter since we re gonna only take one, but I remember we don't have this kind of thing previously, so do we need this still?
@@ -663,27 +613,6 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           // writen = false;
         }
         
-
-        //// progress bar starts ////
-
-        // if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
-        // // printf("Calculating... watching core 0: %.2lf %% done\n",(tcurr[sample_id]/tmax)*100.0);
-        // printf("[");
-        // for (cnt=0; cnt<pace_count/10;cnt++){
-        //   printf("=");
-        // }
-        // for (cnt=pace_count/10; cnt<pace_max/10;cnt++){
-        //   printf("_");
-        // }
-        // printf("] %.2lf %% \n",(tcurr[sample_id]/tmax)*100.0);
-        // //mvaddch(0,pace_count,'=');
-        // //refresh();
-        // //system("clear");
-        // writen = true;
-        // }
-
-        // //// progress bar ends ////
-
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
         // tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         // __syncthreads();
@@ -731,7 +660,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 			    // calculate AP shape
 			    if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90)
           {
-            // printf("check 5 (eligible)\n");
+            printf("check 5 (eligible)\n");
           // inet_ap/qnet_ap under APD.
           inet_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]);
           inet4_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]);
