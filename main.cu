@@ -251,6 +251,8 @@ int main(int argc, char **argv)
     param_t *p_param, *d_p_param;
 	  p_param = new param_t();
   	p_param->init();
+    edison_assign_params(argc,argv,p_param);
+    p_param->show_val();
 
     double *ic50; //temporary
     double *cvar;
@@ -284,8 +286,6 @@ int main(int argc, char **argv)
     static const int CALCIUM_SCALING = 1000000;
     static const int CURRENT_SCALING = 1000;
 
-    p_param->show_val();
-
     int num_of_constants = 146;
     int num_of_states = 41;
     int num_of_algebraic = 199;
@@ -307,12 +307,7 @@ int main(int argc, char **argv)
     cudaSetDevice(p_param->gpu_index);
 
     if(p_param->is_cvar == true){
-      char buffer_cvar[255];
-      snprintf(buffer_cvar, sizeof(buffer_cvar),
-      "./drugs/10000_pop.csv"
-      // "./drugs/optimized_pop_10k.csv"
-      );
-      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
+      int cvar_sample = get_cvar_data_from_file(p_param->cvar_file,sample_size,cvar);
       printf("Reading: %d Conductance Variability samples\n",cvar_sample);
     }
 
@@ -492,7 +487,6 @@ int main(int argc, char **argv)
 
     printf("writing each biomarkers value... \n");
     // sample loop
-    char sample_str[ENOUGH];
       char conc_str[ENOUGH];
       char filename[500] = "./result/";
       // sprintf(sample_str, "%d", sample_id);

@@ -18,6 +18,7 @@ struct param_t
   double dt_write;  // writing step
   double inet_vm_threshold; // Vm threshold for calculating inet
   char hill_file[1024];
+  char cvar_file[1024];
   char drug_name[100];
   char concs[100];
   float conc;
