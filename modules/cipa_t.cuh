@@ -10,18 +10,23 @@
 // using std::string;
 // case 1, what if we limit the datapoints to just 7000 as usual?
 __global__ struct cipa_t{
-  double qnet_ap;
-  double qnet4_ap;
-  double inal_auc_ap;
-  double ical_auc_ap;
-  double qnet_cl;
-  double qnet4_cl;
-  double inal_auc_cl;
-  double ical_auc_cl;
-  
+   double qnet;
+  double inal_auc;
+  double ical_auc;
   double dvmdt_repol;
+  double dvmdt_max;
   double vm_peak;
   double vm_valley;
+  double vm_dia;
+  double apd90;
+  double apd50;
+  double apd_tri;
+  double ca_peak;
+  double ca_valley;
+  double ca_dia;
+  double cad90;
+  double cad50;
+  double cad_tri;
   // multimap<double, double> vm_data;
   // multimap<double, double> dvmdt_data;
   // multimap<double, double> cai_data;
@@ -53,11 +58,11 @@ __global__ struct cipa_t{
   double qnet_data[7500];
   double qnet_time[7500];
 
-  double inet4_data[7500];
-  double inet4_time[7500];
+  // double inet4_data[7500];
+  // double inet4_time[7500];
   
-  double qnet4_data[7500];
-  double qnet4_time[7500];
+  // double qnet4_data[7500];
+  // double qnet4_time[7500];
 
   // double time_series_data[7000];
   // double time_series_time[7000];

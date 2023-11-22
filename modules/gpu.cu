@@ -38,33 +38,39 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
 
     // INIT STARTS
-    temp_result[sample_id].qnet_ap = 0.;
-    temp_result[sample_id].qnet4_ap = 0.;
-    temp_result[sample_id].inal_auc_ap = 0.;
-    temp_result[sample_id].ical_auc_ap = 0.;
-    
-    temp_result[sample_id].qnet_cl = 0.;
-    temp_result[sample_id].qnet4_cl = 0.;
-    temp_result[sample_id].inal_auc_cl = 0.;
-    temp_result[sample_id].ical_auc_cl = 0.;
-    
+
+    temp_result[sample_id].qnet = 0.;
+    temp_result[sample_id].inal_auc = 0.;
+    temp_result[sample_id].ical_auc = 0.;
     temp_result[sample_id].dvmdt_repol = -999;
+    temp_result[sample_id].dvmdt_max = -999;
     temp_result[sample_id].vm_peak = -999;
     temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    temp_result[sample_id].vm_dia = -999;
+    temp_result[sample_id].apd90 = 0.;
+    temp_result[sample_id].apd50 = 0.;
+    temp_result[sample_id].ca_peak = -999;
+    temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+    temp_result[sample_id].ca_dia = -999;
+    temp_result[sample_id].cad90 = 0.;
+    temp_result[sample_id].cad50 = 0.;
 
-    cipa_result[sample_id].qnet_ap = 0.;
-    cipa_result[sample_id].qnet4_ap = 0.;
-    cipa_result[sample_id].inal_auc_ap = 0.;
-    cipa_result[sample_id].ical_auc_ap = 0.;
-    
-    cipa_result[sample_id].qnet_cl = 0.;
-    cipa_result[sample_id].qnet4_cl = 0.;
-    cipa_result[sample_id].inal_auc_cl = 0.;
-    cipa_result[sample_id].ical_auc_cl = 0.;
-    
+    cipa_result[sample_id].qnet = 0.;
+    cipa_result[sample_id].inal_auc = 0.;
+    cipa_result[sample_id].ical_auc = 0.;
     cipa_result[sample_id].dvmdt_repol = -999;
+    cipa_result[sample_id].dvmdt_max = -999;
     cipa_result[sample_id].vm_peak = -999;
     cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    cipa_result[sample_id].vm_dia = -999;
+    cipa_result[sample_id].apd90 = 0.;
+    cipa_result[sample_id].apd50 = 0.;
+    cipa_result[sample_id].ca_peak = -999;
+    cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+    cipa_result[sample_id].ca_dia = -999;
+    cipa_result[sample_id].cad90 = 0.;
+    cipa_result[sample_id].cad50 = 0.;
+
     // INIT ENDS
     bool is_peak = false;
     // to search max dvmdt repol
@@ -118,9 +124,16 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
     bool init_states_captured = false;
 
+    // drug features
     // qnet_ap/inet_ap values
-	  double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
-	  double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl;
+	  // double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
+	  // double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl;
+    double inet,qinward;
+    double inal_auc, ical_auc;
+    double vm_repol30, vm_repol50, vm_repol90;
+    double t_depol;
+    double t_ca_peak, ca_amp50, ca_amp90;
+    double cad50_prev, cad50_curr, cad90_prev, cad90_curr;
     // qinward_cl;
 
     // char buffer[255];
@@ -166,15 +179,31 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
 
           // new part starts
-          if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
-            temp_result[sample_id].qnet_ap = qnet_ap;
-            temp_result[sample_id].qnet4_ap = qnet4_ap;
-            temp_result[sample_id].inal_auc_ap = inal_auc_ap;
-            temp_result[sample_id].ical_auc_ap = ical_auc_ap;
-            temp_result[sample_id].qnet_cl = qnet_cl;
-            temp_result[sample_id].qnet4_cl = qnet4_cl;
-            temp_result[sample_id].inal_auc_cl = inal_auc_cl;
-            temp_result[sample_id].ical_auc_cl = ical_auc_cl;
+          /// only available in single mode!
+        //   if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
+        //     for(std::multimap<double, double>::iterator itrmap = temp_result[sample_id].cai_data.begin(); 
+        //     itrmap != temp_result[sample_id].cai_data.end() ; itrmap++ ){
+        //   // before the peak calcium
+        //   if( itrmap->first < t_ca_peak ){
+        //     if( itrmap->second < ca_amp50 ) cad50_prev = itrmap->first;
+        //     if( itrmap->second < ca_amp90 ) cad90_prev = itrmap->first;
+        //   }
+        //   // after the peak calcium
+        //   else{
+        //     if( itrmap->second > ca_amp50 ) cad50_curr = itrmap->first;
+        //     if( itrmap->second > ca_amp90 ) cad90_curr = itrmap->first;
+        //   }
+        // }
+
+
+            temp_result[sample_id].cad50 = cad50_curr - cad50_prev;
+            temp_result[sample_id].cad90 = cad90_curr - cad90_prev;
+            temp_result[sample_id].qnet = inet/1000.0;
+            temp_result[sample_id].inal_auc = inal_auc;
+            temp_result[sample_id].ical_auc = ical_auc;
+            temp_result[sample_id].vm_dia = d_STATES[(sample_id * num_of_states) +V];
+            temp_result[sample_id].ca_dia = d_STATES[(sample_id * num_of_states) +cai];
+
             // fprintf(fp_vmdebug, "%hu,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf\n", pace_count,t_peak_capture,temp_result.vm_peak,vm_repol30,vm_repol50,vm_repol90,temp_result.dvmdt_repol);
             // replace result with steeper repolarization AP or first pace from the last 250 paces
             // if( temp_result->dvmdt_repol > cipa_result.dvmdt_repol ) {
@@ -184,20 +213,27 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
             if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
               pace_steepest = pace_count;
               // printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
+
               // cipa_result = temp_result;
-              cipa_result[sample_id].qnet_ap = temp_result[sample_id].qnet_ap;
-              cipa_result[sample_id].qnet4_ap = temp_result[sample_id].qnet4_ap;
-              cipa_result[sample_id].inal_auc_ap = temp_result[sample_id].inal_auc_ap;
-              cipa_result[sample_id].ical_auc_ap = temp_result[sample_id].ical_auc_ap;
+              cipa_result[sample_id].qnet = temp_result[sample_id].qnet;
+              cipa_result[sample_id].inal_auc = temp_result[sample_id].inal_auc;
+              cipa_result[sample_id].ical_auc = temp_result[sample_id].ical_auc;
+              cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
+              cipa_result[sample_id].dvmdt_max = temp_result[sample_id].dvmdt_max;
               
-              cipa_result[sample_id].qnet_cl = temp_result[sample_id].qnet_cl;
-              cipa_result[sample_id].qnet4_cl = temp_result[sample_id].qnet4_cl;
-              cipa_result[sample_id].inal_auc_cl = temp_result[sample_id].inal_auc_cl;
-              cipa_result[sample_id].ical_auc_cl = temp_result[sample_id].ical_auc_cl;
+              cipa_result[sample_id].vm_dia = temp_result[sample_id].vm_dia;
+              cipa_result[sample_id].apd90 = temp_result[sample_id].apd90;
+              cipa_result[sample_id].apd50 = temp_result[sample_id].apd50;
+              cipa_result[sample_id].ca_peak = temp_result[sample_id].ca_peak;
+              cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+              cipa_result[sample_id].ca_dia = temp_result[sample_id].ca_dia;
+              cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
+              cipa_result[sample_id].cad50 = temp_result[sample_id].cad50;
               
               cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
               cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
               cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+              // ends of value transfers
               is_peak = true;
               init_states_captured = false;
               }
@@ -220,19 +256,21 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           t_peak_capture = 0.;
 
           // temp_result->init( p_cell->STATES[V]);	
-          temp_result[sample_id].qnet_ap = 0.;
-          temp_result[sample_id].qnet4_ap = 0.;
-          temp_result[sample_id].inal_auc_ap = 0.;
-          temp_result[sample_id].ical_auc_ap = 0.;
-          
-          temp_result[sample_id].qnet_cl = 0.;
-          temp_result[sample_id].qnet4_cl = 0.;
-          temp_result[sample_id].inal_auc_cl = 0.;
-          temp_result[sample_id].ical_auc_cl = 0.;
-          
-          temp_result[sample_id].dvmdt_repol = -999;
-          temp_result[sample_id].vm_peak = -999;
-          temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+            temp_result[sample_id].qnet = 0.;
+            temp_result[sample_id].inal_auc = 0.;
+            temp_result[sample_id].ical_auc = 0.;
+            temp_result[sample_id].dvmdt_repol = -999;
+            temp_result[sample_id].dvmdt_max = -999;
+            temp_result[sample_id].vm_peak = -999;
+            temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];;
+            temp_result[sample_id].vm_dia = -999;
+            temp_result[sample_id].apd90 = 0.;
+            temp_result[sample_id].apd50 = 0.;
+            temp_result[sample_id].ca_peak = -999;
+            temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];;
+            temp_result[sample_id].ca_dia = -999;
+            temp_result[sample_id].cad90 = 0.;
+            temp_result[sample_id].cad50 = 0.;
           // end of init
 
           pace_count++;
@@ -520,8 +558,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     unsigned short pace_steepest = 0;
 
     // qnet_ap/inet_ap values
-	  double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
-	  double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl;
+	  // double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
+	  // double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl;
     // qinward_cl;
 
     // char buffer[255];
@@ -639,6 +677,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               // else is_eligible_AP = false;
             }
 			    }
+
+
+
 			    else if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && is_eligible_AP )
           {
             // printf("check 3\n");
@@ -660,7 +701,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 			    // calculate AP shape
 			    if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90)
           {
-            printf("check 5 (eligible)\n");
+            // printf("check 5 (eligible)\n");
           // inet_ap/qnet_ap under APD.
           inet_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]);
           inet4_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]);
