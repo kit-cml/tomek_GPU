@@ -387,7 +387,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           if((pace_count >= pace_max-last_drug_check_pace) && (pace_count<pace_max) ){
             int counter;
             for(counter=0; counter<num_of_states; counter++){
-              d_all_states[(sample_id * num_of_states) + counter + (num_of_states * ((pace_count - last_drug_check_pace)))] = d_STATES[(sample_id * num_of_states) + counter];
+              d_all_states[(sample_id * num_of_states) + counter + (sample_size * ((pace_max - pace_count - last_drug_check_pace)*(-1)))] = d_STATES[(sample_id * num_of_states) + counter];
               // d_all_states[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
               // printf("%lf\n", d_all_states[(sample_id * num_of_states) + counter]);
             }
