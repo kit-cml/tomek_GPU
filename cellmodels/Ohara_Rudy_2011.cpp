@@ -692,6 +692,7 @@ CONSTANTS[PCa+(offset * num_of_constants)] = CONSTANTS[PCa+(offset * num_of_cons
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, double *cvar, bool is_dutta, bool is_cvar,  int offset)
 {
   // int num_of_constants = 146;
+  // printf("ic50:%d %lf, %lf, %lf\n",offset,ic50[0 + (offset*14)],ic50[1 + (offset*14)],ic50[2 + (offset*14)]);
 
 	___initConsts(CONSTANTS, STATES, type, offset); // initconst kan minta 
 	// // mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
@@ -701,7 +702,9 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 	if(is_dutta == true){
 		___applyDutta(CONSTANTS, offset);
 	}
-    if(is_cvar == true){
+
+  if(is_cvar == true){
+
 		___applyCvar(CONSTANTS, cvar, offset);
 	}
 	// #ifndef COMPONENT_PATCH

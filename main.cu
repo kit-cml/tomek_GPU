@@ -19,6 +19,7 @@
 #define ENOUGH ((CHAR_BIT * sizeof(int) - 1) / 3 + 2)
 char buffer[255];
 
+
 // unsigned int datapoint_size = 7000;
 const unsigned int sample_limit = 10000;
 
@@ -91,8 +92,8 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   FILE *fp_drugs;
 //   drug_t ic50;
   char *token;
-  
-  unsigned short idx;
+  char buffer_ic50[255];
+  unsigned int idx;
 
   if( (fp_drugs = fopen(file_name, "r")) == NULL){
     printf("Cannot open file %s\n",
@@ -101,10 +102,10 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
   }
   idx = 0;
   int sample_size = 0;
-  fgets(buffer, sizeof(buffer), fp_drugs); // skip header
-  while( fgets(buffer, sizeof(buffer), fp_drugs) != NULL )
+  fgets(buffer_ic50, sizeof(buffer_ic50), fp_drugs); // skip header
+  while( fgets(buffer_ic50, sizeof(buffer_ic50), fp_drugs) != NULL )
   { // begin line reading
-    token = strtok( buffer, "," );
+    token = strtok( buffer_ic50, "," );
     while( token != NULL )
     { // begin data tokenizing
       ic50[idx++] = strtod(token, NULL);
@@ -150,6 +151,7 @@ int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *c
   fclose(fp_cvar);
   return sample_size;
 }
+
 
 int get_init_data_from_file(const char* file_name, double *init_states)
 {
@@ -228,6 +230,15 @@ int main(int argc, char **argv)
     param_t *p_param, *d_p_param;
 	  p_param = new param_t();
   	p_param->init();
+    edison_assign_params(argc,argv,p_param);
+    p_param->show_val();
+
+    double *ic50; //temporary
+    double *cvar;
+
+    ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+
 
     double *ic50; //temporary
     double *cvar;
@@ -277,13 +288,35 @@ int main(int argc, char **argv)
     double *ik1;
     cipa_t *temp_result, *cipa_result;
 
+    static const int CALCIUM_SCALING = 1000000;
+    static const int CURRENT_SCALING = 1000;
+
+    int num_of_constants = 146;
+    int num_of_states = 41;
+    int num_of_algebraic = 199;
+    int num_of_rates = 41;
+
+    // snprintf(buffer, sizeof(buffer),
+    //   "./drugs/bepridil/IC50_samples.csv"
+    //   // "./drugs/bepridil/IC50_optimal.csv"
+    //   // "./IC50_samples.csv"
+    //   );
+
     int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50);
     if(sample_size == 0)
         printf("Something problem with the IC50 file!\n");
     // else if(sample_size > 2000)
     //     printf("Too much input! Maximum sample data is 2000!\n");
     printf("Sample size: %d\n",sample_size);
+    printf("Set GPU Number: %d\n",p_param->gpu_index);
+
     cudaSetDevice(p_param->gpu_index);
+
+    if(p_param->is_cvar == true){
+      int cvar_sample = get_cvar_data_from_file(p_param->cvar_file,sample_size,cvar);
+      printf("Reading: %d Conductance Variability samples\n",cvar_sample);
+    }
+
     printf("preparing GPU memory space \n");
 
     if(p_param->is_cvar == true){
@@ -355,7 +388,7 @@ int main(int argc, char **argv)
     // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
 
     tic();
-    printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
+    printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
     int thread;
     if (sample_size>=100){
       thread = 100;
@@ -372,6 +405,7 @@ int main(int argc, char **argv)
     printf("\n   Configuration: \n\n\tblock\t||\tthread\n---------------------------------------\n  \t%d\t||\t%d\n\n\n", block,thread);
     // initscr();
     // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
+
 
     kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC, 
                                               d_STATES_RESULT, d_all_states,
@@ -415,8 +449,8 @@ int main(int argc, char **argv)
      h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for ICaL, \n");
     h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
-    h_cipa_result = (cipa_t *)malloc(  sample_size * sizeof(cipa_t));
-    printf("...allocating for INaL and postpro result, all set!\n");
+    h_cipa_result = (cipa_t *)malloc( sample_size * sizeof(cipa_t));
+    printf("...allocating for INaL and postprocessing, all set!\n");
 
     ////// copy the data back to CPU, and write them into file ////////
     printf("copying the data back to the CPU \n");
@@ -432,7 +466,7 @@ int main(int argc, char **argv)
     cudaMemcpy(h_ikr, ikr, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_iks, iks, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(h_ik1, ik1, sample_size * datapoint_size * sizeof(double), cudaMemcpyDeviceToHost);
-
+    
     cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
     
     FILE *writer;
@@ -490,9 +524,8 @@ int main(int argc, char **argv)
       fclose(writer);
     }
 
-    printf("writing each biomarker value... \n");
+    printf("writing each biomarkers value... \n");
     // sample loop
-    char sample_str[ENOUGH];
       char conc_str[ENOUGH];
       char filename[500] = "./result/";
       // sprintf(sample_str, "%d", sample_id);
@@ -539,6 +572,7 @@ int main(int argc, char **argv)
 
         h_cipa_result[sample_id].vm_valley
         );
+
     }
      fclose(writer);
 
@@ -723,6 +757,7 @@ int main(int argc, char **argv)
 
       fclose(writer);
     }
+//      fclose(writer);
 
     // // FILE *writer;
     // // int check;
