@@ -9,6 +9,8 @@ struct param_t
   bool is_print_graph; // TRUE if we want to print graph
   bool is_using_output; // TRUE if using last output file
   bool is_cvar;
+  bool is_time_series;
+  unsigned int sampling_limit;
   double bcl; // basic cycle length
   // unsigned int max_samples;
   unsigned short pace_max; // maximum pace
@@ -19,6 +21,7 @@ struct param_t
   double inet_vm_threshold; // Vm threshold for calculating inet
   char hill_file[1024];
   char cvar_file[1024];
+  char cache_file[1024];
   char drug_name[100];
   char concs[100];
   float conc;
