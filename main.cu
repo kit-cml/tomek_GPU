@@ -507,7 +507,7 @@ int main(int argc, char **argv)
       fprintf(writer, "Time,Vm,dVm/dt,Cai,INa,INaL,ICaL,IKs,IKr,IK1,Ito\n"); 
       for (int datapoint = 1; datapoint<datapoint_size; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        fprintf(writer,"%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
         h_dt[ sample_id + (datapoint * sample_size)],
@@ -554,11 +554,11 @@ int main(int argc, char **argv)
 
     writer = fopen(filename,"a");
 
-    fprintf(writer, "sample,qnet,inal_auc,ical_auc,apd90,apd50,cad90,cad50,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
+    fprintf(writer, "sample,qnet,inal_auc,ical_auc,apd90,apd50,apd_tri,cad90,cad50,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       // printf("writing sample %d... \n",sample_id);
       
-      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         sample_id,
         h_cipa_result[sample_id].qnet,
         h_cipa_result[sample_id].inal_auc,
@@ -566,6 +566,7 @@ int main(int argc, char **argv)
         
         h_cipa_result[sample_id].apd90,
         h_cipa_result[sample_id].apd50,
+        h_cipa_result[sample_id].apd90 - h_cipa_result[sample_id].apd50,
 
         h_cipa_result[sample_id].cad90,
         h_cipa_result[sample_id].cad50,

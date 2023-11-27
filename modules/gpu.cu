@@ -716,15 +716,17 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
         if( temp_result[sample_id].dvmdt_max < d_RATES[(sample_id * num_of_states)+V] )temp_result[sample_id].dvmdt_max = d_RATES[(sample_id * num_of_states)+V];
           
           // this part should be
-          // "get the peak Vm 6 secs after depolarization (when Na channel just closed after bursting)" now it has a different if
-			    if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2)) && 
-				      tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10)) && 
+          // "get the peak Vm 6 secs after depolarization (when Na channel just closed after bursting)" 
+          //now it has a different if
+			    if( tcurr[sample_id] > ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+2.)) && 
+				      tcurr[sample_id] < ((d_CONSTANTS[(sample_id * num_of_constants) +BCL]*pace_count)+(d_CONSTANTS[(sample_id * num_of_constants) +stim_start]+10.)) && 
 				      abs(d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]) < 1)
           {
             // printf("check 1\n");
             if( d_STATES[(sample_id * num_of_states) +V] > temp_result[sample_id].vm_peak )
             {
               temp_result[sample_id].vm_peak = d_STATES[(sample_id * num_of_states) +V];
+
               if(temp_result[sample_id].vm_peak > 0)
               {
                 vm_repol30 = temp_result[sample_id].vm_peak - (0.3 * (temp_result[sample_id].vm_peak - temp_result[sample_id].vm_valley));
@@ -791,6 +793,11 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
             temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
+            // printf("core: %d, cai_data and time:  %lf %lf datapoint: %d\n",
+            // sample_id,
+            // temp_result[sample_id].cai_data[cipa_datapoint],
+            // temp_result[sample_id].cai_time[cipa_datapoint],
+            // cipa_datapoint  );
 
             temp_result[sample_id].vm_data[cipa_datapoint] = d_STATES[(sample_id * num_of_states) +V];
             temp_result[sample_id].vm_time[cipa_datapoint] = tcurr[sample_id];
@@ -805,7 +812,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             
             out_dt[input_counter + sample_id] = d_RATES[V + (sample_id * num_of_states)];
             
-            cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
+            cai_result[input_counter + sample_id] = d_STATES[(sample_id * num_of_states) +cai];
 
             ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
             inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
@@ -861,13 +868,20 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             if( temp_result[sample_id].cai_data[ca_looper] > ca_amp90 ) cad90_curr = temp_result[sample_id].cai_time[ca_looper];
           }
         }
-        
-      temp_result[sample_id].cad50 = cad50_curr - cad50_prev;
+      printf("core: %d 50: %lf - %lf 90: %lf - %lf\n",sample_id, cad50_curr, cad50_prev, cad90_curr, cad90_prev);
+      
+      temp_result[sample_id].cad50 = cad50_curr - cad50_prev;// the curr is lower than the prev, like waaay lower, its a negative (it shouldnt be, since its in time)
       temp_result[sample_id].cad90 = cad90_curr - cad90_prev;
       cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
       cipa_result[sample_id].cad50 = temp_result[sample_id].cad50;
 
 }
+
+
+
+
+
+
 
 
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_CONSTANTS, double *d_STATES, double *d_STATES_cache, double *d_RATES, double *d_ALGEBRAIC, 
