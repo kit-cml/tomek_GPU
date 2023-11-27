@@ -639,21 +639,20 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
           dt[sample_id] = dt_set;
-          // printf("dt : %lf\n",dt_set);
-          // it goes in here, but it does not, you know, adds the pace, 
         }
         else{
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
 
           // new part starts
               // execute at the beginning of a pace
-              temp_result[sample_id].cad50 = cad50_curr - cad50_prev;
-              temp_result[sample_id].cad90 = cad90_curr - cad90_prev; // cad50 and 90 cur not calculcated yet! use outer loop instead
+              // temp_result[sample_id].cad50 = cad50_curr - cad50_prev;
+              // temp_result[sample_id].cad90 = cad90_curr - cad90_prev; // cad50 and 90 cur not calculcated yet! use outer loop instead
               temp_result[sample_id].qnet = inet/1000.0;
               temp_result[sample_id].inal_auc = inal_auc;
               temp_result[sample_id].ical_auc = ical_auc;
               temp_result[sample_id].vm_dia = d_STATES[(sample_id * num_of_states)+V];
               temp_result[sample_id].ca_dia = d_STATES[(sample_id * num_of_states)+cai];
+
               // cipa_result = temp_result;
               // if(sample_id == 0) printf(" %.2f percent, cipa_result updates!\n", tcurr[sample_id]/tmax);
 
@@ -836,8 +835,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               cipa_result[sample_id].ca_peak = temp_result[sample_id].ca_peak;
               cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
               cipa_result[sample_id].ca_dia = temp_result[sample_id].ca_dia;
-              cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
-              cipa_result[sample_id].cad50 = temp_result[sample_id].cad50;
+              
               
               cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
               cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
@@ -849,6 +847,26 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
        
     } // while loop ends here 
     // __syncthreads();
+
+    // looking for cad50 and 90
+    for(int ca_looper = 0; ca_looper < p_param->sampling_limit; ca_looper++){
+          // before the peak calcium
+          if( temp_result[sample_id].cai_time[ca_looper] < t_ca_peak ){
+            if( temp_result[sample_id].cai_data[ca_looper] < ca_amp50 ) cad50_prev = temp_result[sample_id].cai_time[ca_looper];
+            if( temp_result[sample_id].cai_data[ca_looper] < ca_amp90 ) cad90_prev = temp_result[sample_id].cai_time[ca_looper];
+          }
+          // after the peak calcium
+          else{
+            if( temp_result[sample_id].cai_data[ca_looper] > ca_amp50 ) cad50_curr = temp_result[sample_id].cai_time[ca_looper];
+            if( temp_result[sample_id].cai_data[ca_looper] > ca_amp90 ) cad90_curr = temp_result[sample_id].cai_time[ca_looper];
+          }
+        }
+        
+      temp_result[sample_id].cad50 = cad50_curr - cad50_prev;
+      temp_result[sample_id].cad90 = cad90_curr - cad90_prev;
+      cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
+      cipa_result[sample_id].cad50 = temp_result[sample_id].cad50;
+
 }
 
 
