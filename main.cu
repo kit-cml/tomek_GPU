@@ -189,7 +189,17 @@ int get_init_data_from_file(const char* file_name, double *init_states)
   fclose(fp_cache);
   return sample_size;
 }
-
+int exists(const char *fname)
+{
+    FILE *file;
+    if ((file = fopen(fname, "r")))
+    {
+        fclose(file);
+        return 1;
+    }
+    // fclose(file);
+    return 0;
+}
 
 int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 {
@@ -237,13 +247,7 @@ int main(int argc, char **argv)
     double *cvar;
 
     ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
-    cvar = (double *)malloc(18 * sample_limit * sizeof(double));
-
-
-    double *ic50; //temporary
-    double *cvar;
-
-    ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    // if (p_param->is_cvar == true) cvar = (double *)malloc(18 * sample_limit * sizeof(double));
     cvar = (double *)malloc(18 * sample_limit * sizeof(double));
 
     int num_of_constants = 146;
@@ -254,8 +258,8 @@ int main(int argc, char **argv)
 
     const double CONC = p_param->conc;
 
-    // if we are in write time series mode
-    if(p_param->is_time_series == 1){
+    ////////// if we are in write time series mode (post processing) //////////
+    if(p_param->is_time_series == 1 /*&& exists(p_param->cache_file) == 1 <- still unstable*/){
 
     printf("Using cached initial state from previous result!!!! \n\n");
 
@@ -491,7 +495,7 @@ int main(int argc, char **argv)
           printf("Directory created\n");
           }
         else {
-          printf("Unable to create directory\n");  
+          printf("Unable to create directory, or the folder is already created, relax mate...\n");  
       }
       folder_created = true;
       }
@@ -540,7 +544,7 @@ int main(int argc, char **argv)
           printf("Directory created\n");
           }
         else {
-          printf("Unable to create directory\n");  
+          printf("Unable to create directory, or the folder is already created, relax mate...\n");  
       }
       folder_created = true;
       }
@@ -550,27 +554,48 @@ int main(int argc, char **argv)
 
     writer = fopen(filename,"a");
 
-    fprintf(writer, "sample,qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
+    fprintf(writer, "sample,qnet,inal_auc,ical_auc,apd90,apd50,cad90,cad50,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       // printf("writing sample %d... \n",sample_id);
       
-      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         sample_id,
-        h_cipa_result[sample_id].qnet_ap,
-        h_cipa_result[sample_id].qnet4_ap,
-        h_cipa_result[sample_id].inal_auc_ap,
-        h_cipa_result[sample_id].ical_auc_ap,
+        h_cipa_result[sample_id].qnet,
+        h_cipa_result[sample_id].inal_auc,
+        h_cipa_result[sample_id].ical_auc,
         
-        h_cipa_result[sample_id].qnet_cl,
-        h_cipa_result[sample_id].qnet4_cl,
+        h_cipa_result[sample_id].apd90,
+        h_cipa_result[sample_id].apd50,
 
-        h_cipa_result[sample_id].inal_auc_cl,
-        h_cipa_result[sample_id].ical_auc_cl,
+        h_cipa_result[sample_id].cad90,
+        h_cipa_result[sample_id].cad50,
 
         h_cipa_result[sample_id].dvmdt_repol,
         h_cipa_result[sample_id].vm_peak,
+        h_cipa_result[sample_id].vm_valley,
+        h_cipa_result[sample_id].vm_dia,
 
-        h_cipa_result[sample_id].vm_valley
+        h_cipa_result[sample_id].ca_peak,
+        h_cipa_result[sample_id].ca_valley,
+        h_cipa_result[sample_id].ca_dia
+
+    //      temp_result[sample_id].qnet = 0.;
+    // temp_result[sample_id].inal_auc = 0.;
+    // temp_result[sample_id].ical_auc = 0.;
+
+    // temp_result[sample_id].dvmdt_repol = -999;
+    // temp_result[sample_id].dvmdt_max = -999;
+    // temp_result[sample_id].vm_peak = -999;
+    // temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    // temp_result[sample_id].vm_dia = -999;
+
+    // temp_result[sample_id].apd90 = 0.;
+    // temp_result[sample_id].apd50 = 0.;
+    // temp_result[sample_id].ca_peak = -999;
+    // temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+    // temp_result[sample_id].ca_dia = -999;
+    // temp_result[sample_id].cad90 = 0.;
+    // temp_result[sample_id].cad50 = 0.;
         );
 
     }
@@ -581,14 +606,23 @@ int main(int argc, char **argv)
     return 0;
   }
 
-    // find cache mode
+
+
+
+
+
+
+
+    ////////// find cache mode (in silico code) //////////
     else{
+    printf("In-silico mode, creating cache file because we don't have that yet, or is_time_series is intentionally false \n\n");
     double *d_ic50;
     double *d_cvar;
     double *d_ALGEBRAIC;
     double *d_CONSTANTS;
     double *d_RATES;
     double *d_STATES;
+
     // not used, only to satisfy the parameters of the GPU regulator's function
     double *d_STATES_cache;
     double *time;
@@ -648,9 +682,11 @@ int main(int argc, char **argv)
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    // if(p_param->is_cvar == true) cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
     cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
     
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+    // if(p_param->is_cvar == true) cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
@@ -730,7 +766,7 @@ int main(int argc, char **argv)
           printf("Directory created\n");
           }
         else {
-          printf("Unable to create directory\n");  
+          printf("Unable to create directory, or the folder is already created, relax mate...\n");  
       }
       folder_created = true;
       }
@@ -782,7 +818,7 @@ int main(int argc, char **argv)
           printf("Directory created\n");
           }
         else {
-          printf("Unable to create directory\n");  
+          printf("Unable to create directory, or the folder is already created, relax mate...\n");  
       }
       folder_created = true;
       }
@@ -804,54 +840,6 @@ int main(int argc, char **argv)
       fclose(writer);
     }
 
-    // printf("writing each preprocessing value... \n");
-    // // sample loop
-    // for (int sample_id = 0; sample_id<sample_size; sample_id++){
-    //   // printf("writing sample %d... \n",sample_id);
-    //   char sample_str[ENOUGH];
-    //   char conc_str[ENOUGH];
-    //   char filename[500] = "./result/";
-    //   sprintf(sample_str, "%d", sample_id);
-    //   sprintf(conc_str, "%.2f", CONC);
-    //   strcat(filename,conc_str);
-    //   strcat(filename,"/");
-    //   // printf("creating %s... \n", filename);
-    //   if (folder_created == false){
-    //     check = mkdir(filename,0777);
-    //     // check if directory is created or not
-    //     if (!check){
-    //       printf("Directory created\n");
-    //       }
-    //     else {
-    //       printf("Unable to create directory\n");  
-    //   }
-    //   folder_created = true;
-    //   }
-      
-    //   strcat(filename,sample_str);
-    //   strcat(filename,"_biomarkers.csv");
-
-    //   writer = fopen(filename,"w");
-    //   fprintf(writer, "qnet_ap,qnet4_ap,inal_auc_ap,ical_auc_ap,qnet_cl,qnet4_cl,inal_auc_cl,ical_auc_cl,dvmdt_repol,vm_peak,vm_valley\n"); 
-    //   fprintf(writer,"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
-    //     h_cipa_result[sample_id].qnet_ap,
-    //     h_cipa_result[sample_id].qnet4_ap,
-    //     h_cipa_result[sample_id].inal_auc_ap,
-    //     h_cipa_result[sample_id].ical_auc_ap,
-        
-    //     h_cipa_result[sample_id].qnet_cl,
-    //     h_cipa_result[sample_id].qnet4_cl,
-
-    //     h_cipa_result[sample_id].inal_auc_cl,
-    //     h_cipa_result[sample_id].ical_auc_cl,
-
-    //     h_cipa_result[sample_id].dvmdt_repol,
-    //     h_cipa_result[sample_id].vm_peak,
-
-    //     h_cipa_result[sample_id].vm_valley
-    //     );
-    //   fclose(writer);
-    // }
     toc();
     
     return 0;
