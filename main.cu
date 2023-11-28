@@ -554,11 +554,11 @@ int main(int argc, char **argv)
 
     writer = fopen(filename,"a");
 
-    fprintf(writer, "sample,qnet,inal_auc,ical_auc,apd90,apd50,apd_tri,cad90,cad50,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
+    fprintf(writer, "sample,qnet,inal_auc,ical_auc,apd90,apd50,apd_tri,cad90,cad50,cad_tri,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       // printf("writing sample %d... \n",sample_id);
       
-      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         sample_id,
         h_cipa_result[sample_id].qnet,
         h_cipa_result[sample_id].inal_auc,
@@ -570,6 +570,7 @@ int main(int argc, char **argv)
 
         h_cipa_result[sample_id].cad90,
         h_cipa_result[sample_id].cad50,
+        h_cipa_result[sample_id].cad90 - h_cipa_result[sample_id].cad50,
 
         h_cipa_result[sample_id].dvmdt_repol,
         h_cipa_result[sample_id].vm_peak,

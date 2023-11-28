@@ -491,12 +491,12 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     temp_result[sample_id].dvmdt_repol = -999;
     temp_result[sample_id].dvmdt_max = -999;
     temp_result[sample_id].vm_peak = -999;
-    temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    // temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
     temp_result[sample_id].vm_dia = -999;
     temp_result[sample_id].apd90 = 0.;
     temp_result[sample_id].apd50 = 0.;
     temp_result[sample_id].ca_peak = -999;
-    temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+    // temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
     temp_result[sample_id].ca_dia = -999;
     temp_result[sample_id].cad90 = 0.;
     temp_result[sample_id].cad50 = 0.;
@@ -507,12 +507,12 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     cipa_result[sample_id].dvmdt_repol = -999;
     cipa_result[sample_id].dvmdt_max = -999;
     cipa_result[sample_id].vm_peak = -999;
-    cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    // cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
     cipa_result[sample_id].vm_dia = -999;
     cipa_result[sample_id].apd90 = 0.;
     cipa_result[sample_id].apd50 = 0.;
     cipa_result[sample_id].ca_peak = -999;
-    cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+    // cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
     cipa_result[sample_id].ca_dia = -999;
     cipa_result[sample_id].cad90 = 0.;
     cipa_result[sample_id].cad50 = 0.;
@@ -604,6 +604,19 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
       // the very beginning -> the core number
       // printf("%lf,%lf\n", cache[1], cache[2+(num_of_states+2)]); -> this gives you the V for first and second sample
     }
+    // these values will follow cache file (instead of regular init)
+    temp_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+
+    cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
+    cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+
+    // temp_result[sample_id].vm_valley = 9.;
+    // temp_result[sample_id].ca_valley = 9.;
+
+    // cipa_result[sample_id].vm_valley = 9.;
+    // cipa_result[sample_id].ca_valley = 9.;
+
 
     // printf("%d: %lf, %d\n", sample_id,d_STATES[V + (sample_id * num_of_states)], cnt);
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
@@ -635,6 +648,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           inal_auc += d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*dt[sample_id];
           ical_auc += d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id];
           } 
+          // how can we properly update this value?
+          // temp_result[sample_id].ca_valley = temp_result[sample_id].cai_data[0];
         
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
@@ -675,6 +690,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
               cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
 
+              // temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
+              // temp_valley = d_STATES[(sample_id * num_of_states) +cai];
+
               // cipa_result[sample_id].qnet_ap = qnet_ap;
               // cipa_result[sample_id].qnet4_ap = qnet4_ap;
               // cipa_result[sample_id].inal_auc_ap = inal_auc_ap;
@@ -700,7 +718,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           ical_auc = 0.;
           // if(pace_count >= pace_max-last_drug_check_pace){
             // temp_result.init( p_cell->STATES[V], p_cell->STATES[cai] );
-            t_ca_peak = tcurr[sample_id];
+
+            // t_ca_peak = tcurr[sample_id];
+
             t_depol = (d_CONSTANTS[(sample_id * num_of_constants)+BCL]*pace_count)+d_CONSTANTS[(sample_id * num_of_constants)+stim_start];
             // is_eligible_AP = false;
             is_eligible_AP = true;
@@ -750,6 +770,13 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             // vm_repol30,
             // vm_repol90
             // );
+            // check for valley update
+            if( d_STATES[(sample_id * num_of_states) +cai] < temp_result[sample_id].ca_valley ){
+              temp_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai] ;
+              // printf("ca valley update\n");
+            }
+
+
 				    if( d_RATES[(sample_id * num_of_rates) +V] > temp_result[sample_id].dvmdt_repol &&
 					      d_STATES[(sample_id * num_of_states) +V] <= vm_repol30 &&
 					      d_STATES[(sample_id * num_of_states) +V] >= vm_repol90 )
@@ -760,13 +787,18 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               // get the APD90, APD50, peak calcium, 50% and 90% of amplitude of Calcium, and time of peak calcium
                 if( vm_repol50 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol50-2 ) temp_result[sample_id].apd50 = tcurr[sample_id] - t_depol;
                 if( vm_repol90 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol90-2 ) temp_result[sample_id].apd90 = tcurr[sample_id] - t_depol;
-                if( temp_result[sample_id].ca_peak < d_STATES[(sample_id * num_of_states)+cai] ){  
+                if( temp_result[sample_id].ca_peak < d_STATES[(sample_id * num_of_states)+cai] ){
+                  // printf("steepest in\n");  
                   temp_result[sample_id].ca_peak = d_STATES[(sample_id * num_of_states) +cai];
                   ca_amp50 = temp_result[sample_id].ca_peak - (0.5 * (temp_result[sample_id].ca_peak - temp_result[sample_id].ca_valley));
                   ca_amp90 = temp_result[sample_id].ca_peak - (0.9 * (temp_result[sample_id].ca_peak - temp_result[sample_id].ca_valley));
                   t_ca_peak = tcurr[sample_id];
+                  // printf("ca_amp50 = %lf - (0.5 * (%lf - %lf)) = %lf\n",temp_result[sample_id].ca_peak, temp_result[sample_id].ca_peak,temp_result[sample_id].ca_valley, ca_amp50);
+                  // printf("ca_amp90 = %lf - (0.9 * (%lf - %lf)) = %lf\n",temp_result[sample_id].ca_peak, temp_result[sample_id].ca_peak,temp_result[sample_id].ca_valley, ca_amp90);
                   }
           }
+          
+
 			    // calculate AP shape
 			    // if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90)
           // {
@@ -858,9 +890,17 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     // looking for cad50 and 90
     for(int ca_looper = 0; ca_looper < p_param->sampling_limit; ca_looper++){
           // before the peak calcium
+          
           if( temp_result[sample_id].cai_time[ca_looper] < t_ca_peak ){
-            if( temp_result[sample_id].cai_data[ca_looper] < ca_amp50 ) cad50_prev = temp_result[sample_id].cai_time[ca_looper];
-            if( temp_result[sample_id].cai_data[ca_looper] < ca_amp90 ) cad90_prev = temp_result[sample_id].cai_time[ca_looper];
+            // printf("cai_data %lf \n",temp_result[sample_id].cai_data[ca_looper]);
+            if( temp_result[sample_id].cai_data[ca_looper] < ca_amp50 ){
+              cad50_prev = temp_result[sample_id].cai_time[ca_looper];
+              // printf("cad50 prev update\n");
+            } 
+            if( temp_result[sample_id].cai_data[ca_looper] < ca_amp90 ){
+              cad90_prev = temp_result[sample_id].cai_time[ca_looper];
+              // printf("cad90 prev update\n");
+            } 
           }
           // after the peak calcium
           else{
@@ -868,8 +908,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             if( temp_result[sample_id].cai_data[ca_looper] > ca_amp90 ) cad90_curr = temp_result[sample_id].cai_time[ca_looper];
           }
         }
-      printf("core: %d 50: %lf - %lf 90: %lf - %lf\n",sample_id, cad50_curr, cad50_prev, cad90_curr, cad90_prev);
-      
+      // printf("core: %d ca_peak %lf | : 50: %lf - %lf 90: %lf - %lf\n",sample_id, t_ca_peak, cad50_curr, cad50_prev, cad90_curr, cad90_prev);
+      // printf("ca_peak: %lf ca_valley %lf\n", temp_result[sample_id].ca_peak, temp_result[sample_id].ca_valley);
+      // printf("cai_data[0] %lf \n",temp_result[sample_id].cai_data[0]);
       temp_result[sample_id].cad50 = cad50_curr - cad50_prev;// the curr is lower than the prev, like waaay lower, its a negative (it shouldnt be, since its in time)
       temp_result[sample_id].cad90 = cad90_curr - cad90_prev;
       cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
