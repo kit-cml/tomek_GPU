@@ -453,6 +453,7 @@ int main(int argc, char **argv)
      h_ical= (double *)malloc(datapoint_size * sample_size * sizeof(double));
     printf("...allocated for ICaL, \n");
     h_inal = (double *)malloc(datapoint_size * sample_size * sizeof(double));
+
     h_cipa_result = (cipa_t *)malloc( sample_size * sizeof(cipa_t));
     printf("...allocating for INaL and postprocessing, all set!\n");
 
@@ -782,7 +783,7 @@ int main(int argc, char **argv)
       fprintf(writer,"%d,",sample_id); // write core number at the front
       for (int datapoint = 0; datapoint<num_of_states; datapoint++){
        // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        fprintf(writer,"%lf,", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+        fprintf(writer,"%.5f,", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_states[(sample_id * (num_of_states+1)) + datapoint]
         );
       }
@@ -790,7 +791,7 @@ int main(int argc, char **argv)
         // h_states[(sample_id * num_of_states+1) + num_of_states],
         // h_states[(sample_id * num_of_states+1) + num_of_states+1]
         // );
-        fprintf(writer,"%lf\n", h_states[(sample_id * (num_of_states+1))+num_of_states] );
+        fprintf(writer,"%.5f\n", h_states[(sample_id * (num_of_states+1))+num_of_states] );
         // fprintf(writer, "\n");
 
       fclose(writer);

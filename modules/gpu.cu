@@ -475,7 +475,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
                                        )
     {
     
-    unsigned int input_counter = 0;
+    unsigned long long input_counter = 0;
 
     int num_of_constants = 146;
     int num_of_states = 41;
