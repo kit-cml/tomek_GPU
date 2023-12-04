@@ -31,8 +31,9 @@ void param_t::init()
   
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
-  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples10.csv");
+  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
   snprintf(cache_file, sizeof(cache_file), "%s", "./result/33.00.csv");
+  snprintf(cvar_file, sizeof(cvar_file), "%s", "./drugs/10000_pop.csv");
   snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
   snprintf(concs, sizeof(concs), "%s", "66.0");
 }

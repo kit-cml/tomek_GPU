@@ -323,16 +323,6 @@ int main(int argc, char **argv)
 
     printf("preparing GPU memory space \n");
 
-    if(p_param->is_cvar == true){
-      char buffer_cvar[255];
-      snprintf(buffer_cvar, sizeof(buffer_cvar),
-      "./drugs/10000_pop.csv"
-      // "./drugs/optimized_pop_10k.csv"
-      );
-      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
-      printf("Reading: %d Conductance Variability samples\n",cvar_sample);
-    }
-
       // char buffer_cvar[255];
       // snprintf(buffer_cvar, sizeof(buffer_cvar),
       // "./result/66_00.csv"
