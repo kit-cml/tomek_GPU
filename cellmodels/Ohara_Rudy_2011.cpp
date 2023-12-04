@@ -704,6 +704,7 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 	}
 
   if(is_cvar == true){
+
 		___applyCvar(CONSTANTS, cvar, offset);
 	}
 	// #ifndef COMPONENT_PATCH
