@@ -15,13 +15,13 @@ void param_t::init()
   is_cvar = false;
 
   bcl = 2000.;
-  pace_max = 1000;
+  pace_max = 10;
 
   sampling_limit = 7000;
 
   is_time_series = true;
 
-  find_steepest_start = 250;
+  find_steepest_start = 5;
 
   celltype = 0.;
   dt = 0.005;

@@ -62,6 +62,8 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
       strncpy(file_name, argv[idx + 1], sizeof(file_name));
     else if (!strcasecmp(argv[idx], "-hill_file"))
       strncpy(p_param->hill_file, argv[idx + 1], sizeof(p_param->hill_file));
+    else if (!strcasecmp(argv[idx], "-init_file"))
+      strncpy(p_param->hill_file, argv[idx + 1], sizeof(p_param->cache_file));
     // else if (!strcasecmp(argv[idx], "-cvar_file"))
     //   strncpy(p_param->hill_file, argv[idx + 2], sizeof(p_param->cvar_file));
   }  
@@ -82,6 +84,9 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
     }
     else if (strcasecmp(key, "Celltype") == 0) {
       p_param->celltype = strtod( value, NULL );
+    }
+    else if (strcasecmp(key, "Is_Post_Processing") == 0) {
+      p_param->is_time_series = strtod( value, NULL );
     }
     else if (strcasecmp(key, "Is_Dutta") == 0) {
       p_param->is_dutta = strtol( value, NULL, 10 );
