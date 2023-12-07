@@ -650,12 +650,7 @@ int main(int argc, char **argv)
     printf("preparing GPU memory space \n");
 
     if(p_param->is_cvar == true){
-      char buffer_cvar[255];
-      snprintf(buffer_cvar, sizeof(buffer_cvar),
-      "./drugs/10000_pop.csv"
-      // "./drugs/optimized_pop_10k.csv"
-      );
-      int cvar_sample = get_cvar_data_from_file(buffer_cvar,sample_size,cvar);
+      int cvar_sample = get_cvar_data_from_file(p_param->cvar_file,sample_size,cvar);
       printf("Reading: %d Conductance Variability samples\n",cvar_sample);
     }
 
@@ -670,8 +665,8 @@ int main(int argc, char **argv)
     cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
     cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
 
-    cudaMalloc(&d_STATES_RESULT, (num_of_states+1) * sample_size * sizeof(double));
-    cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double));
+    cudaMalloc(&d_STATES_RESULT, (num_of_states+1) * sample_size * sizeof(double)); // for cache file
+    cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double)); // for each sample 
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
@@ -729,8 +724,8 @@ int main(int argc, char **argv)
     double *h_states, *h_all_states;
     cipa_t *h_cipa_result;
 
-    h_states = (double *)malloc((num_of_states+1) * sample_size * sizeof(double));
-    h_all_states = (double *)malloc( (num_of_states) * sample_size * p_param->find_steepest_start * sizeof(double));
+    h_states = (double *)malloc((num_of_states+1) * sample_size * sizeof(double)); //cache file
+    h_all_states = (double *)malloc( (num_of_states) * sample_size * p_param->find_steepest_start * sizeof(double)); //all core
     h_cipa_result = (cipa_t *)malloc(sample_size * sizeof(cipa_t));
     printf("...allocating for all states, all set!\n");
 
