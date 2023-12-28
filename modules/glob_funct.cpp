@@ -95,7 +95,7 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
       p_param->is_cvar = strtol( value, NULL, 10 );
     }
     else if (strcasecmp(key, "Pace_Find_Steepest") == 0) {
-      p_param->find_steepest_start = strtod( value, NULL);
+      p_param->find_steepest_start = strtol( value, NULL, 10);
     }
     else if (strcasecmp(key, "GPU_Index") == 0) {
       p_param->gpu_index = strtod( value, NULL);
@@ -104,7 +104,7 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
       p_param->bcl = strtod( value, NULL );
     }
     else if (strcasecmp(key, "Number_of_Pacing") == 0) {
-      p_param->pace_max = strtod( value, NULL );
+      p_param->pace_max = strtol( value, NULL, 10 );
     }
     else if (strcasecmp(key, "Time_Step") == 0) {
       p_param->dt = strtod( value, NULL );
