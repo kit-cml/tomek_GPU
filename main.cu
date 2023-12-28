@@ -788,46 +788,46 @@ int main(int argc, char **argv)
     // // int check;
     // // bool folder_created = false;
 
-    printf("writing each core value... \n");
-    // sample loop
-    for (int sample_id = 0; sample_id<sample_size; sample_id++){
-      // printf("writing sample %d... \n",sample_id);
-      char sample_str[ENOUGH];
-      char conc_str[ENOUGH];
-      char filename[500] = "./result/";
-      sprintf(sample_str, "%d", sample_id);
-      sprintf(conc_str, "%.2f", CONC);
-      strcat(filename,conc_str);
-      strcat(filename,"/");
-      // printf("creating %s... \n", filename);
-      if (folder_created == false){
-        check = mkdir(filename,0777);
-        // check if directory is created or not
-        if (!check){
-          printf("Directory created\n");
-          }
-        else {
-          printf("Unable to create directory, or the folder is already created, relax mate...\n");  
-      }
-      folder_created = true;
-      }
+    // printf("writing each core value... \n");
+    // // sample loop
+    // for (int sample_id = 0; sample_id<sample_size; sample_id++){
+    //   // printf("writing sample %d... \n",sample_id);
+    //   char sample_str[ENOUGH];
+    //   char conc_str[ENOUGH];
+    //   char filename[500] = "./result/";
+    //   sprintf(sample_str, "%d", sample_id);
+    //   sprintf(conc_str, "%.2f", CONC);
+    //   strcat(filename,conc_str);
+    //   strcat(filename,"/");
+    //   // printf("creating %s... \n", filename);
+    //   if (folder_created == false){
+    //     check = mkdir(filename,0777);
+    //     // check if directory is created or not
+    //     if (!check){
+    //       printf("Directory created\n");
+    //       }
+    //     else {
+    //       printf("Unable to create directory, or the folder is already created, relax mate...\n");  
+    //   }
+    //   folder_created = true;
+    //   }
       
-      strcat(filename,sample_str);
-      strcat(filename,".csv");
+    //   strcat(filename,sample_str);
+    //   strcat(filename,".csv");
 
-      writer = fopen(filename,"w");
-      for (int pacing = 0; pacing < p_param->find_steepest_start; pacing++){ //pace loop
-       // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
-        for(int datapoint = 0; datapoint < num_of_states; datapoint++){ // each data loop
-        fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states)) + ((sample_size) * pacing) + datapoint]);
-        // fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states))+ datapoint]);
-        } 
-        // fprintf(writer,"%d",p_param->find_steepest_start + pacing);
-        fprintf(writer,"%d\n",pacing + (p_param->pace_max - p_param->find_steepest_start)+1 );
+    //   writer = fopen(filename,"w");
+    //   for (int pacing = 0; pacing < p_param->find_steepest_start; pacing++){ //pace loop
+    //    // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
+    //     for(int datapoint = 0; datapoint < num_of_states; datapoint++){ // each data loop
+    //     fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states)) + ((sample_size) * pacing) + datapoint]);
+    //     // fprintf(writer,"%lf,",h_all_states[((sample_id * num_of_states))+ datapoint]);
+    //     } 
+    //     // fprintf(writer,"%d",p_param->find_steepest_start + pacing);
+    //     fprintf(writer,"%d\n",pacing + (p_param->pace_max - p_param->find_steepest_start)+1 );
 
-      }
-      fclose(writer);
-    }
+    //   }
+    //   fclose(writer);
+    // }
 
     toc();
     
