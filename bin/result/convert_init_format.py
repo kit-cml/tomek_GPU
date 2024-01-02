@@ -18,9 +18,15 @@ foldername = 'converted_'+filename.split('/')[1].split('c')[0]
 
 os.mkdir(foldername)
 
+for indeks in range(10):
+     f = open(foldername+"/output."+str(indeks), "a")
+     f.write(str(data[0][42]*2000.00)+"\n")
+     f.close()
+
 for idx,row in data.iterrows():
     # print(row[1])
-    f = open(foldername+"/output."+str(idx), "a")
+    # devided as core (10 cores..)
+    f = open(foldername+"/output."+str(int(idx/200)), "a")
     for index in range(1,41):
         f.write(str(row[index])+",")
     f.write(str(row[index+1])+"\n")
