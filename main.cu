@@ -497,7 +497,7 @@ int main(int argc, char **argv)
       writer = fopen(filename,"w");
       fprintf(writer, "Time,Vm,dVm/dt,Cai,INa,INaL,ICaL,IKs,IKr,IK1,Ito\n"); 
       for (int datapoint = 1; datapoint<datapoint_size; datapoint++){
-       // if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {continue;}
+       if (h_time[ sample_id + (datapoint * sample_size)] == 0.0) {break;}
         fprintf(writer,"%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         h_time[ sample_id + (datapoint * sample_size)],
         h_states[ sample_id + (datapoint * sample_size)],
