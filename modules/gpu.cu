@@ -805,7 +805,6 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
                 // printf("check 4\n");
 				      }
               // get the APD90, APD50, peak calcium, 50% and 90% of amplitude of Calcium, and time of peak calcium
-                printf("tcurr : %lf\n",tcurr[sample_id]);
                 if( vm_repol50 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol50-2 ) temp_result[sample_id].apd50 = tcurr[sample_id] - t_depol;
                 if( vm_repol90 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol90-2 ) temp_result[sample_id].apd90 = tcurr[sample_id] - t_depol;
                 if( temp_result[sample_id].ca_peak < d_STATES[(sample_id * num_of_states)+cai] ){
