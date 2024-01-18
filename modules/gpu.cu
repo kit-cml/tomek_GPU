@@ -549,7 +549,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
     // const unsigned short pace_max = 1000;
-    const unsigned short pace_max = 2;
+    const unsigned short pace_max = 1;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
     // const unsigned short last_drug_check_pace = 250;
@@ -727,8 +727,11 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               is_peak = true;
             
           // resetting inet and AUC values
-          // and increase the pace count
-          pace_count++;
+          // and increase the pace count. UPDATE: Disabled since it is very obvious we are using only one pacing here
+
+          // pace_count++;
+
+
           input_counter = 0; // at first, we reset the input counter since we re gonna only take one, but I remember we don't have this kind of thing previously, so do we need this still?
           cipa_datapoint = 0; // new pace? reset variables related to saving the values,
           inet = 0.;
@@ -740,7 +743,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             // t_ca_peak = tcurr[sample_id];
 
             t_depol = (d_CONSTANTS[(sample_id * num_of_constants)+BCL]*pace_count)+d_CONSTANTS[(sample_id * num_of_constants)+stim_start];
-            // printf("t_depol: %lf, pace_count: %d\n",t_depol,pace_count);
+            // if (sample_id == 1) printf("t_depol: %lf\n",t_depol);
             // is_eligible_AP = false;
             is_eligible_AP = true;
           // }
@@ -774,7 +777,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
                 is_eligible_AP = true;
                 t_peak_capture = tcurr[sample_id];
                 // printf("check 2\n");
-                // printf("vm_repol 50: %lf\n",vm_repol50);
+               
               }
               // else is_eligible_AP = false;
             }
@@ -805,6 +808,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
                 // printf("check 4\n");
 				      }
               // get the APD90, APD50, peak calcium, 50% and 90% of amplitude of Calcium, and time of peak calcium
+                // if (sample_id == 1) printf("tcurr[1] : %lf\n",tcurr[sample_id]);
+
                 if( vm_repol50 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol50-2 ) temp_result[sample_id].apd50 = tcurr[sample_id] - t_depol;
                 if( vm_repol90 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol90-2 ) temp_result[sample_id].apd90 = tcurr[sample_id] - t_depol;
                 if( temp_result[sample_id].ca_peak < d_STATES[(sample_id * num_of_states)+cai] ){
@@ -889,8 +894,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               cipa_result[sample_id].dvmdt_max = temp_result[sample_id].dvmdt_max;
               
               cipa_result[sample_id].vm_dia = temp_result[sample_id].vm_dia;
-              // cipa_result[sample_id].apd90 = temp_result[sample_id].apd90;
-              // cipa_result[sample_id].apd50 = temp_result[sample_id].apd50;
+              cipa_result[sample_id].apd90 = temp_result[sample_id].apd90;
+              cipa_result[sample_id].apd50 = temp_result[sample_id].apd50;
               cipa_result[sample_id].ca_peak = temp_result[sample_id].ca_peak;
               cipa_result[sample_id].ca_valley = d_STATES[(sample_id * num_of_states) +cai];
               cipa_result[sample_id].ca_dia = temp_result[sample_id].ca_dia;
@@ -933,8 +938,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
       // printf("cai_data[0] %lf \n",temp_result[sample_id].cai_data[0]);
       temp_result[sample_id].cad50 = cad50_curr - cad50_prev;// the curr is lower than the prev, like waaay lower, its a negative (it shouldnt be, since its in time)
       temp_result[sample_id].cad90 = cad90_curr - cad90_prev;
-      cipa_result[sample_id].cad90 = temp_result[sample_id].cad90 - bcl*(pace_max-1);
-      cipa_result[sample_id].cad50 = temp_result[sample_id].cad50 - bcl*(pace_max-1);
+      cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
+      cipa_result[sample_id].cad50 = temp_result[sample_id].cad50;
 
 }
 
