@@ -1,5 +1,5 @@
 # Stage 1: Build environment with CUDA and necessary tools (Ubuntu-based)
-FROM nvidia/cuda:12.3.1-devel-ubuntu20.04 AS builder
+FROM nvidia/cuda:12.2.2-devel-ubuntu20.04 AS builder
 
 WORKDIR /app
 
@@ -37,7 +37,9 @@ RUN make
 ##------------------------------------------------------------------------------------
 
 # Stage 2: Minimal runtime environment (Ubuntu-based)
-FROM nvidia/cuda:12.3.1-runtime-ubuntu20.04
+# Use runtime to save some space, but if there any error, try to switch to devel
+# FROM nvidia/cuda:12.2.2-devel-ubuntu20.04
+FROM nvidia/12.2.2-runtime-ubuntu20.04
 
 # Install essential build tools (Ubuntu-specific packages)
 RUN apt-get update && apt install glibc-source -y
@@ -50,6 +52,6 @@ COPY --from=builder /app/bin/drug_sim /app/
 # Copy files from the host machine
 COPY bin/drugs /app/drugs
 COPY bin/result /app/result
-
+COPY bin/input_deck_example.txt /app/input_deck_example.txt
 # Run the binary file
 CMD ["./drug_sim"]
