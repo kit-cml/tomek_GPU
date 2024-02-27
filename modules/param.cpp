@@ -12,7 +12,7 @@ void param_t::init()
 
   is_print_graph = true;
   is_using_output = false;
-  is_cvar = false;
+  is_cvar = true;
 
   bcl = 2000.;
   pace_max = 10;
@@ -27,15 +27,15 @@ void param_t::init()
   dt = 0.005;
   // dt = 0.1;
 
-  conc = 33.0;
+  conc = 4129.0;
   
   dt_write = 2.0;
   inet_vm_threshold = -88.0;
-  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
-  snprintf(cache_file, sizeof(cache_file), "%s", "./result/33.00.csv");
+  snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/mexiletine/IC50_samples.csv");
+  snprintf(cache_file, sizeof(cache_file), "%s", "./result/4129.00.csv");
   snprintf(cvar_file, sizeof(cvar_file), "%s", "./drugs/10000_pop.csv");
-  snprintf(drug_name, sizeof(drug_name), "%s", "bepridil");
-  snprintf(concs, sizeof(concs), "%s", "33.0");
+  snprintf(drug_name, sizeof(drug_name), "%s", "mexiletine");
+  snprintf(concs, sizeof(concs), "%s", "4129.0");
 }
 
 void param_t::show_val()
