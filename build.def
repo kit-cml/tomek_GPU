@@ -1,0 +1,64 @@
+# Define the Singularity image
+Singularity {
+  # Base image for the build stage
+  Bootstrap nvidia/cuda:12.2.2-devel-ubuntu20.04
+
+  # Define the build environment
+  BuildEnv (
+    # Set non-interactive environment
+    ENV DEBIAN_FRONTEND=noninteractive
+
+    # Install essential build tools
+    %pre {
+      apt-get update && apt-get install -y \
+          make \
+          cmake \
+          nano \
+          libtool \
+          libjson-c-dev \
+          libcurl4-openssl-dev \
+          libc6-dev-i386 \
+          wget \
+          g++
+    }
+    # Download and install cuDNN manually
+    %post {
+      wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcudnn8_8.9.5.29-1+cuda12.2_amd64.deb \
+          && dpkg -i libcudnn8_8.9.5.29-1+cuda12.2_amd64.deb \
+          && rm libcudnn8_8.9.5.29-1+cuda12.2_amd64.deb
+    }
+
+    # Copy project files
+    %files .
+
+    # Build commands
+    %post
+      make
+
+      # Add commands for additional projects (e.g., make -C project3)
+  )
+
+  # Define the runtime environment
+  Env (
+    # Base image for runtime
+    FROM nvidia/12.2.2-runtime-ubuntu20.04
+
+    # Install minimal dependencies
+    %pre {
+      apt-get update && apt install glibc-source -y
+    }
+
+    # Copy compiled binaries and data
+    %files
+      # From builder stage
+      /app/bin/drug_sim /app/
+
+      # From host machine
+      bin/drugs /app/drugs
+      bin/result /app/result
+      bin/input_deck_example.txt /app/input_deck_example.txt
+
+    # Set execution command
+    CMD ["/app/drug_sim"]
+  )
+}
