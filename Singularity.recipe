@@ -1,7 +1,7 @@
 # Define the Singularity image
 Singularity {
   # Base image for the build stage
-  Bootstrap nvidia/cuda:12.2.2-devel-ubuntu20.04
+  Bootstrap: nvidia/cuda:12.2.2-devel-ubuntu20.04
 
   # Define the build environment
   BuildEnv (
