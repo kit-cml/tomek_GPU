@@ -51,14 +51,14 @@ Singularity {
     # Copy compiled binaries and data
     %files
       # From builder stage
-      /app/bin/drug_sim /app/
+      # /app/bin/drug_sim /app/
 
       # From host machine
-      bin/drugs /app/drugs
-      bin/result /app/result
-      bin/input_deck_example.txt /app/input_deck_example.txt
+      # bin/drugs /app/drugs
+      # bin/result /app/result
+      # bin/input_deck_example.txt /app/input_deck_example.txt
 
     # Set execution command
-    CMD ["/app/drug_sim"]
+    # CMD ["/app/drug_sim"]
   )
 }
