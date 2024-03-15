@@ -55,4 +55,4 @@ COPY bin/drugs /app/drugs
 COPY bin/result /app/result
 COPY bin/input_deck_example.txt /app/input_deck_example.txt
 # Run the binary file
-CMD ["./drug_sim"]
+# CMD ["./drug_sim"]
