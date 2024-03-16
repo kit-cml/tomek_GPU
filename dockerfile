@@ -39,8 +39,8 @@ RUN make
 
 # Stage 2: Minimal runtime environment (Ubuntu-based)
 # Use runtime to save some space, but if there any error, try to switch to devel
-# FROM nvidia/cuda:12.2.2-devel-ubuntu20.04
-FROM nvidia/12.2.2-runtime-ubuntu20.04
+FROM nvidia/cuda:12.2.2-devel-ubuntu20.04
+# FROM nvidia/12.2.2-runtime-ubuntu20.04
 
 # Install essential build tools (Ubuntu-specific packages)
 RUN apt-get update && apt install glibc-source -y
