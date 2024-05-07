@@ -142,7 +142,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, sample_id);
     
 
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
@@ -591,7 +591,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, dutta, p_param->is_cvar, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, sample_id);
 
     // starting from initial value, to make things simpler for now, we're just going to replace what initConst has done 
     // to the d_STATES and bring them back to cached initial values:

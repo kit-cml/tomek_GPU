@@ -435,7 +435,7 @@
  * RATES[Jrelp] is d/dt Jrelp in component ryr (dimensionless).
  */
 
-__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, int offset)
+__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int offset)
 {
 
 int num_of_constants = 146;
@@ -453,7 +453,7 @@ CONSTANTS[(offset * num_of_constants) + zk] = 1;
 CONSTANTS[(offset * num_of_constants) + L] = 0.01;
 CONSTANTS[(offset * num_of_constants) + rad] = 0.0011;
 CONSTANTS[(offset * num_of_constants) + stim_start] = 10.0;
-CONSTANTS[(offset * num_of_constants) + BCL] = 1000.0;
+CONSTANTS[(offset * num_of_constants) + BCL] = bcl;
 STATES[(offset * num_of_states) + V] = -87;
 CONSTANTS[(offset * num_of_constants) + amp] = -80;
 CONSTANTS[(offset * num_of_constants) + duration] = 0.5;
@@ -689,12 +689,12 @@ CONSTANTS[PCa+(offset * num_of_constants)] = CONSTANTS[PCa+(offset * num_of_cons
 // 	___initConsts(type, offset);
 // }
 
-__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, double *cvar, bool is_dutta, bool is_cvar,  int offset)
+__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, double *cvar, bool is_dutta, bool is_cvar, double bcl, int offset)
 {
   // int num_of_constants = 146;
   // printf("ic50:%d %lf, %lf, %lf\n",offset,ic50[0 + (offset*14)],ic50[1 + (offset*14)],ic50[2 + (offset*14)]);
 
-	___initConsts(CONSTANTS, STATES, type, offset); // initconst kan minta 
+	___initConsts(CONSTANTS, STATES, type, bcl, offset); // initconst kan minta 
 	// // mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
 	// #ifndef COMPONENT_PATCH // for patch clamp component based research
 	// // mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
