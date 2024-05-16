@@ -235,6 +235,9 @@ int main(int argc, char **argv)
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
 
+    // for qinwards calculation
+    double inal_auc_control = -90.547322;
+    double ical_auc_control = -105.935067;
 
     // input variables for cell simulation
     param_t *p_param, *d_p_param;
@@ -545,13 +548,14 @@ int main(int argc, char **argv)
 
     writer = fopen(filename,"a");
 
-    fprintf(writer, "sample,qnet,inal_auc,ical_auc,apd90,apd50,apd_tri,cad90,cad50,cad_tri,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
+    fprintf(writer, "sample,qnet,qInward,inal_auc,ical_auc,apd90,apd50,apd_tri,cad90,cad50,cad_tri,dvmdt_repol,vm_peak,vm_valley,vm_dia,ca_peak,ca_valley,ca_dia\n"); 
     for (int sample_id = 0; sample_id<sample_size; sample_id++){
       // printf("writing sample %d... \n",sample_id);
       
-      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
+      fprintf(writer,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", // change this into string, or limit the decimal accuracy, so we can decrease filesize
         sample_id,
         h_cipa_result[sample_id].qnet,
+        0.5*((h_cipa_result[sample_id].ical_auc / ical_auc_control)+(h_cipa_result[sample_id].inal_auc / inal_auc_control)),
         h_cipa_result[sample_id].inal_auc,
         h_cipa_result[sample_id].ical_auc,
         
