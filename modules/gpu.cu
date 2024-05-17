@@ -742,7 +742,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
             // t_ca_peak = tcurr[sample_id];
 
-            t_depol = (d_CONSTANTS[(sample_id * num_of_constants)+BCL]*pace_count)+d_CONSTANTS[(sample_id * num_of_constants)+stim_start];
+            t_depol = (d_CONSTANTS[BCL + (sample_id * num_of_constants)]*pace_count) + d_CONSTANTS[stim_start + (sample_id * num_of_constants)];
             // if (sample_id == 1) printf("t_depol: %lf\n",t_depol);
             // is_eligible_AP = false;
             is_eligible_AP = true;
@@ -810,10 +810,15 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
               // get the APD90, APD50, peak calcium, 50% and 90% of amplitude of Calcium, and time of peak calcium
                 // if (sample_id == 1) printf("tcurr[1] : %lf\n",tcurr[sample_id]);
 
-                if( vm_repol50 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol50-2 ) temp_result[sample_id].apd50 = tcurr[sample_id] - t_depol;
-                if( vm_repol90 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol90-2 ) temp_result[sample_id].apd90 = tcurr[sample_id] - t_depol;
+                if( vm_repol50 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol50-2 ){
+                  temp_result[sample_id].apd50 = tcurr[sample_id] - t_depol;
+                  //printf("tcurr: %lf t_depol : %lf\n", tcurr[sample_id], t_depol);  
+                } 
+                if( vm_repol90 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol90-2 ){
+                  temp_result[sample_id].apd90 = tcurr[sample_id] - t_depol;
+                  } 
+
                 if( temp_result[sample_id].ca_peak < d_STATES[(sample_id * num_of_states)+cai] ){
-                  // printf("steepest in\n");  
                   temp_result[sample_id].ca_peak = d_STATES[(sample_id * num_of_states) +cai];
                   ca_amp50 = temp_result[sample_id].ca_peak - (0.5 * (temp_result[sample_id].ca_peak - temp_result[sample_id].ca_valley));
                   ca_amp90 = temp_result[sample_id].ca_peak - (0.9 * (temp_result[sample_id].ca_peak - temp_result[sample_id].ca_valley));
