@@ -1044,7 +1044,7 @@ RATES[ (states_size * offset) +cajsr] =  ALGEBRAIC[(algebraic_size * offset) + B
 
 // }
 
-void Tomek_model::solveAnalytical(double dt)
+void Tomek_model::solveAnalytical(double dt, int offset)
 {
 #ifdef EULER
   STATES[(states_size * offset) + (states_size * offset) + V] = STATES[(states_size * offset) + V] + RATES[ (states_size * offset) +V] * dt;
@@ -1253,7 +1253,8 @@ double Tomek_model::set_time_step(double TIME,
                                               double min_time_step,
                                               double max_time_step,
                                               double min_dV,
-                                              double max_dV) {
+                                              double max_d,
+                                              int offset) {
  double time_step = min_time_step;
  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[(constants_size * offset) + BCL]) * CONSTANTS[(constants_size * offset) + BCL]) <= time_point) {
     //printf("TIME <= time_point ms\n");
