@@ -495,7 +495,7 @@ int main(int argc, char **argv)
       }
       
       strcat(filename,sample_str);
-      strcat(filename,"_pace.csv");
+      strcat(filename,"_timeseries.csv");
 
       writer = fopen(filename,"w");
       fprintf(writer, "Time,Vm,dVm/dt,Cai,INa,INaL,ICaL,IKs,IKr,IK1,Ito\n"); 
