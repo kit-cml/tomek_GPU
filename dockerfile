@@ -53,6 +53,6 @@ COPY --from=builder /app/bin/drug_sim /app/
 # Copy files from the host machine
 COPY bin/drugs /app/drugs
 COPY bin/result /app/result
-COPY bin/input_deck_example.txt /app/input_deck_example.txt
+COPY bin/input_deck.txt /app/input_deck.txt
 # Run the binary file
 # CMD ["./drug_sim"]
