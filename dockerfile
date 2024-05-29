@@ -1,4 +1,5 @@
 # Stage 1: Build environment with CUDA and necessary tools (Ubuntu-based)
+# we need this to be driver version specific
 FROM nvidia/cuda:12.2.2-devel-ubuntu20.04 AS builder
 
 WORKDIR /app
@@ -54,5 +55,6 @@ COPY --from=builder /app/bin/drug_sim /app/
 COPY bin/drugs /app/drugs
 COPY bin/result /app/result
 COPY bin/input_deck.txt /app/input_deck.txt
+COPY bin/run_insilico_postpro.sh /app/run_insilico_postpro.sh
 # Run the binary file
 # CMD ["./drug_sim"]
