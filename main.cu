@@ -229,36 +229,32 @@ int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 int main(int argc, char **argv)
 {
 	// enable real-time output in stdout
-	setvbuf( stdout, NULL, _IONBF, 0 );
+	//setvbuf( stdout, NULL, _IONBF, 0 );
 	
 // NEW CODE STARTS HERE //
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
 
     // for qinwards calculation
-    double inal_auc_control = -90.547322;
-    double ical_auc_control = -105.935067;
+    double inal_auc_control = -90.547322;    // AUC of INaL under control model
+    double ical_auc_control = -105.935067;   // AUC of ICaL under control model
 
     // input variables for cell simulation
-    param_t *p_param, *d_p_param;
-	  p_param = new param_t();
+    param_t *p_param = new param_t();  // input data for CPU
+    param_t *d_p_param;  // input data for GPU parsing
+	
   	p_param->init();
     edison_assign_params(argc,argv,p_param);
     p_param->show_val();
 
-    double *ic50; //temporary
-    double *cvar;
-
-    ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    double* ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
     // if (p_param->is_cvar == true) cvar = (double *)malloc(18 * sample_limit * sizeof(double));
-    cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+    double* cvar = (double *)malloc(18 * sample_limit * sizeof(double));  // conductance variability
 
-    int num_of_constants = 146;
-    int num_of_states = 41;
-    int num_of_algebraic = 199;
-    int num_of_rates = 41;
-
-
+    const int num_of_constants = 146;
+    const int num_of_states = 41;
+    const int num_of_algebraic = 199;
+    const int num_of_rates = 41;
     const double CONC = p_param->conc;
 
     ////////// if we are in write time series mode (post processing) //////////
@@ -266,42 +262,13 @@ int main(int argc, char **argv)
 
     printf("Using cached initial state from previous result!!!! \n\n");
 
-    const unsigned int datapoint_size = p_param->sampling_limit;
-    double *cache;
-    cache = (double *)malloc((num_of_states+2) * sample_limit * sizeof(double));
+    const unsigned int datapoint_size = p_param->sampling_limit; // sampling_limit: limit of num of data points in one sample
+  
+    double* cache = (double *)malloc((num_of_states+2) * sample_limit * sizeof(double)); // array for in silico results
     
-    double *d_ic50;
-    double *d_cvar;
-    double *d_ALGEBRAIC;
-    double *d_CONSTANTS;
-    double *d_RATES;
-    double *d_STATES;
-    double *d_STATES_cache;
-
-    // actually not used but for now, this is only for satisfiying the GPU regulator parameters
-    double *d_STATES_RESULT;
-    double *d_all_states;
-
-    double *time;
-    double *dt;
-    double *states;
-    double *ical;
-    double *inal;
-    double *cai_result;
-    double *ina;
-    double *ito;
-    double *ikr;
-    double *iks;
-    double *ik1;
-    cipa_t *temp_result, *cipa_result;
 
     static const int CALCIUM_SCALING = 1000000;
     static const int CURRENT_SCALING = 1000;
-
-    int num_of_constants = 146;
-    int num_of_states = 41;
-    int num_of_algebraic = 199;
-    int num_of_rates = 41;
 
     // snprintf(buffer, sizeof(buffer),
     //   "./drugs/bepridil/IC50_samples.csv"
@@ -317,7 +284,7 @@ int main(int argc, char **argv)
     printf("Sample size: %d\n",sample_size);
     printf("Set GPU Number: %d\n",p_param->gpu_index);
 
-    cudaSetDevice(p_param->gpu_index);
+    cudaSetDevice(p_param->gpu_index);  // select a specific GPU
 
     if(p_param->is_cvar == true){
       int cvar_sample = get_cvar_data_from_file(p_param->cvar_file,sample_size,cvar);
@@ -331,7 +298,8 @@ int main(int argc, char **argv)
       // "./result/66_00.csv"
       // // "./drugs/optimized_pop_10k.csv"
       // );
-      int cache_num = get_init_data_from_file(p_param->cache_file,cache);
+      int cache_num = get_init_data_from_file(p_param->cache_file,cache);  //
+
       printf("Found cache for %d samples\n",cache_num);
       // note to self:
       // num of states+2 gave you at the very end of the file (pace number)
@@ -342,21 +310,42 @@ int main(int argc, char **argv)
     //   printf("\n");
     //   for (int z = 0; z <  num_of_states; z++) {printf("%lf\n", cache[ 2*(num_of_states+2) + (z+3)]);}
     // return 0 ;
-
+    double *d_ic50;
+    double *d_cvar;
+    double *d_ALGEBRAIC;
+    double *d_CONSTANTS;
+    double *d_RATES;
+    double *d_STATES;
+    double *d_STATES_cache;
+    // actually not used but for now, this is only for satisfiying the GPU regulator parameters
+    double *d_STATES_RESULT;
+    double *d_all_states;
     cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, num_of_states * sample_size * sizeof(double));
     cudaMalloc(&d_STATES_cache, (num_of_states+2) * sample_size * sizeof(double));
-
     cudaMalloc(&d_p_param,  sizeof(param_t));
 
+    double *time;
+    double *dt;
+    double *states;
+    double *ical;
+    double *inal;
+    double *cai_result;
+    double *ina;
+    double *ito;
+    double *ikr;
+    double *iks;
+    double *ik1;
+    cipa_t *temp_result, *cipa_result;
     // prep for 1 cycle plus a bit (7000 * sample_size)
-    cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
-    cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
+    cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));  // for temporal ??
+    cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));  // output of postprocessing
 
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double)); 
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double)); 
+
     cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
@@ -368,11 +357,10 @@ int main(int argc, char **argv)
     cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
     // cudaMalloc(&d_STATES_RESULT, (num_of_states+1) * sample_size * sizeof(double));
     // cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double));
+    cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));  // ic50s of 7 channels 
+    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));  // conductances of 18
 
     printf("Copying sample files to GPU memory space \n");
-    cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
-    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
-    
     cudaMemcpy(d_STATES_cache, cache, (num_of_states+2) * sample_size * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
@@ -383,14 +371,12 @@ int main(int argc, char **argv)
 
     // // Calculate the total number of blocks
     // int numTotalBlocks = numBlocks * cudaDeviceGetMultiprocessorCount();
-
     tic();
     printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
     int thread;
-    if (sample_size>=100){
-      thread = 100;
-    }
+    if (sample_size>=100) thread = 100;// optimal number of thread by experience
     else thread = sample_size;
+    
     int block = int(ceil(sample_size*1.0/thread));
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * sizeof(double) + sizeof(param_t)) == 1){
