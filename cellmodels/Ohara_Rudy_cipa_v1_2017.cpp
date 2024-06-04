@@ -786,6 +786,10 @@ CONSTANTS[(constant_size * offset) + Pnak] = (CONSTANTS[(constant_size * offset)
 
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset)
 {
+algebraic_size = 200;
+constants_size = 206;
+states_size = 49;
+rates_size = 49;
 CONSTANTS[(constant_size * offset) + GK1] = CONSTANTS[(constant_size * offset) + GK1] * ((hill[2] > 10E-14 && hill[3] > 10E-14) ? 1./(1.+pow(conc/hill[2],hill[3])) : 1.);
 CONSTANTS[(constant_size * offset) + GKs] = CONSTANTS[(constant_size * offset) + GKs] * ((hill[4] > 10E-14 && hill[5] > 10E-14) ? 1./(1.+pow(conc/hill[4],hill[5])) : 1.);
 CONSTANTS[(constant_size * offset) + GNaL] = CONSTANTS[(constant_size * offset) + GNaL] * ((hill[8] > 10E-14 && hill[9] > 10E-14) ? 1./(1.+pow(conc/hill[8],hill[9])) : 1.);
@@ -796,6 +800,10 @@ CONSTANTS[(constant_size * offset) + PCa] = CONSTANTS[(constant_size * offset) +
 
 __device__ void ___applyHERGBinding(double conc, const double *herg)
 {
+algebraic_size = 200;
+constants_size = 206;
+states_size = 49;
+rates_size = 49;
 if(conc > 10E-14){
 CONSTANTS[(constant_size * offset) + Kmax] = herg[0];
 CONSTANTS[(constant_size * offset) + Ku] = herg[1];
@@ -831,6 +839,10 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 
 __device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
 {
+algebraic_size = 200;
+constants_size = 206;
+states_size = 49;
+rates_size = 49;
 ALGEBRAIC[(algebraic_size * offset) + hLss] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+87.6100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + hLssp] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+93.8100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + mss] = 1.00000/(1.00000+exp(- (STATES[(states_size * offset) + V]+CONSTANTS[mssV1])/CONSTANTS[(constant_size * offset) + mssV2]));
@@ -1087,6 +1099,10 @@ RATES[(rates_size * offset) + cajsr] =  ALGEBRAIC[(algebraic_size * offset) + Bc
 
 __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset)
 {
+algebraic_size = 200;
+constants_size = 206;
+states_size = 49;
+rates_size = 49;
 ////==============
 ////Exact solution
 ////==============

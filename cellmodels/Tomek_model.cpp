@@ -7,6 +7,11 @@
 #include "Tomek_model.hpp"
 #include <cmath>
 #include <cstdlib>
+#include <cstdio>
+#include "../modules/glob_funct.hpp"
+#include <cuda_runtime.h>
+#include <cuda.h>
+
 // #include "../../functions/inputoutput.hpp" // disabled for GPU operations
 
 /*
@@ -486,20 +491,25 @@
  */
 
 
-Tomek_model::Tomek_model()
+// Tomek_model::Tomek_model()
+// {
+// algebraic_size = 223;
+// constants_size = 163;
+// states_size = 43;
+// rates_size = 43;
+// }
+
+// Tomek_model::~Tomek_model()
+// {
+
+// }
+
+__device__ void ___initConsts(double type, int offset)
 {
 algebraic_size = 223;
 constants_size = 163;
 states_size = 43;
-}
-
-Tomek_model::~Tomek_model()
-{
-
-}
-
-void Tomek_model::___initConsts(double type, int offset)
-{
+rates_size = 43;
 CONSTANTS[(constants_size * offset) + celltype] = type;
 CONSTANTS[(constants_size * offset) + nao] = 140.0;
 CONSTANTS[(constants_size * offset) + cao] = 1.8;
@@ -708,7 +718,7 @@ CONSTANTS[(constants_size * offset) + a4] = (( CONSTANTS[(constants_size * offse
 CONSTANTS[(constants_size * offset) + Pnak] = (CONSTANTS[(constants_size * offset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * offset) + Pnak_b]*0.900000 : CONSTANTS[(constants_size * offset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * offset) + Pnak_b]*0.700000 : CONSTANTS[(constants_size * offset) + Pnak_b]);
 }
 
-void Tomek_model::___applyDrugEffect(double conc, const double *hill, int offset)
+__device__ void ___applyDrugEffect(double conc, const double *hill, int offset)
 {
 CONSTANTS[(constants_size * offset) + GK1] = CONSTANTS[(constants_size * offset) + GK1] * ((hill[2] > 10E-14 && hill[3] > 10E-14) ? 1./(1.+pow(conc/hill[2],hill[3])) : 1.);
 CONSTANTS[(constants_size * offset) + GKr] = CONSTANTS[(constants_size * offset) + GKr] * ((hill[12] > 10E-14 && hill[13] > 10E-14) ? 1./(1.+pow(conc/hill[12],hill[13])) : 1.);
@@ -719,17 +729,17 @@ CONSTANTS[(constants_size * offset) + Gto] = CONSTANTS[(constants_size * offset)
 CONSTANTS[(constants_size * offset) + PCa] = CONSTANTS[(constants_size * offset) + PCa] * ( (hill[0] > 10E-14 && hill[1] > 10E-14) ? 1./(1.+pow(conc/hill[0],hill[1])) : 1.);
 }
 
-void Tomek_model::initConsts()
-{
-	___initConsts(0.);
-}
+// void Tomek_model::initConsts()
+// {
+// 	___initConsts(0.);
+// }
 
-void Tomek_model::initConsts(double type)
-{
-	___initConsts(type);
-}
+// void Tomek_model::initConsts(double type)
+// {
+// 	___initConsts(type);
+// }
 
-void Tomek_model::initConsts(double type, double conc, const double *hill)
+__device__ void initConsts(double type, double conc, const double *hill)
 {
 	___initConsts(type);
 	// mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
@@ -742,7 +752,7 @@ void Tomek_model::initConsts(double type, double conc, const double *hill)
 	#endif
 }
 
-void Tomek_model::computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
+__device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
 {
 ALGEBRAIC[(algebraic_size * offset) + hLss] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+87.6100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + hLssp] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+93.8100)/7.48800));
@@ -1044,7 +1054,7 @@ RATES[ (states_size * offset) +cajsr] =  ALGEBRAIC[(algebraic_size * offset) + B
 
 // }
 
-void Tomek_model::solveAnalytical(double dt, int offset)
+__device__ void solveAnalytical(double dt, int offset)
 {
 #ifdef EULER
   STATES[(states_size * offset) + (states_size * offset) + V] = STATES[(states_size * offset) + V] + RATES[ (states_size * offset) +V] * dt;
@@ -1202,7 +1212,7 @@ void Tomek_model::solveAnalytical(double dt, int offset)
 
 }
 
-void Tomek_model::___gaussElimination(double *A, double *b, double *x, int N) {
+__device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
         // Using A as a flat array to represent an N x N matrix
     for (int i = 0; i < N; i++) {
         // Search for maximum in this column
@@ -1248,7 +1258,7 @@ void Tomek_model::___gaussElimination(double *A, double *b, double *x, int N) {
     }
 }
 
-double Tomek_model::set_time_step(double TIME,
+__device__ void set_time_step(double TIME,
                                               double time_point,
                                               double min_time_step,
                                               double max_time_step,
