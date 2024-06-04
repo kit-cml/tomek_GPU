@@ -520,22 +520,12 @@
  * RATES[Jrelp] is d/dt Jrelp in component ryr (dimensionless).
  */
 
-
-__device__ void ohara_rudy_cipa_v1_2017::ohara_rudy_cipa_v1_2017()
+__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int offset)
 {
 algebraic_size = 200;
 constants_size = 206;
 states_size = 49;
 rates_size = 49;
-}
-
-ohara_rudy_cipa_v1_2017::~ohara_rudy_cipa_v1_2017()
-{
-
-}
-
-__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int offset)
-{
   // consider to put all of the sizes here,  as in 2011 ord
 CONSTANTS[(constant_size * offset) + celltype] = type;
 CONSTANTS[(constant_size * offset) + nao] = 140;
@@ -804,7 +794,7 @@ CONSTANTS[(constant_size * offset) + Gto] = CONSTANTS[(constant_size * offset) +
 CONSTANTS[(constant_size * offset) + PCa] = CONSTANTS[(constant_size * offset) + PCa] * ( (hill[0] > 10E-14 && hill[1] > 10E-14) ? 1./(1.+pow(conc/hill[0],hill[1])) : 1.);
 }
 
-__device__ void___applyHERGBinding(double conc, const double *herg)
+__device__ void ___applyHERGBinding(double conc, const double *herg)
 {
 if(conc > 10E-14){
 CONSTANTS[(constant_size * offset) + Kmax] = herg[0];
