@@ -374,10 +374,10 @@ int main(int argc, char **argv)
     tic();
     printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
     int thread;
-    if (sample_size>=100) thread = 100;// optimal number of thread by experience
+    if (sample_size>=16) thread = 16;// optimal number of thread by experience -> might be different for each GPU, can be 16, can be 32
     else thread = sample_size;
-    
-    int block = int(ceil(sample_size*1.0/thread));
+    // int block = int(ceil(sample_size*1.0/thread)+1);
+    int block = (sample_size + thread - 1) / thread;
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * sizeof(double) + sizeof(param_t)) == 1){
       printf("GPU memory insufficient!\n");
@@ -677,11 +677,12 @@ int main(int argc, char **argv)
     tic();
     printf("Timer started, doing simulation.... \n GPU Usage at this moment: \n");
     int thread;
-    if (sample_size>=100){
-      thread = 100;
+    if (sample_size>=16){
+      thread = 16;
     }
     else thread = sample_size;
-    int block = int(ceil(sample_size*1.0/thread));
+    // int block = int(ceil(sample_size*1.0/thread)+1);
+    int block = (sample_size + thread - 1) / thread;
     // int block = (sample_size + thread - 1) / thread;
     if(gpu_check(15 * sample_size * sizeof(double) + sizeof(param_t)) == 1){
       printf("GPU memory insufficient!\n");
