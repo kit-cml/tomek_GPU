@@ -4,7 +4,7 @@
    There are a total of 206 entries in the constant variable array.
  */
 
-#include "ohara_rudy_cipa_v1_2017.hpp"
+#include "Ohara_Rudy_cipa_v1_2017.hpp"
 #include <cmath>
 #include <cstdlib>
 // #include "../../functions/inputoutput.hpp"
