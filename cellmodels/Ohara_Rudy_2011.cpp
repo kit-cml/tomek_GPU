@@ -441,6 +441,7 @@ __device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, do
 int num_of_constants = 146;
 int num_of_states = 41;
 // printf("%d\n", offset);
+CONSTANTS[(offset * num_of_constants) + celltype] = type;
 CONSTANTS[(offset * num_of_constants) + nao] = 140;
 CONSTANTS[(offset * num_of_constants) + cao] = 1.8;
 CONSTANTS[(offset * num_of_constants) + ko] = 5.4;
