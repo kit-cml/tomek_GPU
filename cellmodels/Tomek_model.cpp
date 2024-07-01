@@ -504,7 +504,7 @@
 
 // }
 
-__device__ void ___initConsts(double type, int offset)
+__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int offset)
 {
 int algebraic_size = 223;
 int constants_size = 163;
@@ -528,7 +528,7 @@ STATES[(states_size * offset) + V] = (CONSTANTS[(constants_size * offset) + cell
 CONSTANTS[(constants_size * offset) + stim_start] = 10;
 CONSTANTS[(constants_size * offset) + i_Stim_End] = 100000000000000000;
 CONSTANTS[(constants_size * offset) + i_Stim_Amplitude] = -53;
-CONSTANTS[(constants_size * offset) + BCL] = 1000;
+CONSTANTS[(constants_size * offset) + BCL] = bcl;
 CONSTANTS[(constants_size * offset) + i_Stim_PulseDuration] = 1.0;
 CONSTANTS[(constants_size * offset) + KmCaMK] = 0.15;
 CONSTANTS[(constants_size * offset) + aCaMK] = 0.05;
@@ -718,7 +718,7 @@ CONSTANTS[(constants_size * offset) + a4] = (( CONSTANTS[(constants_size * offse
 CONSTANTS[(constants_size * offset) + Pnak] = (CONSTANTS[(constants_size * offset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * offset) + Pnak_b]*0.900000 : CONSTANTS[(constants_size * offset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * offset) + Pnak_b]*0.700000 : CONSTANTS[(constants_size * offset) + Pnak_b]);
 }
 
-__device__ void ___applyDrugEffect(double conc, const double *hill, int offset)
+__device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, double epsilon, int offset)
 {
 
 int constants_size = 163;
@@ -742,17 +742,12 @@ CONSTANTS[(constants_size * offset) + PCa] = CONSTANTS[(constants_size * offset)
 // 	___initConsts(type);
 // }
 
-__device__ void initConsts(double type, double conc, const double *hill)
+__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_dutta, bool is_cvar, double bcl, double epsilon, int offset)
 {
-	___initConsts(type);
-	// mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
-	#ifndef COMPONENT_PATCH
-	// mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[(constants_size * offset) + PCa], CONSTANTS[(constants_size * offset) + GK1], CONSTANTS[(constants_size * offset) + GKs], CONSTANTS[(constants_size * offset) + GNaL], CONSTANTS[(constants_size * offset) + GKr]);
-	#endif
-	___applyDrugEffect(conc, hill);
-	#ifndef COMPONENT_PATCH
-	// mpi_printf(0,"After drug %lf %lf %lf %lf %lf\n", CONSTANTS[(constants_size * offset) + PCa], CONSTANTS[(constants_size * offset) + GK1], CONSTANTS[(constants_size * offset) + GKs], CONSTANTS[(constants_size * offset) + GNaL], CONSTANTS[(constants_size * offset) + GKr]);
-	#endif
+	___initConsts(CONSTANTS, STATES, type, bcl, offset);
+	
+	applyDrugEffect(CONSTANTS, conc, hill, epsilon, offset);
+	
 }
 
 __device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
@@ -1061,7 +1056,7 @@ RATES[ (states_size * offset) +cajsr] =  ALGEBRAIC[(algebraic_size * offset) + B
 
 // }
 
-__device__ void solveAnalytical(double dt, int offset)
+__device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset)
 {
 int algebraic_size = 223;
 int constants_size = 163;
@@ -1269,47 +1264,87 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
     }
 }
 
-__device__ void set_time_step(double TIME,
-                                              double time_point,
-                                              double min_time_step,
-                                              double max_time_step,
-                                              double min_dV,
-                                              double max_d,
-                                              int offset) {
- int constants_size = 163;
- int rates_size = 43;
+// __device__ void set_time_step(double TIME,
+//                                               double time_point,
+//                                               double min_time_step,
+//                                               double max_time_step,
+//                                               double min_dV,
+//                                               double max_d,
+//                                               int offset) {
+//  int constants_size = 163;
+//  int rates_size = 43;
 
- double time_step = min_time_step;
- if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[(constants_size * offset) + BCL]) * CONSTANTS[(constants_size * offset) + BCL]) <= time_point) {
+//  double time_step = min_time_step;
+//  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[(constants_size * offset) + BCL]) * CONSTANTS[(constants_size * offset) + BCL]) <= time_point) {
+//     //printf("TIME <= time_point ms\n");
+//     return time_step;
+//     //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
+//   }
+//   else {
+//     //printf("TIME > time_point ms\n");
+//     if (std::abs(RATES[(rates_size * offset) +V] * time_step) <= min_dV) {//Slow changes in V
+//         //printf("dV/dt <= 0.2\n");
+//         time_step = std::abs(max_dV / RATES[(rates_size * offset) +V]);
+//         //Make sure time_step is between min time step and max_time_step
+//         if (time_step < min_time_step) {
+//             time_step = min_time_step;
+//         }
+//         else if (time_step > max_time_step) {
+//             time_step = max_time_step;
+//         }
+//         //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
+//     }
+//     else if (std::abs(RATES[(rates_size * offset) +V] * time_step) >= max_dV) {//Fast changes in V
+//         //printf("dV/dt >= 0.8\n");
+//         time_step = std::abs(min_dV / RATES[(rates_size * offset) +V]);
+//         //Make sure time_step is not less than 0.005
+//         if (time_step < min_time_step) {
+//             time_step = min_time_step;
+//         }
+//         //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
+//     } else {
+//         time_step = min_time_step;
+//     }
+//     return time_step;
+//   }
+// }
+
+//using ord 2011 set time step
+__device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int offset) {
+  double time_step = 0.005;
+  int num_of_constants = 146;
+  int num_of_rates = 41;
+
+  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * num_of_constants)]) * CONSTANTS[BCL + (offset * num_of_constants)]) <= time_point) {
     //printf("TIME <= time_point ms\n");
     return time_step;
-    //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
+    //printf("dV = %lf, time_step = %lf\n",RATES[V] * time_step, time_step);
   }
   else {
     //printf("TIME > time_point ms\n");
-    if (std::abs(RATES[(rates_size * offset) +V] * time_step) <= min_dV) {//Slow changes in V
-        //printf("dV/dt <= 0.2\n");
-        time_step = std::abs(max_dV / RATES[(rates_size * offset) +V]);
-        //Make sure time_step is between min time step and max_time_step
-        if (time_step < min_time_step) {
-            time_step = min_time_step;
+    if (std::abs(RATES[V + (offset * num_of_rates)] * time_step) <= 0.2) {//Slow changes in V
+        // printf("dV/dt <= 0.2\n");
+        time_step = std::abs(0.8 / RATES[V + (offset * num_of_rates)]);
+        //Make sure time_step is between 0.005 and max_time_step
+        if (time_step < 0.005) {
+            time_step = 0.005;
         }
         else if (time_step > max_time_step) {
             time_step = max_time_step;
         }
-        //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
+        //printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
     }
-    else if (std::abs(RATES[(rates_size * offset) +V] * time_step) >= max_dV) {//Fast changes in V
-        //printf("dV/dt >= 0.8\n");
-        time_step = std::abs(min_dV / RATES[(rates_size * offset) +V]);
-        //Make sure time_step is not less than 0.005
-        if (time_step < min_time_step) {
-            time_step = min_time_step;
+    else if (std::abs(RATES[V + (offset * num_of_rates)] * time_step) >= 0.8) {//Fast changes in V
+        // printf("dV/dt >= 0.8\n");
+        time_step = std::abs(0.2 / RATES[V + (offset * num_of_rates)]);
+        while (std::abs(RATES[V + (offset * num_of_rates)]  * time_step) >= 0.8 &&
+               0.005 < time_step &&
+               time_step < max_time_step) {
+            time_step = time_step / 10.0;
+            // printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
         }
-        //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
-    } else {
-        time_step = min_time_step;
     }
+    // __syncthreads();
     return time_step;
   }
 }

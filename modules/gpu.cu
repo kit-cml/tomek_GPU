@@ -142,7 +142,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     
 
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
@@ -165,8 +165,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
         dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
         d_CONSTANTS, 
         d_RATES, 
-        d_STATES, 
-        d_ALGEBRAIC, 
         sample_id); 
         
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
@@ -591,7 +589,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
 
     // starting from initial value, to make things simpler for now, we're just going to replace what initConst has done 
     // to the d_STATES and bring them back to cached initial values:
@@ -645,8 +643,6 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
         dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
         d_CONSTANTS, 
         d_RATES, 
-        d_STATES, 
-        d_ALGEBRAIC, 
         sample_id); 
 
         if(d_STATES[(sample_id * num_of_states)+V] > inet_vm_threshold){
