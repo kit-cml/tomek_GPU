@@ -506,10 +506,10 @@
 
 __device__ void ___initConsts(double type, int offset)
 {
-algebraic_size = 223;
-constants_size = 163;
-states_size = 43;
-rates_size = 43;
+int algebraic_size = 223;
+int constants_size = 163;
+int states_size = 43;
+int rates_size = 43;
 CONSTANTS[(constants_size * offset) + celltype] = type;
 CONSTANTS[(constants_size * offset) + nao] = 140.0;
 CONSTANTS[(constants_size * offset) + cao] = 1.8;
@@ -720,6 +720,9 @@ CONSTANTS[(constants_size * offset) + Pnak] = (CONSTANTS[(constants_size * offse
 
 __device__ void ___applyDrugEffect(double conc, const double *hill, int offset)
 {
+
+int constants_size = 163;
+
 CONSTANTS[(constants_size * offset) + GK1] = CONSTANTS[(constants_size * offset) + GK1] * ((hill[2] > 10E-14 && hill[3] > 10E-14) ? 1./(1.+pow(conc/hill[2],hill[3])) : 1.);
 CONSTANTS[(constants_size * offset) + GKr] = CONSTANTS[(constants_size * offset) + GKr] * ((hill[12] > 10E-14 && hill[13] > 10E-14) ? 1./(1.+pow(conc/hill[12],hill[13])) : 1.);
 CONSTANTS[(constants_size * offset) + GKs] = CONSTANTS[(constants_size * offset) + GKs] * ((hill[4] > 10E-14 && hill[5] > 10E-14) ? 1./(1.+pow(conc/hill[4],hill[5])) : 1.);
@@ -754,6 +757,10 @@ __device__ void initConsts(double type, double conc, const double *hill)
 
 __device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset )
 {
+int algebraic_size = 223;
+int constants_size = 163;
+int states_size = 43;
+int rates_size = 43;
 ALGEBRAIC[(algebraic_size * offset) + hLss] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+87.6100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + hLssp] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+93.8100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + jcass] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+18.0800)/2.79160));
@@ -1056,6 +1063,10 @@ RATES[ (states_size * offset) +cajsr] =  ALGEBRAIC[(algebraic_size * offset) + B
 
 __device__ void solveAnalytical(double dt, int offset)
 {
+int algebraic_size = 223;
+int constants_size = 163;
+int states_size = 43;
+int rates_size = 43;
 #ifdef EULER
   STATES[(states_size * offset) + (states_size * offset) + V] = STATES[(states_size * offset) + V] + RATES[ (states_size * offset) +V] * dt;
   STATES[(states_size * offset) + CaMKt] = STATES[(states_size * offset) + CaMKt] + RATES[ (states_size * offset) +CaMKt] * dt;
@@ -1265,6 +1276,9 @@ __device__ void set_time_step(double TIME,
                                               double min_dV,
                                               double max_d,
                                               int offset) {
+ int constants_size = 163;
+ int rates_size = 43;
+
  double time_step = min_time_step;
  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[(constants_size * offset) + BCL]) * CONSTANTS[(constants_size * offset) + BCL]) <= time_point) {
     //printf("TIME <= time_point ms\n");
@@ -1273,9 +1287,9 @@ __device__ void set_time_step(double TIME,
   }
   else {
     //printf("TIME > time_point ms\n");
-    if (std::abs(RATES[(states_size * offset) +V] * time_step) <= min_dV) {//Slow changes in V
+    if (std::abs(RATES[(rates_size * offset) +V] * time_step) <= min_dV) {//Slow changes in V
         //printf("dV/dt <= 0.2\n");
-        time_step = std::abs(max_dV / RATES[(states_size * offset) +V]);
+        time_step = std::abs(max_dV / RATES[(rates_size * offset) +V]);
         //Make sure time_step is between min time step and max_time_step
         if (time_step < min_time_step) {
             time_step = min_time_step;
@@ -1285,9 +1299,9 @@ __device__ void set_time_step(double TIME,
         }
         //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
     }
-    else if (std::abs(RATES[(states_size * offset) +V] * time_step) >= max_dV) {//Fast changes in V
+    else if (std::abs(RATES[(rates_size * offset) +V] * time_step) >= max_dV) {//Fast changes in V
         //printf("dV/dt >= 0.8\n");
-        time_step = std::abs(min_dV / RATES[(states_size * offset) +V]);
+        time_step = std::abs(min_dV / RATES[(rates_size * offset) +V]);
         //Make sure time_step is not less than 0.005
         if (time_step < min_time_step) {
             time_step = min_time_step;
