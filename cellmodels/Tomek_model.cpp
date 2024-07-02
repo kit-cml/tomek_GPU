@@ -1312,19 +1312,19 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
 //using ord 2011 set time step
 __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int offset) {
   double time_step = 0.005;
-  int num_of_constants = 146;
-  int num_of_rates = 41;
+  int constants_size = 163;
+  int rates_size = 43;
 
-  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * num_of_constants)]) * CONSTANTS[BCL + (offset * num_of_constants)]) <= time_point) {
+  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * constants_size)]) * CONSTANTS[BCL + (offset * constants_size)]) <= time_point) {
     //printf("TIME <= time_point ms\n");
     return time_step;
     //printf("dV = %lf, time_step = %lf\n",RATES[V] * time_step, time_step);
   }
   else {
     //printf("TIME > time_point ms\n");
-    if (std::abs(RATES[V + (offset * num_of_rates)] * time_step) <= 0.2) {//Slow changes in V
+    if (std::abs(RATES[V + (offset * rates_size)] * time_step) <= 0.2) {//Slow changes in V
         // printf("dV/dt <= 0.2\n");
-        time_step = std::abs(0.8 / RATES[V + (offset * num_of_rates)]);
+        time_step = std::abs(0.8 / RATES[V + (offset * rates_size)]);
         //Make sure time_step is between 0.005 and max_time_step
         if (time_step < 0.005) {
             time_step = 0.005;
@@ -1334,10 +1334,10 @@ __device__ double set_time_step(double TIME, double time_point, double max_time_
         }
         //printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
     }
-    else if (std::abs(RATES[V + (offset * num_of_rates)] * time_step) >= 0.8) {//Fast changes in V
+    else if (std::abs(RATES[V + (offset * rates_size)] * time_step) >= 0.8) {//Fast changes in V
         // printf("dV/dt >= 0.8\n");
-        time_step = std::abs(0.2 / RATES[V + (offset * num_of_rates)]);
-        while (std::abs(RATES[V + (offset * num_of_rates)]  * time_step) >= 0.8 &&
+        time_step = std::abs(0.2 / RATES[V + (offset * rates_size)]);
+        while (std::abs(RATES[V + (offset * rates_size)]  * time_step) >= 0.8 &&
                0.005 < time_step &&
                time_step < max_time_step) {
             time_step = time_step / 10.0;

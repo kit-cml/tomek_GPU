@@ -227,13 +227,7 @@ int check_IC50_content(const drug_t* ic50, const param_t* p_param)
 }
 
 int main(int argc, char **argv)
-{
-	// enable real-time output in stdout
-	//setvbuf( stdout, NULL, _IONBF, 0 );
-	
-// NEW CODE STARTS HERE //
-    // mycuda *thread_id;
-    // cudaMalloc(&thread_id, sizeof(mycuda));
+ {
 
     // for qinwards calculation
     double inal_auc_control = -90.547322;    // AUC of INaL under control model
