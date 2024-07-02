@@ -506,10 +506,9 @@
 
 __device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int offset)
 {
-int algebraic_size = 223;
 int constants_size = 163;
 int states_size = 43;
-int rates_size = 43;
+
 CONSTANTS[(constants_size * offset) + celltype] = type;
 CONSTANTS[(constants_size * offset) + nao] = 140.0;
 CONSTANTS[(constants_size * offset) + cao] = 1.8;
@@ -755,7 +754,7 @@ __device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, dou
 int algebraic_size = 223;
 int constants_size = 163;
 int states_size = 43;
-int rates_size = 43;
+
 ALGEBRAIC[(algebraic_size * offset) + hLss] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+87.6100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + hLssp] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+93.8100)/7.48800));
 ALGEBRAIC[(algebraic_size * offset) + jcass] = 1.00000/(1.00000+exp((STATES[(states_size * offset) + V]+18.0800)/2.79160));
@@ -1061,7 +1060,7 @@ __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEB
 int algebraic_size = 223;
 int constants_size = 163;
 int states_size = 43;
-int rates_size = 43;
+
 #ifdef EULER
   STATES[(states_size * offset) + (states_size * offset) + V] = STATES[(states_size * offset) + V] + RATES[ (states_size * offset) +V] * dt;
   STATES[(states_size * offset) + CaMKt] = STATES[(states_size * offset) + CaMKt] + RATES[ (states_size * offset) +CaMKt] * dt;
