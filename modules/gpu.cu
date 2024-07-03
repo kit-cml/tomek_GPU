@@ -32,6 +32,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     unsigned long long input_counter = 0;
 
     int num_of_algebraic = 223;
+    int algebraic_size = num_of_algebraic;
     int num_of_constants = 163;
     int num_of_states = 43;
     int num_of_rates = 43;
@@ -98,7 +99,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     // double dtw = 2.0;
     // const char *drug_name = "bepridil";
     // const double bcl = 2000; // bcl is basic cycle length
-    const double bcl = p_param->bcl;
+    double bcl = p_param->bcl;
     
     // const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
@@ -141,12 +142,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
-    
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_cvar, bcl, epsilon, sample_id);
 
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
 
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
+
+    printf("%lf\n\n\n",d_STATES[(43 * offset) + V]);
 
     // generate file for time-series output
 
@@ -160,6 +162,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     while (tcurr[sample_id]<tmax)
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
+
+        printf("%lf\n", d_STATES[(43 * offset) + V]);
+
+        // printf("%lf, %lf, %lf, %lf, %lf \n
+        //         %lf, %lf, %lf, %lf, %lf \n
+        //         %lf, %lf, %lf, %lf, %lf \n
+        //         %lf, %lf, %lf, %lf, %lf \n",
+        // d_ALGEBRAIC[(algebraic_size * offset) + INa], d_ALGEBRAIC[(algebraic_size * offset) + INaL], d_ALGEBRAIC[(algebraic_size * offset) + Ito], d_ALGEBRAIC[(algebraic_size * offset) + ICaL], d_ALGEBRAIC[(algebraic_size * offset) + ICaNa], d_ALGEBRAIC[(algebraic_size * offset) + ICaK], d_ALGEBRAIC[(algebraic_size * offset) + IKr], d_ALGEBRAIC[(algebraic_size * offset) + IKs], d_ALGEBRAIC[(algebraic_size * offset) + IK1], d_ALGEBRAIC[(algebraic_size * offset) + INaCa_i], d_ALGEBRAIC[(algebraic_size * offset) + INaCa_ss], d_ALGEBRAIC[(algebraic_size * offset) + INaK], d_ALGEBRAIC[(algebraic_size * offset) + INab], d_ALGEBRAIC[(algebraic_size * offset) + IKb], d_ALGEBRAIC[(algebraic_size * offset) + IpCa], d_ALGEBRAIC[(algebraic_size * offset) + ICab], d_ALGEBRAIC[(algebraic_size * offset) + IClCa], d_ALGEBRAIC[(algebraic_size * offset) + IClb], d_ALGEBRAIC[(algebraic_size * offset) + I_katp], d_ALGEBRAIC[(algebraic_size * offset) + Istim]);
         
         dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
         d_CONSTANTS, 
@@ -588,7 +598,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_cvar, bcl, epsilon, sample_id);
 
     // starting from initial value, to make things simpler for now, we're just going to replace what initConst has done 
     // to the d_STATES and bring them back to cached initial values:

@@ -741,7 +741,7 @@ CONSTANTS[(constants_size * offset) + PCa] = CONSTANTS[(constants_size * offset)
 // 	___initConsts(type);
 // }
 
-__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_dutta, bool is_cvar, double bcl, double epsilon, int offset)
+__device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_cvar, double bcl, double epsilon, int offset)
 {
 	___initConsts(CONSTANTS, STATES, type, bcl, offset);
 	
@@ -881,7 +881,9 @@ ALGEBRAIC[(algebraic_size * offset) + PhiCaK_ss] = ( 1.00000*ALGEBRAIC[(algebrai
 ALGEBRAIC[(algebraic_size * offset) + ICaK_ss] =  CONSTANTS[(constants_size * offset) + ICaL_fractionSS]*( (1.00000 - ALGEBRAIC[(algebraic_size * offset) + fICaLp])*CONSTANTS[(constants_size * offset) + PCaK]*ALGEBRAIC[(algebraic_size * offset) + PhiCaK_ss]*STATES[(states_size * offset) + d]*( ALGEBRAIC[(algebraic_size * offset) + f]*(1.00000 - STATES[(states_size * offset) + nca_ss])+ STATES[(states_size * offset) + jca]*ALGEBRAIC[(algebraic_size * offset) + fca]*STATES[(states_size * offset) + nca_ss])+ ALGEBRAIC[(algebraic_size * offset) + fICaLp]*CONSTANTS[(constants_size * offset) + PCaKp]*ALGEBRAIC[(algebraic_size * offset) + PhiCaK_ss]*STATES[(states_size * offset) + d]*( ALGEBRAIC[(algebraic_size * offset) + fp]*(1.00000 - STATES[(states_size * offset) + nca_ss])+ STATES[(states_size * offset) + jca]*ALGEBRAIC[(algebraic_size * offset) + fcap]*STATES[(states_size * offset) + nca_ss]));
 ALGEBRAIC[(algebraic_size * offset) + ENa] =  (( CONSTANTS[(constants_size * offset) + R]*CONSTANTS[(constants_size * offset) + T])/( CONSTANTS[(constants_size * offset) + zna]*CONSTANTS[(constants_size * offset) + F]))*log(CONSTANTS[(constants_size * offset) + nao]/STATES[(states_size * offset) + nai]);
 ALGEBRAIC[(algebraic_size * offset) + fINap] = 1.00000/(1.00000+CONSTANTS[(constants_size * offset) + KmCaMK]/ALGEBRAIC[(algebraic_size * offset) + CaMKa]);
-ALGEBRAIC[(algebraic_size * offset) + INa] =  CONSTANTS[(constants_size * offset) + GNa]*(STATES[(states_size * offset) + V] - ALGEBRAIC[(algebraic_size * offset) + ENa])*pow(STATES[(states_size * offset) + m], 3.00000)*( (1.00000 - ALGEBRAIC[(algebraic_size * offset) + fINap])*STATES[(states_size * offset) + h]*STATES[(states_size * offset) + j]+ ALGEBRAIC[(algebraic_size * offset) + fINap]*STATES[(states_size * offset) + hp]*STATES[(states_size * offset) + jp]);
+
+ALGEBRAIC[(algebraic_size * offset) + INa] = CONSTANTS[(constants_size * offset) + GNa]*(STATES[(states_size * offset) + V] - ALGEBRAIC[(algebraic_size * offset) + ENa])*pow(STATES[(states_size * offset) + m], 3.00000)*( (1.00000 - ALGEBRAIC[(algebraic_size * offset) + fINap])*STATES[(states_size * offset) + h]*STATES[(states_size * offset) + j]+ ALGEBRAIC[(algebraic_size * offset) + fINap]*STATES[(states_size * offset) + hp]*STATES[(states_size * offset) + jp]);
+
 ALGEBRAIC[(algebraic_size * offset) + fINaLp] = 1.00000/(1.00000+CONSTANTS[(constants_size * offset) + KmCaMK]/ALGEBRAIC[(algebraic_size * offset) + CaMKa]);
 ALGEBRAIC[(algebraic_size * offset) + INaL] =  CONSTANTS[(constants_size * offset) + GNaL]*(STATES[(states_size * offset) + V] - ALGEBRAIC[(algebraic_size * offset) + ENa])*STATES[(states_size * offset) + mL]*( (1.00000 - ALGEBRAIC[(algebraic_size * offset) + fINaLp])*STATES[(states_size * offset) + hL]+ ALGEBRAIC[(algebraic_size * offset) + fINaLp]*STATES[(states_size * offset) + hLp]);
 ALGEBRAIC[(algebraic_size * offset) + allo_i] = 1.00000/(1.00000+pow(CONSTANTS[(constants_size * offset) + KmCaAct]/STATES[(states_size * offset) + cai], 2.00000));
@@ -1018,7 +1020,9 @@ RATES[ (states_size * offset) +kss] = ( - ALGEBRAIC[(algebraic_size * offset) + 
 RATES[ (states_size * offset) +nai] = ( - (ALGEBRAIC[(algebraic_size * offset) + INa]+ALGEBRAIC[(algebraic_size * offset) + INaL]+ 3.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_i]+ALGEBRAIC[(algebraic_size * offset) + ICaNa_i]+ 3.00000*ALGEBRAIC[(algebraic_size * offset) + INaK]+ALGEBRAIC[(algebraic_size * offset) + INab])*CONSTANTS[(constants_size * offset) + Acap])/( CONSTANTS[(constants_size * offset) + F]*CONSTANTS[(constants_size * offset) + vmyo])+( ALGEBRAIC[(algebraic_size * offset) + JdiffNa]*CONSTANTS[(constants_size * offset) + vss])/CONSTANTS[(constants_size * offset) + vmyo];
 RATES[ (states_size * offset) +nass] = ( - (ALGEBRAIC[(algebraic_size * offset) + ICaNa_ss]+ 3.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_ss])*CONSTANTS[(constants_size * offset) + Acap])/( CONSTANTS[(constants_size * offset) + F]*CONSTANTS[(constants_size * offset) + vss]) - ALGEBRAIC[(algebraic_size * offset) + JdiffNa];
 RATES[ (states_size * offset) +cass] =  ALGEBRAIC[(algebraic_size * offset) + Bcass]*((( - (ALGEBRAIC[(algebraic_size * offset) + ICaL_ss] -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_ss])*CONSTANTS[(constants_size * offset) + Acap])/( 2.00000*CONSTANTS[(constants_size * offset) + F]*CONSTANTS[(constants_size * offset) + vss])+( ALGEBRAIC[(algebraic_size * offset) + Jrel]*CONSTANTS[(constants_size * offset) + vjsr])/CONSTANTS[(constants_size * offset) + vss]) - ALGEBRAIC[(algebraic_size * offset) + Jdiff]);
+
 RATES[ (states_size * offset) +V] = - (ALGEBRAIC[(algebraic_size * offset) + INa]+ALGEBRAIC[(algebraic_size * offset) + INaL]+ALGEBRAIC[(algebraic_size * offset) + Ito]+ALGEBRAIC[(algebraic_size * offset) + ICaL]+ALGEBRAIC[(algebraic_size * offset) + ICaNa]+ALGEBRAIC[(algebraic_size * offset) + ICaK]+ALGEBRAIC[(algebraic_size * offset) + IKr]+ALGEBRAIC[(algebraic_size * offset) + IKs]+ALGEBRAIC[(algebraic_size * offset) + IK1]+ALGEBRAIC[(algebraic_size * offset) + INaCa_i]+ALGEBRAIC[(algebraic_size * offset) + INaCa_ss]+ALGEBRAIC[(algebraic_size * offset) + INaK]+ALGEBRAIC[(algebraic_size * offset) + INab]+ALGEBRAIC[(algebraic_size * offset) + IKb]+ALGEBRAIC[(algebraic_size * offset) + IpCa]+ALGEBRAIC[(algebraic_size * offset) + ICab]+ALGEBRAIC[(algebraic_size * offset) + IClCa]+ALGEBRAIC[(algebraic_size * offset) + IClb]+ALGEBRAIC[(algebraic_size * offset) + I_katp]+ALGEBRAIC[(algebraic_size * offset) + Istim]);
+
 RATES[ (states_size * offset) +cai] =  ALGEBRAIC[(algebraic_size * offset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * offset) + ICaL_i]+ALGEBRAIC[(algebraic_size * offset) + IpCa]+ALGEBRAIC[(algebraic_size * offset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_i])*CONSTANTS[(constants_size * offset) + Acap])/( 2.00000*CONSTANTS[(constants_size * offset) + F]*CONSTANTS[(constants_size * offset) + vmyo]) - ( ALGEBRAIC[(algebraic_size * offset) + Jup]*CONSTANTS[(constants_size * offset) + vnsr])/CONSTANTS[(constants_size * offset) + vmyo])+( ALGEBRAIC[(algebraic_size * offset) + Jdiff]*CONSTANTS[(constants_size * offset) + vss])/CONSTANTS[(constants_size * offset) + vmyo]);
 RATES[ (states_size * offset) +cansr] = ALGEBRAIC[(algebraic_size * offset) + Jup] - ( ALGEBRAIC[(algebraic_size * offset) + Jtr]*CONSTANTS[(constants_size * offset) + vjsr])/CONSTANTS[(constants_size * offset) + vnsr];
 RATES[ (states_size * offset) +cajsr] =  ALGEBRAIC[(algebraic_size * offset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * offset) + Jtr] - ALGEBRAIC[(algebraic_size * offset) + Jrel]);
@@ -1315,12 +1319,13 @@ __device__ double set_time_step(double TIME, double time_point, double max_time_
   int rates_size = 43;
 
   if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * constants_size)]) * CONSTANTS[BCL + (offset * constants_size)]) <= time_point) {
-    //printf("TIME <= time_point ms\n");
+    // printf("TIME <= time_point ms\n");
+    // printf("dV = %lf, time_step = %lf\n",RATES[V + (offset * rates_size)] * time_step, time_step);
     return time_step;
-    //printf("dV = %lf, time_step = %lf\n",RATES[V] * time_step, time_step);
+    // printf("dV = %lf, time_step = %lf\n",RATES[V] * time_step, time_step);
   }
   else {
-    //printf("TIME > time_point ms\n");
+    printf("TIME > time_point ms\n");
     if (std::abs(RATES[V + (offset * rates_size)] * time_step) <= 0.2) {//Slow changes in V
         // printf("dV/dt <= 0.2\n");
         time_step = std::abs(0.8 / RATES[V + (offset * rates_size)]);
