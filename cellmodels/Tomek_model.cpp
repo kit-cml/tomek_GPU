@@ -911,13 +911,46 @@ ALGEBRAIC[(algebraic_size * offset) + x1_i] =  CONSTANTS[(constants_size * offse
 ALGEBRAIC[(algebraic_size * offset) + x2_i] =  CONSTANTS[(constants_size * offset) + k1_i]*ALGEBRAIC[(algebraic_size * offset) + k7_i]*(ALGEBRAIC[(algebraic_size * offset) + k4_i]+CONSTANTS[(constants_size * offset) + k5_i])+ ALGEBRAIC[(algebraic_size * offset) + k4_i]*ALGEBRAIC[(algebraic_size * offset) + k6_i]*(CONSTANTS[(constants_size * offset) + k1_i]+ALGEBRAIC[(algebraic_size * offset) + k8_i]);
 ALGEBRAIC[(algebraic_size * offset) + x3_i] =  CONSTANTS[(constants_size * offset) + k1_i]*ALGEBRAIC[(algebraic_size * offset) + k3_i]*(ALGEBRAIC[(algebraic_size * offset) + k7_i]+ALGEBRAIC[(algebraic_size * offset) + k6_i])+ ALGEBRAIC[(algebraic_size * offset) + k8_i]*ALGEBRAIC[(algebraic_size * offset) + k6_i]*(CONSTANTS[(constants_size * offset) + k2_i]+ALGEBRAIC[(algebraic_size * offset) + k3_i]);
 ALGEBRAIC[(algebraic_size * offset) + x4_i] =  CONSTANTS[(constants_size * offset) + k2_i]*ALGEBRAIC[(algebraic_size * offset) + k8_i]*(ALGEBRAIC[(algebraic_size * offset) + k4_i]+CONSTANTS[(constants_size * offset) + k5_i])+ ALGEBRAIC[(algebraic_size * offset) + k3_i]*CONSTANTS[(constants_size * offset) + k5_i]*(CONSTANTS[(constants_size * offset) + k1_i]+ALGEBRAIC[(algebraic_size * offset) + k8_i]);
+
 ALGEBRAIC[(algebraic_size * offset) + E1_i] = ALGEBRAIC[(algebraic_size * offset) + x1_i]/(ALGEBRAIC[(algebraic_size * offset) + x1_i]+ALGEBRAIC[(algebraic_size * offset) + x2_i]+ALGEBRAIC[(algebraic_size * offset) + x3_i]+ALGEBRAIC[(algebraic_size * offset) + x4_i]);
+
 ALGEBRAIC[(algebraic_size * offset) + E2_i] = ALGEBRAIC[(algebraic_size * offset) + x2_i]/(ALGEBRAIC[(algebraic_size * offset) + x1_i]+ALGEBRAIC[(algebraic_size * offset) + x2_i]+ALGEBRAIC[(algebraic_size * offset) + x3_i]+ALGEBRAIC[(algebraic_size * offset) + x4_i]);
 ALGEBRAIC[(algebraic_size * offset) + E3_i] = ALGEBRAIC[(algebraic_size * offset) + x3_i]/(ALGEBRAIC[(algebraic_size * offset) + x1_i]+ALGEBRAIC[(algebraic_size * offset) + x2_i]+ALGEBRAIC[(algebraic_size * offset) + x3_i]+ALGEBRAIC[(algebraic_size * offset) + x4_i]);
 ALGEBRAIC[(algebraic_size * offset) + E4_i] = ALGEBRAIC[(algebraic_size * offset) + x4_i]/(ALGEBRAIC[(algebraic_size * offset) + x1_i]+ALGEBRAIC[(algebraic_size * offset) + x2_i]+ALGEBRAIC[(algebraic_size * offset) + x3_i]+ALGEBRAIC[(algebraic_size * offset) + x4_i]);
 ALGEBRAIC[(algebraic_size * offset) + JncxNa_i] = ( 3.00000*( ALGEBRAIC[(algebraic_size * offset) + E4_i]*ALGEBRAIC[(algebraic_size * offset) + k7_i] -  ALGEBRAIC[(algebraic_size * offset) + E1_i]*ALGEBRAIC[(algebraic_size * offset) + k8_i])+ ALGEBRAIC[(algebraic_size * offset) + E3_i]*ALGEBRAIC[(algebraic_size * offset) + k4pp_i]) -  ALGEBRAIC[(algebraic_size * offset) + E2_i]*ALGEBRAIC[(algebraic_size * offset) + k3pp_i];
-ALGEBRAIC[(algebraic_size * offset) + JncxCa_i] =  ALGEBRAIC[(algebraic_size * offset) + E2_i]*CONSTANTS[(constants_size * offset) + k2_i] -  ALGEBRAIC[(algebraic_size * offset) + E1_i]*CONSTANTS[(constants_size * offset) + k1_i];
-ALGEBRAIC[(algebraic_size * offset) + INaCa_i] =  (1.00000 - CONSTANTS[(constants_size * offset) + INaCa_fractionSS])*CONSTANTS[(constants_size * offset) + Gncx]*ALGEBRAIC[(algebraic_size * offset) + allo_i]*( CONSTANTS[(constants_size * offset) + zna]*ALGEBRAIC[(algebraic_size * offset) + JncxNa_i]+ CONSTANTS[(constants_size * offset) + zca]*ALGEBRAIC[(algebraic_size * offset) + JncxCa_i]);
+
+// ALGEBRAIC[(algebraic_size * offset) + JncxCa_i] =  ALGEBRAIC[(algebraic_size * offset) + E2_i]*CONSTANTS[(constants_size * offset) + k2_i] -  ALGEBRAIC[(algebraic_size * offset) + E1_i]*CONSTANTS[(constants_size * offset) + k1_i];
+
+// Ensure the ALGEBRAIC components are not NaN
+    if (isnan(ALGEBRAIC[(algebraic_size * offset) + E2_i])) printf("NaN detected in ALGEBRAIC[E2_i]\n");
+    if (isnan(ALGEBRAIC[(algebraic_size * offset) + E1_i])) printf("NaN detected in ALGEBRAIC[E1_i]\n");
+
+    // Compute the value
+    ALGEBRAIC[(algebraic_size * offset) + JncxCa_i] = ALGEBRAIC[(algebraic_size * offset) + E2_i] * CONSTANTS[(constants_size * offset) + k2_i] - ALGEBRAIC[(algebraic_size * offset) + E1_i] * CONSTANTS[(constants_size * offset) + k1_i];
+
+    // // Check the result
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + JncxCa_i])) {
+    //     printf("NaN detected in ALGEBRAIC[JncxCa_i]\n");
+    // }
+
+// ALGEBRAIC[(algebraic_size * offset) + INaCa_i] =  (1.00000 - CONSTANTS[(constants_size * offset) + INaCa_fractionSS])*CONSTANTS[(constants_size * offset) + Gncx]*ALGEBRAIC[(algebraic_size * offset) + allo_i]*( CONSTANTS[(constants_size * offset) + zna]*ALGEBRAIC[(algebraic_size * offset) + JncxNa_i]+ CONSTANTS[(constants_size * offset) + zca]*ALGEBRAIC[(algebraic_size * offset) + JncxCa_i]);
+
+    // if (isnan(CONSTANTS[(constants_size * offset) + INaCa_fractionSS])) printf("NaN detected in CONSTANTS[INaCa_fractionSS]\n");
+    // if (isnan(CONSTANTS[(constants_size * offset) + Gncx])) printf("NaN detected in CONSTANTS[Gncx]\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + allo_i])) printf("NaN detected in ALGEBRAIC[allo_i]\n");
+    // if (isnan(CONSTANTS[(constants_size * offset) + zna])) printf("NaN detected in CONSTANTS[zna]\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + JncxNa_i])) printf("NaN detected in ALGEBRAIC[JncxNa_i]\n");
+    // if (isnan(CONSTANTS[(constants_size * offset) + zca])) printf("NaN detected in CONSTANTS[zca]\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + JncxCa_i])) printf("NaN detected in ALGEBRAIC[JncxCa_i]\n");
+
+    // Compute the value
+    ALGEBRAIC[(algebraic_size * offset) + INaCa_i] = (1.00000 - CONSTANTS[(constants_size * offset) + INaCa_fractionSS]) * CONSTANTS[(constants_size * offset) + Gncx] * ALGEBRAIC[(algebraic_size * offset) + allo_i] * (CONSTANTS[(constants_size * offset) + zna] * ALGEBRAIC[(algebraic_size * offset) + JncxNa_i] + CONSTANTS[(constants_size * offset) + zca] * ALGEBRAIC[(algebraic_size * offset) + JncxCa_i]);
+
+    // // Check the result
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INaCa_i])) {
+    //     printf("NaN detected in ALGEBRAIC[INaCa_i]\n");
+    // }
+
 ALGEBRAIC[(algebraic_size * offset) + INab] = ( CONSTANTS[(constants_size * offset) + PNab]*ALGEBRAIC[(algebraic_size * offset) + vffrt]*( STATES[(states_size * offset) + nai]*exp(ALGEBRAIC[(algebraic_size * offset) + vfrt]) - CONSTANTS[(constants_size * offset) + nao]))/(exp(ALGEBRAIC[(algebraic_size * offset) + vfrt]) - 1.00000);
 ALGEBRAIC[(algebraic_size * offset) + gamma_nai] = exp( - CONSTANTS[(constants_size * offset) + constA]*1.00000*( pow(ALGEBRAIC[(algebraic_size * offset) + Ii], 1.0 / 2)/(1.00000+ pow(ALGEBRAIC[(algebraic_size * offset) + Ii], 1.0 / 2)) -  0.300000*ALGEBRAIC[(algebraic_size * offset) + Ii]));
 ALGEBRAIC[(algebraic_size * offset) + PhiCaNa_i] = ( 1.00000*ALGEBRAIC[(algebraic_size * offset) + vffrt]*( ALGEBRAIC[(algebraic_size * offset) + gamma_nai]*STATES[(states_size * offset) + nai]*exp( 1.00000*ALGEBRAIC[(algebraic_size * offset) + vfrt]) -  CONSTANTS[(constants_size * offset) + gamma_nao]*CONSTANTS[(constants_size * offset) + nao]))/(exp( 1.00000*ALGEBRAIC[(algebraic_size * offset) + vfrt]) - 1.00000);
@@ -1026,6 +1059,29 @@ RATES[ (states_size * offset) +V] = - (ALGEBRAIC[(algebraic_size * offset) + INa
 RATES[ (states_size * offset) +cai] =  ALGEBRAIC[(algebraic_size * offset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * offset) + ICaL_i]+ALGEBRAIC[(algebraic_size * offset) + IpCa]+ALGEBRAIC[(algebraic_size * offset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_i])*CONSTANTS[(constants_size * offset) + Acap])/( 2.00000*CONSTANTS[(constants_size * offset) + F]*CONSTANTS[(constants_size * offset) + vmyo]) - ( ALGEBRAIC[(algebraic_size * offset) + Jup]*CONSTANTS[(constants_size * offset) + vnsr])/CONSTANTS[(constants_size * offset) + vmyo])+( ALGEBRAIC[(algebraic_size * offset) + Jdiff]*CONSTANTS[(constants_size * offset) + vss])/CONSTANTS[(constants_size * offset) + vmyo]);
 RATES[ (states_size * offset) +cansr] = ALGEBRAIC[(algebraic_size * offset) + Jup] - ( ALGEBRAIC[(algebraic_size * offset) + Jtr]*CONSTANTS[(constants_size * offset) + vjsr])/CONSTANTS[(constants_size * offset) + vnsr];
 RATES[ (states_size * offset) +cajsr] =  ALGEBRAIC[(algebraic_size * offset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * offset) + Jtr] - ALGEBRAIC[(algebraic_size * offset) + Jrel]);
+
+    // Print and check each term
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INa])) printf("NaN detected in INa\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INaL])) printf("NaN detected in INaL\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + Ito])) printf("NaN detected in Ito\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + ICaL])) printf("NaN detected in ICaL\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + ICaNa])) printf("NaN detected in ICaNa\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + ICaK])) printf("NaN detected in ICaK\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IKr])) printf("NaN detected in IKr\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IKs])) printf("NaN detected in IKs\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IK1])) printf("NaN detected in IK1\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INaCa_i])) printf("NaN detected in INaCa_i\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INaCa_ss])) printf("NaN detected in INaCa_ss\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INaK])) printf("NaN detected in INaK\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + INab])) printf("NaN detected in INab\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IKb])) printf("NaN detected in IKb\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IpCa])) printf("NaN detected in IpCa\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + ICab])) printf("NaN detected in ICab\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IClCa])) printf("NaN detected in IClCa\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + IClb])) printf("NaN detected in IClb\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + I_katp])) printf("NaN detected in I_katp\n");
+    // if (isnan(ALGEBRAIC[(algebraic_size * offset) + Istim])) printf("NaN detected in Istim\n");
+
 }
 
 // void Tomek_model::solveRK4(double TIME, double dt)

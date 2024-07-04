@@ -148,7 +148,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
-    printf("%lf\n\n\n",d_STATES[(43 * offset) + V]);
 
     // generate file for time-series output
 
@@ -156,14 +155,15 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     int pace_count = 0;
     
   
-    // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
+    printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
 
     while (tcurr[sample_id]<tmax)
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
 
-        printf("%lf\n", d_STATES[(43 * offset) + V]);
+        // printf("%lf\n", d_STATES[(43 * offset) + V]);
+        printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
 
         // printf("%lf, %lf, %lf, %lf, %lf \n
         //         %lf, %lf, %lf, %lf, %lf \n
