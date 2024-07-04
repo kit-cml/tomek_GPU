@@ -80,17 +80,8 @@ int check_IC50_content(const drug_t* ic50, const param_t* p_param);
 
 
 int get_IC50_data_from_file(const char* file_name, double *ic50)
-{
-    /*
-    a host function to take all samples from the file, assuming each sample has 14 features.
-
-    it takes the file name, and an ic50 (already declared in 1D, everything become 1D)
-    as a note, the data will be stored in 1D array, means this functions applies flatten.
-
-    it returns 'how many samples were detected?' in integer.
-    */
+  {
   FILE *fp_drugs;
-//   drug_t ic50;
   char *token;
   char buffer_ic50[255];
   unsigned int idx;
@@ -116,7 +107,8 @@ int get_IC50_data_from_file(const char* file_name, double *ic50)
 
   fclose(fp_drugs);
   return sample_size;
-}
+  }
+
 
 int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *cvar)
 {
@@ -151,7 +143,6 @@ int get_cvar_data_from_file(const char* file_name, unsigned int limit, double *c
   fclose(fp_cvar);
   return sample_size;
 }
-
 
 int get_init_data_from_file(const char* file_name, double *init_states)
 {
