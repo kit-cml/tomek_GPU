@@ -155,7 +155,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     int pace_count = 0;
     
   
-    printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
+    // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
 
     while (tcurr[sample_id]<tmax)
@@ -163,7 +163,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
 
         // printf("%lf\n", d_STATES[(43 * offset) + V]);
-        printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
+        // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
 
         // printf("%lf, %lf, %lf, %lf, %lf \n
         //         %lf, %lf, %lf, %lf, %lf \n
@@ -976,9 +976,10 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     double time_for_each_sample[10000];
     double dt_for_each_sample[10000];
-    // cipa_t temp_per_sample[2000];
-    // cipa_t cipa_per_sample[2000];
-    // printf("in\n");
+    
+    // printf("%d\n", thread_id);
+    // printf("%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n",
+    // d_ic50[0+(14*thread_id)],d_ic50[1+(14*thread_id)],d_ic50[2+(14*thread_id)],d_ic50[3+(14*thread_id)],d_ic50[4+(14*thread_id)],d_ic50[5+(14*thread_id)],d_ic50[6+(14*thread_id)],d_ic50[7+(14*thread_id)]);
     if (p_param->is_time_series == 0){
     // printf("Calculating %d\n",thread_id);
     kernel_DoDrugSim(d_ic50, d_cvar, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 

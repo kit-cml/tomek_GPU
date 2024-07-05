@@ -233,6 +233,7 @@ int main(int argc, char **argv)
     p_param->show_val();
 
     double* ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
+    
     // if (p_param->is_cvar == true) cvar = (double *)malloc(18 * sample_limit * sizeof(double));
     double* cvar = (double *)malloc(18 * sample_limit * sizeof(double));  // conductance variability
 
@@ -646,11 +647,12 @@ int main(int argc, char **argv)
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
     // if(p_param->is_cvar == true) cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
-    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+    // cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+    cudaMalloc(&d_cvar, sizeof(double));
     
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     // if(p_param->is_cvar == true) cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
     // // Get the maximum number of active blocks per multiprocessor
