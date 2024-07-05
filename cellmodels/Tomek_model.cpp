@@ -743,7 +743,7 @@ CONSTANTS[(constants_size * foset) + PCa] = CONSTANTS[(constants_size * foset) +
 
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_cvar, double bcl, double epsilon, int foset)
 {
-	___initConsts(CONSTANTS, STATES, type, bcl, offset); // clean up later
+	___initConsts(CONSTANTS, STATES, type, bcl, foset); // clean up later
 	
 }
 
