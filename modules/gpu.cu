@@ -161,15 +161,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     while (tcurr[sample_id]<tmax)
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
-
-        // printf("%lf\n", d_STATES[(43 * offset) + V]);
-        // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * 43)],d_RATES[V + (sample_id * 43)]);
-
-        // printf("%lf, %lf, %lf, %lf, %lf \n
-        //         %lf, %lf, %lf, %lf, %lf \n
-        //         %lf, %lf, %lf, %lf, %lf \n
-        //         %lf, %lf, %lf, %lf, %lf \n",
-        // d_ALGEBRAIC[(algebraic_size * offset) + INa], d_ALGEBRAIC[(algebraic_size * offset) + INaL], d_ALGEBRAIC[(algebraic_size * offset) + Ito], d_ALGEBRAIC[(algebraic_size * offset) + ICaL], d_ALGEBRAIC[(algebraic_size * offset) + ICaNa], d_ALGEBRAIC[(algebraic_size * offset) + ICaK], d_ALGEBRAIC[(algebraic_size * offset) + IKr], d_ALGEBRAIC[(algebraic_size * offset) + IKs], d_ALGEBRAIC[(algebraic_size * offset) + IK1], d_ALGEBRAIC[(algebraic_size * offset) + INaCa_i], d_ALGEBRAIC[(algebraic_size * offset) + INaCa_ss], d_ALGEBRAIC[(algebraic_size * offset) + INaK], d_ALGEBRAIC[(algebraic_size * offset) + INab], d_ALGEBRAIC[(algebraic_size * offset) + IKb], d_ALGEBRAIC[(algebraic_size * offset) + IpCa], d_ALGEBRAIC[(algebraic_size * offset) + ICab], d_ALGEBRAIC[(algebraic_size * offset) + IClCa], d_ALGEBRAIC[(algebraic_size * offset) + IClb], d_ALGEBRAIC[(algebraic_size * offset) + I_katp], d_ALGEBRAIC[(algebraic_size * offset) + Istim]);
         
         dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
         d_CONSTANTS, 
@@ -527,7 +518,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     bool is_peak = false;
     // to search max dvmdt repol
 
-    tcurr[sample_id] = 0.000001;
+    tcurr[sample_id] = 0.0;
     dt[sample_id] = p_param->dt;
     double tmax;
     double max_time_step = 1.0, time_point = 25.0;
