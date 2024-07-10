@@ -547,7 +547,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
     // const unsigned short pace_max = 1000;
-    const unsigned short pace_max = 1;
+
+    const unsigned short pace_max = 2;
+
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
     // const unsigned short last_drug_check_pace = 250;
@@ -630,7 +632,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     // generate file for time-series output
 
     tmax = pace_max * bcl;
-    int pace_count = 0;
+    int pace_count = 1;
     
   
     // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
@@ -739,6 +741,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             // t_ca_peak = tcurr[sample_id];
 
             t_depol = (d_CONSTANTS[BCL + (sample_id * num_of_constants)]*pace_count) + d_CONSTANTS[stim_start + (sample_id * num_of_constants)];
+            if (sample_id == 10 || sample_id == 131) printf("core: %d, bcl: %lf stim_start : %lf\n", sample_id, d_CONSTANTS[BCL + (sample_id * num_of_constants)]*pace_count, d_CONSTANTS[stim_start + (sample_id * num_of_constants)]);  
             // if (sample_id == 1) printf("t_depol: %lf\n",t_depol);
             // is_eligible_AP = false;
             is_eligible_AP = true;
@@ -808,7 +811,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
                 if( vm_repol50 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol50-2 ){
                   temp_result[sample_id].apd50 = tcurr[sample_id] - t_depol;
-                  //printf("tcurr: %lf t_depol : %lf\n", tcurr[sample_id], t_depol);  
+                  // if (sample_id == 10 || sample_id == 131) printf("core: %d, tcurr: %lf t_depol : %lf\n", sample_id, tcurr[sample_id], t_depol);  
                 } 
                 if( vm_repol90 > d_STATES[(sample_id * num_of_states) +V] && d_STATES[(sample_id * num_of_states) +V] > vm_repol90-2 ){
                   temp_result[sample_id].apd90 = tcurr[sample_id] - t_depol;
