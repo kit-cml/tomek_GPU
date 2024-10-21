@@ -722,13 +722,15 @@ __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, do
 
 int constants_size = 163;
 
-CONSTANTS[(constants_size * foset) + GK1] = CONSTANTS[(constants_size * foset) + GK1] * ((hill[(foset*14)+2] > 10E-14 && hill[(foset*14)+3] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+2],hill[(foset*14)+3])) : 1.);
-CONSTANTS[(constants_size * foset) + GKr] = CONSTANTS[(constants_size * foset) + GKr] * ((hill[(foset*14)+12] > 10E-14 && hill[(foset*14)+13] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+12],hill[(foset*14)+13])) : 1.);
-CONSTANTS[(constants_size * foset) + GKs] = CONSTANTS[(constants_size * foset) + GKs] * ((hill[(foset*14)+4] > 10E-14 && hill[(foset*14)+5] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+4],hill[(foset*14)+5])) : 1.);
-CONSTANTS[(constants_size * foset) + GNaL] = CONSTANTS[(constants_size * foset) + GNaL] * ((hill[(foset*14)+8] > 10E-14 && hill[(foset*14)+9] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+8],hill[(foset*14)+9])) : 1.);
-CONSTANTS[(constants_size * foset) + GNa] = CONSTANTS[(constants_size * foset) + GNa] * ((hill[(foset*14)+6] > 10E-14 && hill[(foset*14)+7] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+6],hill[(foset*14)+7])) : 1.);
-CONSTANTS[(constants_size * foset) + Gto] = CONSTANTS[(constants_size * foset) + Gto] * ((hill[(foset*14)+10] > 10E-14 && hill[(foset*14)+11] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+10],hill[(foset*14)+11])) : 1.);
-CONSTANTS[(constants_size * foset) + PCa] = CONSTANTS[(constants_size * foset) + PCa] * ( (hill[(foset*14)+0] > 10E-14 && hill[(foset*14)+1] > 10E-14) ? 1./(1.+pow(conc/hill[(foset*14)+0],hill[(foset*14)+1])) : 1.);
+CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > 10E-14 && hill[(14 * foset) + 1] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
+CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > 10E-14 && hill[(14 * foset) + 3] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
+CONSTANTS[(constant_size * foset) + GKs_b] = CONSTANTS[(constant_size * foset) + GKs_b] * ((hill[(14 * foset) + 4] > 10E-14 && hill[(14 * foset) + 5] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 4],hill[(14 * foset) + 5])) : 1.);
+CONSTANTS[(constant_size * foset) + GNa] = CONSTANTS[(constant_size * foset) + GNa] * ((hill[(14 * foset) + 6] > 10E-14 && hill[(14 * foset) + 7] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 6],hill[(14 * foset) + 7])) : 1.);
+CONSTANTS[(constant_size * foset) + GNaL_b] = CONSTANTS[(constant_size * foset) + GNaL_b] * ((hill[(14 * foset) + 8] > 10E-14 && hill[(14 * foset) + 9] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 8],hill[(14 * foset) + 9])) : 1.);
+CONSTANTS[(constant_size * foset) + Gto_b] = CONSTANTS[(constant_size * foset) + Gto_b] * ((hill[(14 * foset) + 10] > 10E-14 && hill[(14 * foset) + 11] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 10],hill[(14 * foset) + 11])) : 1.);
+CONSTANTS[(constant_size * foset) + GKr_b] = CONSTANTS[(constant_size * foset) + GKr_b] * ((hill[(14 * foset) + 12] > 10E-14 && hill[(14 * foset) + 13] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 12],hill[(14 * foset) + 13])) : 1.);
+
+
 }
 
 // void Tomek_model::initConsts()
