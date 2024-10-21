@@ -15,3 +15,5 @@ bin/result/parse.ipynb
 output.*
 *.old
 bin/result/*
+*.samplecpp
+*.samplehpp
