@@ -17,7 +17,8 @@ void param_t::init()
   bcl = 2000.;
   pace_max = 10;
 
-  sampling_limit = 7000;
+  // sampling_limit = 7000;
+  sampling_limit =57000;
 
   is_time_series = true;
 

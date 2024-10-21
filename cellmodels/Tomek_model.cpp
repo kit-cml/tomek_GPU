@@ -1168,8 +1168,6 @@ int states_size = 43;
   STATES[(states_size * foset) + cass] = STATES[(states_size * foset) + cass] + RATES[(states_size * foset) +cass] * dt;
   STATES[(states_size * foset) + cansr] = STATES[(states_size * foset) + cansr] + RATES[(states_size * foset) +cansr] * dt;
   STATES[(states_size * foset) + cajsr] = STATES[(states_size * foset) + cajsr] + RATES[(states_size * foset) +cajsr] * dt;
-#endif
-
 }
 
 __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
