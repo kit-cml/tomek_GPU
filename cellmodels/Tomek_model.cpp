@@ -722,26 +722,17 @@ __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, do
 
 int constants_size = 163;
 
-CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > 10E-14 && hill[(14 * foset) + 1] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
-CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > 10E-14 && hill[(14 * foset) + 3] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
-CONSTANTS[(constant_size * foset) + GKs_b] = CONSTANTS[(constant_size * foset) + GKs_b] * ((hill[(14 * foset) + 4] > 10E-14 && hill[(14 * foset) + 5] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 4],hill[(14 * foset) + 5])) : 1.);
-CONSTANTS[(constant_size * foset) + GNa] = CONSTANTS[(constant_size * foset) + GNa] * ((hill[(14 * foset) + 6] > 10E-14 && hill[(14 * foset) + 7] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 6],hill[(14 * foset) + 7])) : 1.);
-CONSTANTS[(constant_size * foset) + GNaL_b] = CONSTANTS[(constant_size * foset) + GNaL_b] * ((hill[(14 * foset) + 8] > 10E-14 && hill[(14 * foset) + 9] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 8],hill[(14 * foset) + 9])) : 1.);
-CONSTANTS[(constant_size * foset) + Gto_b] = CONSTANTS[(constant_size * foset) + Gto_b] * ((hill[(14 * foset) + 10] > 10E-14 && hill[(14 * foset) + 11] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 10],hill[(14 * foset) + 11])) : 1.);
-CONSTANTS[(constant_size * foset) + GKr_b] = CONSTANTS[(constant_size * foset) + GKr_b] * ((hill[(14 * foset) + 12] > 10E-14 && hill[(14 * foset) + 13] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 12],hill[(14 * foset) + 13])) : 1.);
+CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > epsilon && hill[(14 * foset) + 1] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
+CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > epsilon && hill[(14 * foset) + 3] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
+CONSTANTS[(constant_size * foset) + GKs_b] = CONSTANTS[(constant_size * foset) + GKs_b] * ((hill[(14 * foset) + 4] > epsilon && hill[(14 * foset) + 5] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 4],hill[(14 * foset) + 5])) : 1.);
+CONSTANTS[(constant_size * foset) + GNa] = CONSTANTS[(constant_size * foset) + GNa] * ((hill[(14 * foset) + 6] > epsilon && hill[(14 * foset) + 7] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 6],hill[(14 * foset) + 7])) : 1.);
+CONSTANTS[(constant_size * foset) + GNaL_b] = CONSTANTS[(constant_size * foset) + GNaL_b] * ((hill[(14 * foset) + 8] > epsilon && hill[(14 * foset) + 9] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 8],hill[(14 * foset) + 9])) : 1.);
+CONSTANTS[(constant_size * foset) + Gto_b] = CONSTANTS[(constant_size * foset) + Gto_b] * ((hill[(14 * foset) + 10] > epsilon && hill[(14 * foset) + 11] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 10],hill[(14 * foset) + 11])) : 1.);
+CONSTANTS[(constant_size * foset) + GKr_b] = CONSTANTS[(constant_size * foset) + GKr_b] * ((hill[(14 * foset) + 12] > epsilon && hill[(14 * foset) + 13] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 12],hill[(14 * foset) + 13])) : 1.);
 
 
 }
 
-// void Tomek_model::initConsts()
-// {
-// 	___initConsts(0.);
-// }
-
-// void Tomek_model::initConsts(double type)
-// {
-// 	___initConsts(type);
-// }
 
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_cvar, double bcl, double epsilon, int foset)
 {
@@ -911,20 +902,8 @@ ALGEBRAIC[(algebraic_size * foset) + x1_i] =  CONSTANTS[(constants_size * foset)
 ALGEBRAIC[(algebraic_size * foset) + x2_i] =  CONSTANTS[(constants_size * foset) + k1_i]*ALGEBRAIC[(algebraic_size * foset) + k7_i]*(ALGEBRAIC[(algebraic_size * foset) + k4_i]+CONSTANTS[(constants_size * foset) + k5_i])+ ALGEBRAIC[(algebraic_size * foset) + k4_i]*ALGEBRAIC[(algebraic_size * foset) + k6_i]*(CONSTANTS[(constants_size * foset) + k1_i]+ALGEBRAIC[(algebraic_size * foset) + k8_i]);
 ALGEBRAIC[(algebraic_size * foset) + x3_i] =  CONSTANTS[(constants_size * foset) + k1_i]*ALGEBRAIC[(algebraic_size * foset) + k3_i]*(ALGEBRAIC[(algebraic_size * foset) + k7_i]+ALGEBRAIC[(algebraic_size * foset) + k6_i])+ ALGEBRAIC[(algebraic_size * foset) + k8_i]*ALGEBRAIC[(algebraic_size * foset) + k6_i]*(CONSTANTS[(constants_size * foset) + k2_i]+ALGEBRAIC[(algebraic_size * foset) + k3_i]);
 ALGEBRAIC[(algebraic_size * foset) + x4_i] =  CONSTANTS[(constants_size * foset) + k2_i]*ALGEBRAIC[(algebraic_size * foset) + k8_i]*(ALGEBRAIC[(algebraic_size * foset) + k4_i]+CONSTANTS[(constants_size * foset) + k5_i])+ ALGEBRAIC[(algebraic_size * foset) + k3_i]*CONSTANTS[(constants_size * foset) + k5_i]*(CONSTANTS[(constants_size * foset) + k1_i]+ALGEBRAIC[(algebraic_size * foset) + k8_i]);
-// printf("core %d: %lf, %lf\n", foset, ALGEBRAIC[(algebraic_size * foset)+ 0], ALGEBRAIC[(algebraic_size * foset) + 222] );
-// ALGEBRAIC[(algebraic_size * foset) + E1_i] = ALGEBRAIC[(algebraic_size * foset) + x1_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + x1_i])) printf("NaN detected in ALGEBRAIC[x1_i]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + x2_i])) printf("NaN detected in ALGEBRAIC[x2_i]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + x3_i])) printf("NaN detected in ALGEBRAIC[x3_i]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + x4_i])) printf("NaN detected in ALGEBRAIC[x4_i]\n");
 
-    // Compute the value
-    ALGEBRAIC[(algebraic_size * foset) + E1_i] = ALGEBRAIC[(algebraic_size * foset) + x1_i] / (ALGEBRAIC[(algebraic_size * foset) + x1_i] + ALGEBRAIC[(algebraic_size * foset) + x2_i] + ALGEBRAIC[(algebraic_size * foset) + x3_i] + ALGEBRAIC[(algebraic_size * foset) + x4_i]);
-
-    // Check the result
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + E1_i])) {
-    //     printf("NaN detected in ALGEBRAIC[E1_i]\n");
-    // }
+ALGEBRAIC[(algebraic_size * foset) + E1_i] = ALGEBRAIC[(algebraic_size * foset) + x1_i] / (ALGEBRAIC[(algebraic_size * foset) + x1_i] + ALGEBRAIC[(algebraic_size * foset) + x2_i] + ALGEBRAIC[(algebraic_size * foset) + x3_i] + ALGEBRAIC[(algebraic_size * foset) + x4_i]);
 
 ALGEBRAIC[(algebraic_size * foset) + E2_i] = ALGEBRAIC[(algebraic_size * foset) + x2_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
 
@@ -932,37 +911,9 @@ ALGEBRAIC[(algebraic_size * foset) + E3_i] = ALGEBRAIC[(algebraic_size * foset) 
 ALGEBRAIC[(algebraic_size * foset) + E4_i] = ALGEBRAIC[(algebraic_size * foset) + x4_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
 ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] = ( 3.00000*( ALGEBRAIC[(algebraic_size * foset) + E4_i]*ALGEBRAIC[(algebraic_size * foset) + k7_i] - ALGEBRAIC[(algebraic_size * foset) + E1_i]*ALGEBRAIC[(algebraic_size * foset) + k8_i])+ ALGEBRAIC[(algebraic_size * foset) + E3_i]*ALGEBRAIC[(algebraic_size * foset) + k4pp_i]) -  ALGEBRAIC[(algebraic_size * foset) + E2_i]*ALGEBRAIC[(algebraic_size * foset) + k3pp_i];
 
-// ALGEBRAIC[(algebraic_size * foset) + JncxCa_i] =  ALGEBRAIC[(algebraic_size * foset) + E2_i]*CONSTANTS[(constants_size * foset) + k2_i] -  ALGEBRAIC[(algebraic_size * foset) + E1_i]*CONSTANTS[(constants_size * foset) + k1_i];
+ALGEBRAIC[(algebraic_size * foset) + JncxCa_i] = ALGEBRAIC[(algebraic_size * foset) + E2_i] * CONSTANTS[(constants_size * foset) + k2_i] - ALGEBRAIC[(algebraic_size * foset) + E1_i] * CONSTANTS[(constants_size * foset) + k1_i];
 
-// Ensure the ALGEBRAIC components are not NaN
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + E2_i])) printf("NaN detected in ALGEBRAIC[E2_i]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + E1_i])) printf("NaN detected in ALGEBRAIC[E1_i]\n");
-
-    // Compute the value
-    ALGEBRAIC[(algebraic_size * foset) + JncxCa_i] = ALGEBRAIC[(algebraic_size * foset) + E2_i] * CONSTANTS[(constants_size * foset) + k2_i] - ALGEBRAIC[(algebraic_size * foset) + E1_i] * CONSTANTS[(constants_size * foset) + k1_i];
-
-    // // Check the result
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + JncxCa_i])) {
-    //     printf("NaN detected in ALGEBRAIC[JncxCa_i]\n");
-    // }
-
-// ALGEBRAIC[(algebraic_size * foset) + INaCa_i] =  (1.00000 - CONSTANTS[(constants_size * foset) + INaCa_fractionSS])*CONSTANTS[(constants_size * foset) + Gncx]*ALGEBRAIC[(algebraic_size * foset) + allo_i]*( CONSTANTS[(constants_size * foset) + zna]*ALGEBRAIC[(algebraic_size * foset) + JncxNa_i]+ CONSTANTS[(constants_size * foset) + zca]*ALGEBRAIC[(algebraic_size * foset) + JncxCa_i]);
-
-    // if (isnan(CONSTANTS[(constants_size * foset) + INaCa_fractionSS])) printf("NaN detected in CONSTANTS[INaCa_fractionSS]\n");
-    // if (isnan(CONSTANTS[(constants_size * foset) + Gncx])) printf("NaN detected in CONSTANTS[Gncx]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + allo_i])) printf("NaN detected in ALGEBRAIC[allo_i]\n");
-    // if (isnan(CONSTANTS[(constants_size * foset) + zna])) printf("NaN detected in CONSTANTS[zna]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + JncxNa_i])) printf("NaN detected in ALGEBRAIC[JncxNa_i]\n");
-    // if (isnan(CONSTANTS[(constants_size * foset) + zca])) printf("NaN detected in CONSTANTS[zca]\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + JncxCa_i])) printf("NaN detected in ALGEBRAIC[JncxCa_i]\n");
-
-    // Compute the value
-    ALGEBRAIC[(algebraic_size * foset) + INaCa_i] = (1.00000 - CONSTANTS[(constants_size * foset) + INaCa_fractionSS]) * CONSTANTS[(constants_size * foset) + Gncx] * ALGEBRAIC[(algebraic_size * foset) + allo_i] * (CONSTANTS[(constants_size * foset) + zna] * ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] + CONSTANTS[(constants_size * foset) + zca] * ALGEBRAIC[(algebraic_size * foset) + JncxCa_i]);
-
-    // // Check the result
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INaCa_i])) {
-    //     printf("NaN detected in ALGEBRAIC[INaCa_i]\n");
-    // }
+ALGEBRAIC[(algebraic_size * foset) + INaCa_i] = (1.00000 - CONSTANTS[(constants_size * foset) + INaCa_fractionSS]) * CONSTANTS[(constants_size * foset) + Gncx] * ALGEBRAIC[(algebraic_size * foset) + allo_i] * (CONSTANTS[(constants_size * foset) + zna] * ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] + CONSTANTS[(constants_size * foset) + zca] * ALGEBRAIC[(algebraic_size * foset) + JncxCa_i]);
 
 ALGEBRAIC[(algebraic_size * foset) + INab] = ( CONSTANTS[(constants_size * foset) + PNab]*ALGEBRAIC[(algebraic_size * foset) + vffrt]*( STATES[(states_size * foset) + nai]*exp(ALGEBRAIC[(algebraic_size * foset) + vfrt]) - CONSTANTS[(constants_size * foset) + nao]))/(exp(ALGEBRAIC[(algebraic_size * foset) + vfrt]) - 1.00000);
 ALGEBRAIC[(algebraic_size * foset) + gamma_nai] = exp( - CONSTANTS[(constants_size * foset) + constA]*1.00000*( pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)/(1.00000+ pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)) -  0.300000*ALGEBRAIC[(algebraic_size * foset) + Ii]));
@@ -1072,29 +1023,6 @@ RATES[ (states_size * foset) +V] = - (ALGEBRAIC[(algebraic_size * foset) + INa]+
 RATES[ (states_size * foset) +cai] =  ALGEBRAIC[(algebraic_size * foset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * foset) + ICaL_i]+ALGEBRAIC[(algebraic_size * foset) + IpCa]+ALGEBRAIC[(algebraic_size * foset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_i])*CONSTANTS[(constants_size * foset) + Acap])/( 2.00000*CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo]) - ( ALGEBRAIC[(algebraic_size * foset) + Jup]*CONSTANTS[(constants_size * foset) + vnsr])/CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + Jdiff]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo]);
 RATES[ (states_size * foset) +cansr] = ALGEBRAIC[(algebraic_size * foset) + Jup] - ( ALGEBRAIC[(algebraic_size * foset) + Jtr]*CONSTANTS[(constants_size * foset) + vjsr])/CONSTANTS[(constants_size * foset) + vnsr];
 RATES[ (states_size * foset) +cajsr] =  ALGEBRAIC[(algebraic_size * foset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * foset) + Jtr] - ALGEBRAIC[(algebraic_size * foset) + Jrel]);
-
-    // Print and check each term
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INa])) printf("NaN detected in INa\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INaL])) printf("NaN detected in INaL\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + Ito])) printf("NaN detected in Ito\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + ICaL])) printf("NaN detected in ICaL\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + ICaNa])) printf("NaN detected in ICaNa\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + ICaK])) printf("NaN detected in ICaK\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IKr])) printf("NaN detected in IKr\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IKs])) printf("NaN detected in IKs\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IK1])) printf("NaN detected in IK1\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INaCa_i])) printf("NaN detected in INaCa_i\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INaCa_ss])) printf("NaN detected in INaCa_ss\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INaK])) printf("NaN detected in INaK\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + INab])) printf("NaN detected in INab\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IKb])) printf("NaN detected in IKb\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IpCa])) printf("NaN detected in IpCa\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + ICab])) printf("NaN detected in ICab\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IClCa])) printf("NaN detected in IClCa\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + IClb])) printf("NaN detected in IClb\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + I_katp])) printf("NaN detected in I_katp\n");
-    // if (isnan(ALGEBRAIC[(algebraic_size * foset) + Istim])) printf("NaN detected in Istim\n");
-
 }
 
 // void Tomek_model::solveRK4(double TIME, double dt)
@@ -1133,52 +1061,6 @@ __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEB
 int algebraic_size = 223;
 int constants_size = 163;
 int states_size = 43;
-
-#ifdef EULER
-  STATES[(states_size * foset) + V] = STATES[(states_size * foset) + V] + RATES[ (states_size * foset) +V] * dt;
-  STATES[(states_size * foset) + CaMKt] = STATES[(states_size * foset) + CaMKt] + RATES[ (states_size * foset) +CaMKt] * dt;
-  STATES[(states_size * foset) + cass] = STATES[(states_size * foset) + cass] + RATES[ (states_size * foset) +cass] * dt;
-  STATES[(states_size * foset) + nai] = STATES[(states_size * foset) + nai] + RATES[ (states_size * foset) +nai] * dt;
-  STATES[(states_size * foset) + nass] = STATES[(states_size * foset) + nass] + RATES[ (states_size * foset) +nass] * dt;
-  STATES[(states_size * foset) + ki] = STATES[(states_size * foset) + ki] + RATES[ (states_size * foset) +ki] * dt;
-  STATES[(states_size * foset) + kss] = STATES[(states_size * foset) + kss] + RATES[ (states_size * foset) +kss] * dt;
-  STATES[(states_size * foset) + cansr] = STATES[(states_size * foset) + cansr] + RATES[ (states_size * foset) +cansr] * dt;
-  STATES[(states_size * foset) + cajsr] = STATES[(states_size * foset) + cajsr] + RATES[ (states_size * foset) +cajsr] * dt;
-  STATES[(states_size * foset) + cai] = STATES[(states_size * foset) + cai] + RATES[ (states_size * foset) +cai] * dt;
-  STATES[(states_size * foset) + m] = STATES[(states_size * foset) + m] + RATES[ (states_size * foset) +m] * dt;
-  STATES[(states_size * foset) + h] = STATES[(states_size * foset) + h] + RATES[ (states_size * foset) +h] * dt;
-  STATES[(states_size * foset) + j] = STATES[(states_size * foset) + j] + RATES[ (states_size * foset) +j] * dt;
-  STATES[(states_size * foset) + hp] = STATES[(states_size * foset) + hp] + RATES[ (states_size * foset) +hp] * dt;
-  STATES[(states_size * foset) + jp] = STATES[(states_size * foset) + jp] + RATES[ (states_size * foset) +jp] * dt;
-  STATES[(states_size * foset) + mL] = STATES[(states_size * foset) + mL] + RATES[ (states_size * foset) +mL] * dt;
-  STATES[(states_size * foset) + hL] = STATES[(states_size * foset) + hL] + RATES[ (states_size * foset) +hL] * dt;
-  STATES[(states_size * foset) + hLp] = STATES[(states_size * foset) + hLp] + RATES[ (states_size * foset) +hLp] * dt;
-  STATES[(states_size * foset) + a] = STATES[(states_size * foset) + a] + RATES[ (states_size * foset) +a] * dt;
-  STATES[(states_size * foset) + iF] = STATES[(states_size * foset) + iF] + RATES[ (states_size * foset) +iF] * dt;
-  STATES[(states_size * foset) + iS] = STATES[(states_size * foset) + iS] + RATES[ (states_size * foset) +iS] * dt;
-  STATES[(states_size * foset) + ap] = STATES[(states_size * foset) + ap] + RATES[ (states_size * foset) +ap] * dt;
-  STATES[(states_size * foset) + iFp] = STATES[(states_size * foset) + iFp] + RATES[ (states_size * foset) +iFp] * dt;
-  STATES[(states_size * foset) + iSp] = STATES[(states_size * foset) + iSp] + RATES[ (states_size * foset) +iSp] * dt;
-  STATES[(states_size * foset) + d] = STATES[(states_size * foset) + d] + RATES[ (states_size * foset) +d] * dt;
-  STATES[(states_size * foset) + ff] = STATES[(states_size * foset) + ff] + RATES[ (states_size * foset) +ff] * dt;
-  STATES[(states_size * foset) + fs] = STATES[(states_size * foset) + fs] + RATES[ (states_size * foset) +fs] * dt;
-  STATES[(states_size * foset) + fcaf] = STATES[(states_size * foset) + fcaf] + RATES[ (states_size * foset) +fcaf] * dt;
-  STATES[(states_size * foset) + fcas] = STATES[(states_size * foset) + fcas] + RATES[ (states_size * foset) +fcas] * dt;
-  STATES[(states_size * foset) + jca] = STATES[(states_size * foset) + jca] + RATES[ (states_size * foset) +jca] * dt;
-  STATES[(states_size * foset) + ffp] = STATES[(states_size * foset) + ffp] + RATES[ (states_size * foset) +ffp] * dt;
-  STATES[(states_size * foset) + fcafp] = STATES[(states_size * foset) + fcafp] + RATES[ (states_size * foset) +fcafp] * dt;
-  STATES[(states_size * foset) + nca_ss] = STATES[(states_size * foset) + nca_ss] + RATES[ (states_size * foset) +nca_ss] * dt;
-  STATES[(states_size * foset) + nca_i] = STATES[(states_size * foset) + nca_i] + RATES[ (states_size * foset) +nca_i] * dt;
-  STATES[(states_size * foset) + O] = STATES[(states_size * foset) + O] + RATES[ (states_size * foset) +O] * dt;
-  STATES[(states_size * foset) + I] = STATES[(states_size * foset) + I] + RATES[ (states_size * foset) +I] * dt;
-	STATES[(states_size * foset) + C3] = STATES[(states_size * foset) + C3] + RATES[ (states_size * foset) +C3] * dt;
-	STATES[(states_size * foset) + C2] = STATES[(states_size * foset) + C2] + RATES[ (states_size * foset) +C2] * dt;
-	STATES[(states_size * foset) + C1] = STATES[(states_size * foset) + C1] + RATES[ (states_size * foset) +C1] * dt;
-  STATES[(states_size * foset) + xs1] = STATES[(states_size * foset) + xs1] + RATES[ (states_size * foset) +xs1] * dt;
-  STATES[(states_size * foset) + xs2] = STATES[(states_size * foset) + xs2] + RATES[ (states_size * foset) +xs2] * dt;
-  STATES[(states_size * foset) + Jrel_np] = STATES[(states_size * foset) + Jrel_np] + RATES[ (states_size * foset) +Jrel_np] * dt;
-  STATES[(states_size * foset) + Jrel_p] = STATES[(states_size * foset) + Jrel_p] + RATES[(states_size * foset) +Jrel_p] * dt;
-#else
 ////==============
 ////Exact solution
 ////==============
@@ -1378,6 +1260,54 @@ __device__ double set_time_step(double TIME, double time_point, double max_time_
 
     return time_step;
   }
+}
+__device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
+{
+  int rates_size = 43;
+  int states_size = 43;
+  STATES[(states_size * foset) + V] = STATES[(states_size * foset) + V] + RATES[ (states_size * foset) +V] * dt;
+  STATES[(states_size * foset) + CaMKt] = STATES[(states_size * foset) + CaMKt] + RATES[ (states_size * foset) +CaMKt] * dt;
+  STATES[(states_size * foset) + cass] = STATES[(states_size * foset) + cass] + RATES[ (states_size * foset) +cass] * dt;
+  STATES[(states_size * foset) + nai] = STATES[(states_size * foset) + nai] + RATES[ (states_size * foset) +nai] * dt;
+  STATES[(states_size * foset) + nass] = STATES[(states_size * foset) + nass] + RATES[ (states_size * foset) +nass] * dt;
+  STATES[(states_size * foset) + ki] = STATES[(states_size * foset) + ki] + RATES[ (states_size * foset) +ki] * dt;
+  STATES[(states_size * foset) + kss] = STATES[(states_size * foset) + kss] + RATES[ (states_size * foset) +kss] * dt;
+  STATES[(states_size * foset) + cansr] = STATES[(states_size * foset) + cansr] + RATES[ (states_size * foset) +cansr] * dt;
+  STATES[(states_size * foset) + cajsr] = STATES[(states_size * foset) + cajsr] + RATES[ (states_size * foset) +cajsr] * dt;
+  STATES[(states_size * foset) + cai] = STATES[(states_size * foset) + cai] + RATES[ (states_size * foset) +cai] * dt;
+  STATES[(states_size * foset) + m] = STATES[(states_size * foset) + m] + RATES[ (states_size * foset) +m] * dt;
+  STATES[(states_size * foset) + h] = STATES[(states_size * foset) + h] + RATES[ (states_size * foset) +h] * dt;
+  STATES[(states_size * foset) + j] = STATES[(states_size * foset) + j] + RATES[ (states_size * foset) +j] * dt;
+  STATES[(states_size * foset) + hp] = STATES[(states_size * foset) + hp] + RATES[ (states_size * foset) +hp] * dt;
+  STATES[(states_size * foset) + jp] = STATES[(states_size * foset) + jp] + RATES[ (states_size * foset) +jp] * dt;
+  STATES[(states_size * foset) + mL] = STATES[(states_size * foset) + mL] + RATES[ (states_size * foset) +mL] * dt;
+  STATES[(states_size * foset) + hL] = STATES[(states_size * foset) + hL] + RATES[ (states_size * foset) +hL] * dt;
+  STATES[(states_size * foset) + hLp] = STATES[(states_size * foset) + hLp] + RATES[ (states_size * foset) +hLp] * dt;
+  STATES[(states_size * foset) + a] = STATES[(states_size * foset) + a] + RATES[ (states_size * foset) +a] * dt;
+  STATES[(states_size * foset) + iF] = STATES[(states_size * foset) + iF] + RATES[ (states_size * foset) +iF] * dt;
+  STATES[(states_size * foset) + iS] = STATES[(states_size * foset) + iS] + RATES[ (states_size * foset) +iS] * dt;
+  STATES[(states_size * foset) + ap] = STATES[(states_size * foset) + ap] + RATES[ (states_size * foset) +ap] * dt;
+  STATES[(states_size * foset) + iFp] = STATES[(states_size * foset) + iFp] + RATES[ (states_size * foset) +iFp] * dt;
+  STATES[(states_size * foset) + iSp] = STATES[(states_size * foset) + iSp] + RATES[ (states_size * foset) +iSp] * dt;
+  STATES[(states_size * foset) + d] = STATES[(states_size * foset) + d] + RATES[ (states_size * foset) +d] * dt;
+  STATES[(states_size * foset) + ff] = STATES[(states_size * foset) + ff] + RATES[ (states_size * foset) +ff] * dt;
+  STATES[(states_size * foset) + fs] = STATES[(states_size * foset) + fs] + RATES[ (states_size * foset) +fs] * dt;
+  STATES[(states_size * foset) + fcaf] = STATES[(states_size * foset) + fcaf] + RATES[ (states_size * foset) +fcaf] * dt;
+  STATES[(states_size * foset) + fcas] = STATES[(states_size * foset) + fcas] + RATES[ (states_size * foset) +fcas] * dt;
+  STATES[(states_size * foset) + jca] = STATES[(states_size * foset) + jca] + RATES[ (states_size * foset) +jca] * dt;
+  STATES[(states_size * foset) + ffp] = STATES[(states_size * foset) + ffp] + RATES[ (states_size * foset) +ffp] * dt;
+  STATES[(states_size * foset) + fcafp] = STATES[(states_size * foset) + fcafp] + RATES[ (states_size * foset) +fcafp] * dt;
+  STATES[(states_size * foset) + nca_ss] = STATES[(states_size * foset) + nca_ss] + RATES[ (states_size * foset) +nca_ss] * dt;
+  STATES[(states_size * foset) + nca_i] = STATES[(states_size * foset) + nca_i] + RATES[ (states_size * foset) +nca_i] * dt;
+  STATES[(states_size * foset) + O] = STATES[(states_size * foset) + O] + RATES[ (states_size * foset) +O] * dt;
+  STATES[(states_size * foset) + I] = STATES[(states_size * foset) + I] + RATES[ (states_size * foset) +I] * dt;
+	STATES[(states_size * foset) + C3] = STATES[(states_size * foset) + C3] + RATES[ (states_size * foset) +C3] * dt;
+	STATES[(states_size * foset) + C2] = STATES[(states_size * foset) + C2] + RATES[ (states_size * foset) +C2] * dt;
+	STATES[(states_size * foset) + C1] = STATES[(states_size * foset) + C1] + RATES[ (states_size * foset) +C1] * dt;
+  STATES[(states_size * foset) + xs1] = STATES[(states_size * foset) + xs1] + RATES[ (states_size * foset) +xs1] * dt;
+  STATES[(states_size * foset) + xs2] = STATES[(states_size * foset) + xs2] + RATES[ (states_size * foset) +xs2] * dt;
+  STATES[(states_size * foset) + Jrel_np] = STATES[(states_size * foset) + Jrel_np] + RATES[ (states_size * foset) +Jrel_np] * dt;
+  STATES[(states_size * foset) + Jrel_p] = STATES[(states_size * foset) + Jrel_p] + RATES[(states_size * foset) +Jrel_p] * dt;
 }
 
 // ord 2011 set time step

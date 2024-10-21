@@ -162,11 +162,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
-        dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
-        d_CONSTANTS, 
-        d_RATES, 
-        sample_id); 
+        // dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
         
+        //euler only
+        dt_set = 0.005;
+
+
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
           dt[sample_id] = dt_set;
@@ -298,7 +299,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
         // //// progress bar ends ////
 
-        solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
+        // solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
+        solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
         // tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         // __syncthreads();
         // printf("solved analytical\n"); 
