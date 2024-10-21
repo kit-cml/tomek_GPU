@@ -720,7 +720,7 @@ CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset)
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, double epsilon, int foset)
 {
 
-int constants_size = 163;
+int constant_size = 163;
 
 CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > epsilon && hill[(14 * foset) + 1] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
 CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > epsilon && hill[(14 * foset) + 3] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
