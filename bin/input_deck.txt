@@ -1,11 +1,11 @@
 Basic_Cycle_Length = 2000
-Number_of_Pacing = 10
+Number_of_Pacing = 1000
 Simulation_Mode = 0
 Celltype = 0     // 0: endo, 1: epi, 2: M
 Is_Dutta = 0     // Dutta means conductance scaling from Dutta et al. 2017
 Is_Post_Processing = 0
 Use_Conductance_Variability = 0    // 1: read additional file which contain individual conductance variability
-Pace_Find_Steepest = 5  // timing to start searching steepest dvdtrepol (ex. last 250 pacing).
+Pace_Find_Steepest = 250  // timing to start searching steepest dvdtrepol (ex. last 250 pacing).
 Drug_Name = bepridil
-Concentrations = 0.0
+Concentrations = 33.0
 GPU_Index = 0 
