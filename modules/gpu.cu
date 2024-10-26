@@ -394,7 +394,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           }
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
-          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
+          // comment is peak true if you want to take last pace!
+          if((pace_count >= pace_max-last_drug_check_pace) /*&& (is_peak == true)*/ && (pace_count<pace_max) )
           {
             // printf("input_counter: %d\n",input_counter);
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
