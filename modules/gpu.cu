@@ -579,6 +579,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     double t_peak_capture = 0.0;
     unsigned short pace_steepest = 0;
 
+    unsigned int dtw_counter;
+
     // qnet_ap/inet_ap values
 	  // double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
 	  // double inal_auc_ap, ical_auc_ap,inal_auc_cl, ical_auc_cl;
@@ -652,10 +654,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
-        dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
-        d_CONSTANTS, 
-        d_RATES, 
-        sample_id); 
+        // dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
+         dt_set = 0.003;
 
         if(d_STATES[(sample_id * num_of_states)+V] > inet_vm_threshold){
           inet += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1])*dt[sample_id];
@@ -763,7 +763,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           // writen = false;
         }
         
-        solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
+        // solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
+        solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
+
         if( temp_result[sample_id].dvmdt_max < d_RATES[(sample_id * num_of_states)+V] )temp_result[sample_id].dvmdt_max = d_RATES[(sample_id * num_of_states)+V];
           
           // this part should be
@@ -898,6 +900,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
+            dtw_counter = 0;
+            if (sample_id == 0) printf("Printed!\n");
           }
 
           // cipa result update
@@ -922,6 +926,14 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 	
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         //printf("t after addition: %lf\n", tcurr[sample_id]);
+
+          // finish if nan
+        if(isnan(d_STATES[(sample_id * num_of_states) + V]) == true) {
+          printf("core %d has nan, ejecting\n", sample_id);
+          return;
+        }
+        if (sample_id == 0) printf("time: %lf\n", tcurr[0]);
+        dtw_counter++;
        
   } // // while loop ends here 
     // __syncthreads();
