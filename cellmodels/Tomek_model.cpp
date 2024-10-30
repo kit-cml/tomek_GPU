@@ -746,6 +746,19 @@ int algebraic_size = 223;
 int constants_size = 163;
 int states_size = 43;
 
+//addition from libcml
+CONSTANTS[(constants_size * foset) + cmdnmax] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + cmdnmax_b]*1.30000 : CONSTANTS[(constants_size * foset) + cmdnmax_b]);
+CONSTANTS[(constants_size * foset) + GNaL] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GNaL_b]*0.600000 : CONSTANTS[(constants_size * foset) + GNaL_b]);
+CONSTANTS[(constants_size * foset) + Gto] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Gto_b]*2.00000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Gto_b]*2.00000 : CONSTANTS[(constants_size * foset) + Gto_b]);
+CONSTANTS[(constants_size * foset) + PCa] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + PCa_b]*1.20000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + PCa_b]*2.00000 : CONSTANTS[(constants_size * foset) + PCa_b]);
+CONSTANTS[(constants_size * foset) + GKr] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GKr_b]*1.30000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + GKr_b]*0.800000 : CONSTANTS[(constants_size * foset) + GKr_b]);
+CONSTANTS[(constants_size * foset) + GKs] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GKs_b]*1.40000 : CONSTANTS[(constants_size * foset) + GKs_b]);
+CONSTANTS[(constants_size * foset) + GK1] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GK1_b]*1.20000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + GK1_b]*1.30000 : CONSTANTS[(constants_size * foset) + GK1_b]);
+CONSTANTS[(constants_size * foset) + GKb] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GKb_b]*0.600000 : CONSTANTS[(constants_size * foset) + GKb_b]);
+CONSTANTS[(constants_size * foset) + upScale] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 1.30000 : 1.00000);
+CONSTANTS[(constants_size * foset) + Gncx] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Gncx_b]*1.10000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Gncx_b]*1.40000 : CONSTANTS[(constants_size * foset) + Gncx_b]);
+
+
 ALGEBRAIC[(algebraic_size * foset) + hLss] = 1.00000/(1.00000+exp((STATES[(states_size * foset) + V]+87.6100)/7.48800));
 ALGEBRAIC[(algebraic_size * foset) + hLssp] = 1.00000/(1.00000+exp((STATES[(states_size * foset) + V]+93.8100)/7.48800));
 ALGEBRAIC[(algebraic_size * foset) + jcass] = 1.00000/(1.00000+exp((STATES[(states_size * foset) + V]+18.0800)/2.79160));
@@ -1261,7 +1274,7 @@ __device__ double set_time_step(double TIME, double time_point, double max_time_
 }
 __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
 {
-  int rates_size = 43;
+  //int rates_size = 43;
   int states_size = 43;
   STATES[(states_size * foset) + V] = STATES[(states_size * foset) + V] + RATES[ (states_size * foset) +V] * dt;
   STATES[(states_size * foset) + CaMKt] = STATES[(states_size * foset) + CaMKt] + RATES[ (states_size * foset) +CaMKt] * dt;
