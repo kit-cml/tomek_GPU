@@ -878,7 +878,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
             // time series result
 
-            time[input_counter + sample_id] = tcurr[sample_id];
+            time[input_counter + sample_id] = tcurr[sample_id]-1000.0;
             states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
             
             out_dt[input_counter + sample_id] = d_RATES[V + (sample_id * num_of_states)];
