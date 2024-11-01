@@ -17,20 +17,17 @@ void param_t::init()
   bcl = 2000.;
   pace_max = 10;
 
-  // sampling_limit = 7000;
-  sampling_limit =57000;
-
+  sampling_limit = 7000;
+  // sampling_limit =57000;
   is_time_series = true;
-
   find_steepest_start = 5;
-
   celltype = 0.;
-  dt = 0.005;
+  dt = 0.003;
   // dt = 0.1;
-
   conc = 4129.0;
-  
-  dt_write = 2.0;
+  //being used again:
+  dt_write = 1.0; // to capture every x second
+
   inet_vm_threshold = -88.0;
   snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/mexiletine/IC50_samples.csv");
   snprintf(cache_file, sizeof(cache_file), "%s", "./result/4129.00.csv");
