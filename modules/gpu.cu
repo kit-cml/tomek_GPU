@@ -578,7 +578,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     double t_peak_capture = 0.0;
     unsigned short pace_steepest = 0;
 
-    unsigned int dtw_counter;
+    unsigned int dtw_counter = 0;
 
     // qnet_ap/inet_ap values
 	  // double inet_ap, qnet_ap, inet4_ap, qnet4_ap, inet_cl, qnet_cl, inet4_cl, qnet4_cl;
@@ -644,7 +644,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
     tmax = pace_max * bcl;
     int pace_count = 1;
-    
+    int checker = p_param->dt_write/p_param->dt;
   
     // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
@@ -861,7 +861,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
 
-          if(cipa_datapoint<p_param->sampling_limit && dtw_counter == p_param->dt_write/p_param->dt){ // temporary solution to limit the datapoint :(
+          if(cipa_datapoint<p_param->sampling_limit && dtw_counter == checker){ // temporary solution to limit the datapoint :(
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
             temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
             // printf("core: %d, cai_data and time:  %lf %lf datapoint: %d\n",
@@ -899,7 +899,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
             dtw_counter = 0;
-            if (sample_id == 0) printf("Printed!\n");
+            //if (sample_id == 0) printf("Printed!\n");
           }
 
           // cipa result update
@@ -930,7 +930,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
           printf("core %d has nan, ejecting\n", sample_id);
           return;
         }
-        if (sample_id == 0) printf("time: %lf\n", tcurr[0]);
+        //if (sample_id == 0) printf("time: %lf\n", tcurr[0]);
         dtw_counter++;
        
   } // // while loop ends here 
