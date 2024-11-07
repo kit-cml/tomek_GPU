@@ -394,7 +394,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
           // comment is peak true if you want to take last pace!
-          if((pace_count >= pace_max-last_drug_check_pace) /*&& (is_peak == true)*/ && (pace_count<pace_max) )
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           {
             // printf("input_counter: %d\n",input_counter);
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
@@ -406,16 +406,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
-           
-            if(init_states_captured == false){
-              // printf("writinggg\n"); //cache file
-              int counter;
-              for(counter=0; counter<num_of_states; counter++){
-                d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];
-              }
-              d_STATES_RESULT[(sample_id * (num_of_states+1)) + num_of_states ] = pace_count;
-              init_states_captured = true;
-            }
 
             // time series result
 
@@ -440,9 +430,17 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
-
-           
              } // temporary guard ends here
+
+              if(init_states_captured == false){
+              // printf("writinggg\n"); //cache file
+              int counter;
+              for(counter=0; counter<num_of_states; counter++){
+                d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+              }
+              d_STATES_RESULT[(sample_id * (num_of_states+1)) + num_of_states ] = pace_count;
+              init_states_captured = true;
+            }
 
 		    } // end the last 250 pace operations
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
