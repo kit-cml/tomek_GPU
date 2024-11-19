@@ -30,22 +30,22 @@ void mpi_printf(unsigned short node_id, const char *fmt, ...)
   va_end(args);	
 }
 
-void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...)
-{
-#ifndef _WIN32
-  if(mympi::rank == node_id){
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stream, fmt, args);
-    va_end(args);
-  }
-#else
-  va_list args;
-  va_start(args, fmt);
-  vfprintf(stream, fmt, args);
-  va_end(args);	
-#endif
-}
+// void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...)
+// {
+// #ifndef _WIN32
+//   if(mympi::rank == node_id){
+//     va_list args;
+//     va_start(args, fmt);
+//     vfprintf(stream, fmt, args);
+//     va_end(args);
+//   }
+// #else
+//   va_list args;
+//   va_start(args, fmt);
+//   vfprintf(stream, fmt, args);
+//   va_end(args);	
+// #endif
+// }
 
 void edison_assign_params(int argc, char *argv[], param_t *p_param)
 {
@@ -206,22 +206,22 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
 // }
 // #endif
 
-int make_directory(const char* dirname )
-{
-#if defined _WIN32
-  return _mkdir(dirname);
-#else
-  return mkdir(dirname, 0775);
-#endif	
-}
+// int make_directory(const char* dirname )
+// {
+// #if defined _WIN32
+//   return _mkdir(dirname);
+// #else
+//   return mkdir(dirname, 0775);
+// #endif	
+// }
 
-int is_file_existed(const char* pathname)
-{
-#if defined _WIN32
-  struct _stat buf;
-  return _stat( pathname, &buf );
-#else
-  struct stat st = {0};
-  return stat(pathname, &st);
-#endif
-}
+// int is_file_existed(const char* pathname)
+// {
+// #if defined _WIN32
+//   struct _stat buf;
+//   return _stat( pathname, &buf );
+// #else
+//   struct stat st = {0};
+//   return stat(pathname, &st);
+// #endif
+// }

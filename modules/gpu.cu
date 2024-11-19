@@ -6,7 +6,6 @@
 
 #include "glob_funct.hpp"
 #include "glob_type.hpp"
-#include "gpu_glob_type.cuh"
 #include "gpu.cuh"
 
 
