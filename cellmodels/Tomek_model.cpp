@@ -737,10 +737,10 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
   CONSTANTS[(foset * num_of_constants) +KmCaMK] *= cvar[17 + (foset*18)];	// KCaMK
 
   // Additional constants
-  CONSTANTS[(foset * num_of_constants) +Jrel_scale] *= cvar[13 + (foset*18)];	// SERCA_Total (release)
-  CONSTANTS[(foset * num_of_constants) +Jup_scale] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
-  CONSTANTS[(foset * num_of_constants) +Jtr_scale] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
-  CONSTANTS[(foset * num_of_constants) +Jleak_scale] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
+  // CONSTANTS[(foset * num_of_constants) +Jrel_scale] *= cvar[13 + (foset*18)];	// SERCA_Total (release)
+  // CONSTANTS[(foset * num_of_constants) +Jup_scale] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
+  // CONSTANTS[(foset * num_of_constants) +Jtr_scale] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
+  // CONSTANTS[(foset * num_of_constants) +Jleak_scale] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
   // CONSTANTS[(offset * num_of_constants) +KCaMK_scale] *= cvar[17 + (offset*18)];	// KCaMK
 }
 
