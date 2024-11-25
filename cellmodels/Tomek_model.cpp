@@ -717,6 +717,35 @@ CONSTANTS[(constants_size * foset) + a4] = (( CONSTANTS[(constants_size * foset)
 CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.900000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.700000 : CONSTANTS[(constants_size * foset) + Pnak_b]);
 }
 
+__device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
+{
+  int num_of_constants = 163;
+
+  CONSTANTS[(foset * num_of_constants) +GNa] *= cvar[0 + (foset*18)];		// GNa
+  CONSTANTS[(foset * num_of_constants) +GNaL] *= cvar[1 + (foset*18)];		// GNaL
+  CONSTANTS[(foset * num_of_constants) +Gto] *= cvar[2 + (foset*18)];		// Gto
+  CONSTANTS[(foset * num_of_constants) +GKr] *= cvar[3 + (foset*18)];		// GKr
+  CONSTANTS[(foset * num_of_constants) +GKs] *= cvar[4 + (foset*18)];		// GKs
+  CONSTANTS[(foset * num_of_constants) +GK1] *= cvar[5 + (foset*18)];		// GK1
+  CONSTANTS[(foset * num_of_constants) +Gncx] *= cvar[6 + (foset*18)];		// GNaCa
+  CONSTANTS[(foset * num_of_constants) +GKb] *= cvar[7 + (foset*18)];		// GKb
+  CONSTANTS[(foset * num_of_constants) +PCa] *= cvar[8 + (foset*18)];		// PCa
+  CONSTANTS[(foset * num_of_constants) +Pnak] *= cvar[9 + (foset*18)];		// INaK
+  CONSTANTS[(foset * num_of_constants) +PNab] *= cvar[10 + (foset*18)];		// PNab
+  CONSTANTS[(foset * num_of_constants) +PCab] *= cvar[11 + (foset*18)];		// PCab
+  CONSTANTS[(foset * num_of_constants) +GpCa] *= cvar[12 + (foset*18)];		// GpCa
+  CONSTANTS[(foset * num_of_constants) +KmCaMK] *= cvar[17 + (foset*18)];	// KCaMK
+
+  // Additional constants
+  CONSTANTS[(foset * num_of_constants) +Jrel_scale] *= cvar[13 + (foset*18)];	// SERCA_Total (release)
+  CONSTANTS[(foset * num_of_constants) +Jup_scale] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
+  CONSTANTS[(foset * num_of_constants) +Jtr_scale] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
+  CONSTANTS[(foset * num_of_constants) +Jleak_scale] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
+  // CONSTANTS[(offset * num_of_constants) +KCaMK_scale] *= cvar[17 + (offset*18)];	// KCaMK
+}
+
+
+
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, double epsilon, int foset)
 {
 
@@ -737,6 +766,9 @@ CONSTANTS[(constant_size * foset) + GKr_b] = CONSTANTS[(constant_size * foset) +
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_cvar, double bcl, double epsilon, int foset)
 {
 	___initConsts(CONSTANTS, STATES, type, bcl, foset); // clean up later
+  if (is_cvar == 1){
+    ___applyCvar(CONSTANTS, cvar, foset);
+  }
 	
 }
 

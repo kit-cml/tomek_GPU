@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 
     double* ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
     
-    // if (p_param->is_cvar == true) cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+    // if (p_param->is_cvar == true) cvar = (double *)malloc(18 * sample_limit * sizeof(double)); // still unstable :((
     double* cvar = (double *)malloc(18 * sample_limit * sizeof(double));  // conductance variability
 
     const int num_of_constants = 163;
@@ -279,11 +279,6 @@ int main(int argc, char **argv)
 
       printf("preparing GPU memory space \n");
 
-        // char buffer_cvar[255];
-        // snprintf(buffer_cvar, sizeof(buffer_cvar),
-        // "./result/66_00.csv"
-        // // "./drugs/optimized_pop_10k.csv"
-        // );
         int cache_num = get_init_data_from_file(p_param->cache_file,cache);  //
 
         printf("Found cache for %d samples\n",cache_num);
@@ -647,12 +642,12 @@ int main(int argc, char **argv)
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
     // if(p_param->is_cvar == true) cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
-    // cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
-    cudaMalloc(&d_cvar, sizeof(double));
+    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+    // cudaMalloc(&d_cvar, sizeof(double));
     
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     // if(p_param->is_cvar == true) cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
-    // cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 
     // // Get the maximum number of active blocks per multiprocessor
