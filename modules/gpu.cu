@@ -277,34 +277,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
         }
         
 
-        //// progress bar starts ////
-
-        // if(sample_id==0 && pace_count%10==0 && pace_count>99 && !writen){
-        // // printf("Calculating... watching core 0: %.2lf %% done\n",(tcurr[sample_id]/tmax)*100.0);
-        // printf("[");
-        // for (cnt=0; cnt<pace_count/10;cnt++){
-        //   printf("=");
-        // }
-        // for (cnt=pace_count/10; cnt<pace_max/10;cnt++){
-        //   printf("_");
-        // }
-        // printf("] %.2lf %% \n",(tcurr[sample_id]/tmax)*100.0);
-        // //mvaddch(0,pace_count,'=');
-        // //refresh();
-        // //system("clear");
-        // writen = true;
-        // }
-
-        // //// progress bar ends ////
-
         // solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
         solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
         
-        // tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
-        // __syncthreads();
-        // printf("solved analytical\n"); 
-        // it goes here, so it means, basically, floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl) is always true
-
         // begin the last 250 pace operations
 
         if (pace_count >= pace_max-last_drug_check_pace)
@@ -431,8 +406,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
              } // temporary guard ends here
 
+              // capture temp
               if(init_states_captured == false){
-              // printf("writinggg\n"); //cache file
+              if (sample_id == 0) printf("Writing cache\n"); //cache file
               int counter;
               for(counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];

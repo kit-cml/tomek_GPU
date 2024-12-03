@@ -30,22 +30,6 @@ void mpi_printf(unsigned short node_id, const char *fmt, ...)
   va_end(args);	
 }
 
-// void mpi_fprintf(unsigned short node_id, FILE *stream, const char *fmt, ...)
-// {
-// #ifndef _WIN32
-//   if(mympi::rank == node_id){
-//     va_list args;
-//     va_start(args, fmt);
-//     vfprintf(stream, fmt, args);
-//     va_end(args);
-//   }
-// #else
-//   va_list args;
-//   va_start(args, fmt);
-//   vfprintf(stream, fmt, args);
-//   va_end(args);	
-// #endif
-// }
 
 void edison_assign_params(int argc, char *argv[], param_t *p_param)
 {
@@ -65,7 +49,7 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
     else if (!strcasecmp(argv[idx], "-init_file"))
       strncpy(p_param->cache_file, argv[idx + 1], sizeof(p_param->cache_file));
     else if (!strcasecmp(argv[idx], "-cvar_file"))
-      strncpy(p_param->hill_file, argv[idx + 1], sizeof(p_param->cvar_file));
+      strncpy(p_param->cvar_file, argv[idx + 1], sizeof(p_param->cvar_file));
   }  
 
   is_default = false;
@@ -121,107 +105,4 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
   if( is_default == false ) fclose( fp_inputdeck );
 }
 
-// #ifndef _WIN32
-// int extract_zip(const char *zip_filename, const char *target_folder)
-// {
-//   // return zip_extract( zip_filename, target_folder, NULL, NULL);
-// }
 
-// void create_zip(const char *zip_filename, const char *target_folder)
-// {
-//   // struct zip_t *zp_result = zip_open(zip_filename, ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
-//   // if( zp_result != NULL ){
-//   //   zip_walk(zp_result, target_folder);
-//   // }
-//   // else{
-//   //   fprintf(stderr, "Error when zipping result folder!!\n");
-//   //   return;
-//   // }
-//   // if( zp_result != NULL ) zip_close(zp_result);
-// }
-
-// void zip_walk(struct zip_t *zip, const char *path) 
-// {
-//   // DIR *dir;
-//   // struct dirent *entry;
-//   // char fullpath[MAX_PATH];
-//   // struct stat s;
-
-//   // memset(fullpath, 0, MAX_PATH);
-//   // dir = opendir(path);
-//   // if(dir == NULL){
-//   //   fprintf(stderr, "Error opening the directory %s\n", path);
-//   //   return;
-//   // }
-
-
-//   // while ((entry = readdir(dir))) {
-//   //   // skip "." and ".."
-//   //   if (!strcasecmp(entry->d_name, ".\0") || !strcasecmp(entry->d_name, "..\0"))
-//   //     continue;
-
-//   //   snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
-//   //   stat(fullpath, &s);
-//   //   if (S_ISDIR(s.st_mode))
-//   //     zip_walk(zip, fullpath);
-//   //   else {
-//   //     zip_entry_open(zip, fullpath);
-//   //     zip_entry_fwrite(zip, fullpath);
-//   //     zip_entry_close(zip);
-//   //   }
-//   // }
-//   // closedir(dir);
-// }
-
-// void remove_dir_content(const char *path)
-// {
-  // struct dirent *de;
-  // char fname[300];
-  // DIR *dr = opendir(path);
-  // if(dr == NULL){
-  //   printf("No file or directory found\n");
-  //   return;
-  // }
-  // while((de = readdir(dr)) != NULL){
-  //   int ret = -1;
-  //   struct stat statbuf;
-  //   sprintf(fname,"%s/%s",path,de->d_name);
-  //   if(!strcasecmp(de->d_name, ".") || !strcasecmp(de->d_name, "..")) continue;
-  //   if(!stat(fname, &statbuf)){
-  //     if(S_ISDIR(statbuf.st_mode)){
-  //       //printf("Is dir: %s\n",fname);
-  //       if(ret != 0){
-  //         remove_dir_content(fname);
-  //         rmdir(fname);
-  //       }
-  //     }
-  //     else{
-  //       unlink(fname);
-  //       //printf("Is file: %s\n",fname);
-  //       //printf("Err: %d\n",unlink(fname));
-  //     }
-  //   }
-  // }
-  // closedir(dr);
-// }
-// #endif
-
-// int make_directory(const char* dirname )
-// {
-// #if defined _WIN32
-//   return _mkdir(dirname);
-// #else
-//   return mkdir(dirname, 0775);
-// #endif	
-// }
-
-// int is_file_existed(const char* pathname)
-// {
-// #if defined _WIN32
-//   struct _stat buf;
-//   return _stat( pathname, &buf );
-// #else
-//   struct stat st = {0};
-//   return stat(pathname, &st);
-// #endif
-// }

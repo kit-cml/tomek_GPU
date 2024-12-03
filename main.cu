@@ -256,12 +256,6 @@ int main(int argc, char **argv)
       static const int CALCIUM_SCALING = 1000000;
       static const int CURRENT_SCALING = 1000;
 
-      // snprintf(buffer, sizeof(buffer),
-      //   "./drugs/bepridil/IC50_samples.csv"
-      //   // "./drugs/bepridil/IC50_optimal.csv"
-      //   // "./IC50_samples.csv"
-      //   );
-
       int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50);
       if(sample_size == 0)
           printf("Something problem with the IC50 file!\n");
@@ -279,9 +273,9 @@ int main(int argc, char **argv)
 
       printf("preparing GPU memory space \n");
 
-        int cache_num = get_init_data_from_file(p_param->cache_file,cache);  //
+      int cache_num = get_init_data_from_file(p_param->cache_file,cache);  //
 
-        printf("Found cache for %d samples\n",cache_num);
+      printf("Found cache for %d samples\n",cache_num);
         // note to self:
         // num of states+2 gave you at the very end of the file (pace number)
         // the very beginning -> the core number
@@ -605,12 +599,6 @@ int main(int argc, char **argv)
     double *d_all_states;
 
     cipa_t *temp_result, *cipa_result;
-
-    // snprintf(buffer, sizeof(buffer),
-    //   "./drugs/bepridil/IC50_samples.csv"
-    //   // "./drugs/bepridil/IC50_optimal.csv"
-    //   // "./IC50_samples.csv"
-    //   );
     int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50);
     if(sample_size == 0)
         printf("Something problem with the IC50 file!\n");
