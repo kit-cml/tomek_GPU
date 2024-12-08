@@ -381,32 +381,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
-            // time series result
-
-            // time[input_counter + sample_id] = tcurr[sample_id];
-            // states[input_counter + sample_id] = d_STATES[V + (sample_id * num_of_states)];
-            
-            // out_dt[input_counter + sample_id] = d_RATES[V + (sample_id * num_of_states)];
-
-            
-            // cai_result[input_counter + sample_id] = d_ALGEBRAIC[cai + (sample_id * num_of_algebraic)];
-
-            // ina[input_counter + sample_id] = d_ALGEBRAIC[INa + (sample_id * num_of_algebraic)] ;
-            // inal[input_counter + sample_id] = d_ALGEBRAIC[INaL + (sample_id * num_of_algebraic)] ;
-
-            // ical[input_counter + sample_id] = d_ALGEBRAIC[ICaL + (sample_id * num_of_algebraic)] ;
-            // ito[input_counter + sample_id] = d_ALGEBRAIC[Ito + (sample_id * num_of_algebraic)] ;
-
-            // ikr[input_counter + sample_id] = d_ALGEBRAIC[IKr + (sample_id * num_of_algebraic)] ;
-            // iks[input_counter + sample_id] = d_ALGEBRAIC[IKs + (sample_id * num_of_algebraic)] ;
-
-            // ik1[input_counter + sample_id] = d_ALGEBRAIC[IK1 + (sample_id * num_of_algebraic)] ;
-
-            input_counter = input_counter + sample_size;
-            cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
-             } // temporary guard ends here
-
-              // capture temp
+             // capture temp
               if(init_states_captured == false){
               if (sample_id == 0) printf("Writing cache\n"); //cache file
               int counter;
@@ -416,6 +391,10 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
               d_STATES_RESULT[(sample_id * (num_of_states+1)) + num_of_states ] = pace_count;
               init_states_captured = true;
             }
+
+            input_counter = input_counter + sample_size;
+            cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
+             } // temporary guard ends here
 
 		    } // end the last 250 pace operations
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
