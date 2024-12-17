@@ -506,7 +506,7 @@
 
 __device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int foset)
 {
-int constants_size = 163;
+int constants_size = 163+2;
 int states_size = 43;
 
 CONSTANTS[(constants_size * foset) + celltype] = type;
@@ -661,6 +661,10 @@ CONSTANTS[(constants_size * foset) + tauCa] = 0.2;
 CONSTANTS[(constants_size * foset) + bt] = 4.75;
 STATES[(states_size * foset) + Jrel_np] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 2.82E-24 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ? 0. : 1.6129e-22);
 STATES[(states_size * foset) + Jrel_p] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 0. : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ? 0. : 1.2475e-20);
+// cvar addition
+CONSTANTS[(constants_size * foset) + Jtr_b] = 1.0;	// Trans_Total (NSR to JSR translocation)
+CONSTANTS[(constants_size * foset) + Jleak_b] = 1.0;	// Leak_Total (Ca leak from NSR)
+
 CONSTANTS[(constants_size * foset) + cajsr_half] = 1.7;
 CONSTANTS[(constants_size * foset) + Jrel_b] = 1.5378;
 CONSTANTS[(constants_size * foset) + Jup_b] = 1.0;
@@ -721,26 +725,26 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
 {
   int num_of_constants = 163;
 
-  CONSTANTS[(foset * num_of_constants) +GNa] *= cvar[0 + (foset*18)];		// GNa
-  CONSTANTS[(foset * num_of_constants) +GNaL] *= cvar[1 + (foset*18)];		// GNaL
-  CONSTANTS[(foset * num_of_constants) +Gto] *= cvar[2 + (foset*18)];		// Gto
-  CONSTANTS[(foset * num_of_constants) +GKr] *= cvar[3 + (foset*18)];		// GKr
-  CONSTANTS[(foset * num_of_constants) +GKs] *= cvar[4 + (foset*18)];		// GKs
-  CONSTANTS[(foset * num_of_constants) +GK1] *= cvar[5 + (foset*18)];		// GK1
-  CONSTANTS[(foset * num_of_constants) +Gncx] *= cvar[6 + (foset*18)];		// GNaCa
-  CONSTANTS[(foset * num_of_constants) +GKb] *= cvar[7 + (foset*18)];		// GKb
+  CONSTANTS[(foset * num_of_constants) +GNa ] *= cvar[0 + (foset*18)];		// GNa
+  CONSTANTS[(foset * num_of_constants) +GNaL_b] *= cvar[1 + (foset*18)];		// GNaL
+  CONSTANTS[(foset * num_of_constants) +Gto_b] *= cvar[2 + (foset*18)];		// Gto
+  CONSTANTS[(foset * num_of_constants) +GKr_b] *= cvar[3 + (foset*18)];		// GKr
+  CONSTANTS[(foset * num_of_constants) +GKs_b] *= cvar[4 + (foset*18)];		// GKs
+  CONSTANTS[(foset * num_of_constants) +GK1_b] *= cvar[5 + (foset*18)];		// GK1
+  CONSTANTS[(foset * num_of_constants) +Gncx_b] *= cvar[6 + (foset*18)];		// GNaCa
+  CONSTANTS[(foset * num_of_constants) +GKb_b] *= cvar[7 + (foset*18)];		// GKb
   CONSTANTS[(foset * num_of_constants) +PCa] *= cvar[8 + (foset*18)];		// PCa
-  CONSTANTS[(foset * num_of_constants) +Pnak] *= cvar[9 + (foset*18)];		// INaK
+  CONSTANTS[(foset * num_of_constants) +Pnak_b] *= cvar[9 + (foset*18)];		// INaK
   CONSTANTS[(foset * num_of_constants) +PNab] *= cvar[10 + (foset*18)];		// PNab
   CONSTANTS[(foset * num_of_constants) +PCab] *= cvar[11 + (foset*18)];		// PCab
   CONSTANTS[(foset * num_of_constants) +GpCa] *= cvar[12 + (foset*18)];		// GpCa
   CONSTANTS[(foset * num_of_constants) +KmCaMK] *= cvar[17 + (foset*18)];	// KCaMK
 
   // Additional constants
-  // CONSTANTS[(foset * num_of_constants) +Jrel_scale] *= cvar[13 + (foset*18)];	// SERCA_Total (release)
-  // CONSTANTS[(foset * num_of_constants) +Jup_scale] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
-  // CONSTANTS[(foset * num_of_constants) +Jtr_scale] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
-  // CONSTANTS[(foset * num_of_constants) +Jleak_scale] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
+  CONSTANTS[(foset * num_of_constants) +Jrel_b] *= cvar[13 + (foset*18)];	// SERCA_Total (release)
+  CONSTANTS[(foset * num_of_constants) +Jup_b] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
+  CONSTANTS[(foset * num_of_constants) +Jtr_b] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
+  CONSTANTS[(foset * num_of_constants) +Jleak_b] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
   // CONSTANTS[(offset * num_of_constants) +KCaMK_scale] *= cvar[17 + (offset*18)];	// KCaMK
 }
 
@@ -1001,6 +1005,7 @@ ALGEBRAIC[(algebraic_size * foset) + ICaNa_ss] =  CONSTANTS[(constants_size * fo
 ALGEBRAIC[(algebraic_size * foset) + Jdiff] = (STATES[(states_size * foset) + cass] - STATES[(states_size * foset) + cai])/CONSTANTS[(constants_size * foset) + tauCa];
 ALGEBRAIC[(algebraic_size * foset) + fJrelp] = 1.00000/(1.00000+CONSTANTS[(constants_size * foset) + KmCaMK]/ALGEBRAIC[(algebraic_size * foset) + CaMKa]);
 ALGEBRAIC[(algebraic_size * foset) + Jrel] =  CONSTANTS[(constants_size * foset) + Jrel_b]*( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fJrelp])*STATES[(states_size * foset) + Jrel_np]+ ALGEBRAIC[(algebraic_size * foset) + fJrelp]*STATES[(states_size * foset) + Jrel_p]);
+
 ALGEBRAIC[(algebraic_size * foset) + Bcass] = 1.00000/(1.00000+( CONSTANTS[(constants_size * foset) + BSRmax]*CONSTANTS[(constants_size * foset) + KmBSR])/pow(CONSTANTS[(constants_size * foset) + KmBSR]+STATES[(states_size * foset) + cass], 2.00000)+( CONSTANTS[(constants_size * foset) + BSLmax]*CONSTANTS[(constants_size * foset) + KmBSL])/pow(CONSTANTS[(constants_size * foset) + KmBSL]+STATES[(states_size * foset) + cass], 2.00000));
 ALGEBRAIC[(algebraic_size * foset) + gamma_cai] = exp( - CONSTANTS[(constants_size * foset) + constA]*4.00000*( pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)/(1.00000+ pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)) -  0.300000*ALGEBRAIC[(algebraic_size * foset) + Ii]));
 ALGEBRAIC[(algebraic_size * foset) + PhiCaL_i] = ( 4.00000*ALGEBRAIC[(algebraic_size * foset) + vffrt]*( ALGEBRAIC[(algebraic_size * foset) + gamma_cai]*STATES[(states_size * foset) + cai]*exp( 2.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) -  CONSTANTS[(constants_size * foset) + gamma_cao]*CONSTANTS[(constants_size * foset) + cao]))/(exp( 2.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) - 1.00000);
