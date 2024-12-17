@@ -494,7 +494,7 @@
 // Tomek_model::Tomek_model()
 // {
 // algebraic_size = 223;
-// constants_size = 163;
+// constants_size = 163+2;
 // states_size = 43;
 // rates_size = 43;
 // }
@@ -779,7 +779,7 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 __device__ void computeRates(double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 163;
+int constants_size = 163+2;
 int states_size = 43;
 
 //addition from libcml
@@ -1109,7 +1109,7 @@ RATES[ (states_size * foset) +cajsr] =  ALGEBRAIC[(algebraic_size * foset) + Bca
 __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 163;
+int constants_size = 163+2;
 int states_size = 43;
 ////==============
 ////Exact solution
@@ -1267,7 +1267,7 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
 }
 
 __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
- int constants_size = 163;
+ int constants_size = 163+2;
  int rates_size = 43;
 
  double min_time_step = 0.005;
@@ -1361,7 +1361,7 @@ __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
 // ord 2011 set time step
 // __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
 //   double time_step = 0.005;
-//   int constants_size = 163;
+//   int constants_size = 163+2;
 //   int rates_size = 43;
 
 //   if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * constants_size)]) * CONSTANTS[BCL + (offset * constants_size)]) <= time_point) {
