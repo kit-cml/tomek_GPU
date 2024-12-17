@@ -723,7 +723,7 @@ CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset)
 
 __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
 {
-  int num_of_constants = 163;
+  int num_of_constants = 163+2;
 
   CONSTANTS[(foset * num_of_constants) +GNa ] *= cvar[0 + (foset*18)];		// GNa
   CONSTANTS[(foset * num_of_constants) +GNaL_b] *= cvar[1 + (foset*18)];		// GNaL

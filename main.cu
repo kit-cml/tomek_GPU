@@ -237,7 +237,7 @@ int main(int argc, char **argv)
     // if (p_param->is_cvar == true) cvar = (double *)malloc(18 * sample_limit * sizeof(double)); // still unstable :((
     double* cvar = (double *)malloc(18 * sample_limit * sizeof(double));  // conductance variability
 
-    const int num_of_constants = 163;
+    const int num_of_constants = 163+2;
     const int num_of_states = 43;
     const int num_of_algebraic = 223;
     const int num_of_rates = 43;
