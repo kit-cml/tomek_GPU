@@ -32,7 +32,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
     int num_of_algebraic = 223;
     int algebraic_size = num_of_algebraic;
-    int num_of_constants = 163+2;
+    int num_of_constants = 165;
     int num_of_states = 43;
     int num_of_rates = 43;
 
@@ -381,9 +381,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
-             // capture temp
+            input_counter = input_counter + sample_size;
+            cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
+             } // temporary guard ends here
+
+              // capture temp
               if(init_states_captured == false){
-              if (sample_id == 0) printf("Writing cache\n"); //cache file
+              if (sample_id == 0) printf("Writing cache for %d\n", sample_id); //cache file
               int counter;
               for(counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];
@@ -392,10 +396,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
               init_states_captured = true;
             }
 
-            input_counter = input_counter + sample_size;
-            cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
-             } // temporary guard ends here
-
+ 
 		    } // end the last 250 pace operations
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         //printf("t after addition: %lf\n", tcurr[sample_id]);
@@ -437,7 +438,7 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     unsigned long long input_counter = 0;
 
     int num_of_algebraic = 223;
-    int num_of_constants = 163+2;
+    int num_of_constants = 165;
     int num_of_states = 43;
     int num_of_rates = 43;
 

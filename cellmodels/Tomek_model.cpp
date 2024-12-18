@@ -1,7 +1,7 @@
 /*
    There are a total of 223 entries in the algebraic variable array.
    There are a total of 43 entries in each of the rate and state variable arrays.
-   There are a total of 163 entries in the constant variable array.
+   There are a total of 163+2 entries in the constant variable array.
  */
 
 #include "Tomek_model.hpp"
@@ -494,7 +494,7 @@
 // Tomek_model::Tomek_model()
 // {
 // algebraic_size = 223;
-// constants_size = 163+2;
+// constants_size = 165;
 // states_size = 43;
 // rates_size = 43;
 // }
@@ -506,7 +506,7 @@
 
 __device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int foset)
 {
-int constants_size = 163+2;
+int constants_size = 165;
 int states_size = 43;
 
 CONSTANTS[(constants_size * foset) + celltype] = type;
@@ -723,7 +723,7 @@ CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset)
 
 __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
 {
-  int num_of_constants = 163+2;
+  int num_of_constants = 165;
 
   CONSTANTS[(foset * num_of_constants) +GNa ] *= cvar[0 + (foset*18)];		// GNa
   CONSTANTS[(foset * num_of_constants) +GNaL_b] *= cvar[1 + (foset*18)];		// GNaL
@@ -745,7 +745,7 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
   CONSTANTS[(foset * num_of_constants) +Jup_b] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
   CONSTANTS[(foset * num_of_constants) +Jtr_b] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
   CONSTANTS[(foset * num_of_constants) +Jleak_b] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
-  // CONSTANTS[(offset * num_of_constants) +KCaMK_scale] *= cvar[17 + (offset*18)];	// KCaMK
+  // CONSTANTS[(foset * num_of_constants) +KCaMK_scale] *= cvar[17 + (foset*18)];	// KCaMK
 }
 
 
@@ -753,7 +753,7 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, double epsilon, int foset)
 {
 
-int constant_size = 163;
+int constant_size = 165;
 
 CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > epsilon && hill[(14 * foset) + 1] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
 CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > epsilon && hill[(14 * foset) + 3] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
@@ -779,7 +779,7 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 __device__ void computeRates(double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 163+2;
+int constants_size = 165;
 int states_size = 43;
 
 //addition from libcml
@@ -1109,7 +1109,7 @@ RATES[ (states_size * foset) +cajsr] =  ALGEBRAIC[(algebraic_size * foset) + Bca
 __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 163+2;
+int constants_size = 165;
 int states_size = 43;
 ////==============
 ////Exact solution
@@ -1267,7 +1267,7 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
 }
 
 __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
- int constants_size = 163+2;
+ int constants_size = 165;
  int rates_size = 43;
 
  double min_time_step = 0.005;
@@ -1361,7 +1361,7 @@ __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
 // ord 2011 set time step
 // __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
 //   double time_step = 0.005;
-//   int constants_size = 163+2;
+//   int constants_size = 165;
 //   int rates_size = 43;
 
 //   if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * constants_size)]) * CONSTANTS[BCL + (offset * constants_size)]) <= time_point) {
