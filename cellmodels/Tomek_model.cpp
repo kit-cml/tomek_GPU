@@ -1,7 +1,7 @@
 /*
    There are a total of 223 entries in the algebraic variable array.
    There are a total of 43 entries in each of the rate and state variable arrays.
-   There are a total of 163+2 entries in the constant variable array.
+   There are a total of 163 entries in the constant variable array.
  */
 
 #include "Tomek_model.hpp"
@@ -494,7 +494,7 @@
 // Tomek_model::Tomek_model()
 // {
 // algebraic_size = 223;
-// constants_size = 165;
+// constants_size = 163;
 // states_size = 43;
 // rates_size = 43;
 // }
@@ -661,7 +661,7 @@ CONSTANTS[(constants_size * foset) + tauCa] = 0.2;
 CONSTANTS[(constants_size * foset) + bt] = 4.75;
 STATES[(states_size * foset) + Jrel_np] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 2.82E-24 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ? 0. : 1.6129e-22);
 STATES[(states_size * foset) + Jrel_p] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 0. : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ? 0. : 1.2475e-20);
-// cvar addition
+// cvar addition, implemented
 CONSTANTS[(constants_size * foset) + Jtr_b] = 1.0;	// Trans_Total (NSR to JSR translocation)
 CONSTANTS[(constants_size * foset) + Jleak_b] = 1.0;	// Leak_Total (Ca leak from NSR)
 
@@ -720,12 +720,12 @@ CONSTANTS[(constants_size * foset) + a2] = CONSTANTS[(constants_size * foset) + 
 CONSTANTS[(constants_size * foset) + a4] = (( CONSTANTS[(constants_size * foset) + k4p]*CONSTANTS[(constants_size * foset) + MgATP])/CONSTANTS[(constants_size * foset) + Kmgatp])/(1.00000+CONSTANTS[(constants_size * foset) + MgATP]/CONSTANTS[(constants_size * foset) + Kmgatp]);
 CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.900000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.700000 : CONSTANTS[(constants_size * foset) + Pnak_b]);
 }
-
+//implemented
 __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
 {
   int num_of_constants = 165;
 
-  CONSTANTS[(foset * num_of_constants) +GNa ] *= cvar[0 + (foset*18)];		// GNa
+  CONSTANTS[(foset * num_of_constants) +GNa] *= cvar[0 + (foset*18)];		// GNa
   CONSTANTS[(foset * num_of_constants) +GNaL_b] *= cvar[1 + (foset*18)];		// GNaL
   CONSTANTS[(foset * num_of_constants) +Gto_b] *= cvar[2 + (foset*18)];		// Gto
   CONSTANTS[(foset * num_of_constants) +GKr_b] *= cvar[3 + (foset*18)];		// GKr
@@ -733,7 +733,7 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
   CONSTANTS[(foset * num_of_constants) +GK1_b] *= cvar[5 + (foset*18)];		// GK1
   CONSTANTS[(foset * num_of_constants) +Gncx_b] *= cvar[6 + (foset*18)];		// GNaCa
   CONSTANTS[(foset * num_of_constants) +GKb_b] *= cvar[7 + (foset*18)];		// GKb
-  CONSTANTS[(foset * num_of_constants) +PCa] *= cvar[8 + (foset*18)];		// PCa
+  CONSTANTS[(foset * num_of_constants) +PCa_b] *= cvar[8 + (foset*18)];		// PCa
   CONSTANTS[(foset * num_of_constants) +Pnak_b] *= cvar[9 + (foset*18)];		// INaK
   CONSTANTS[(foset * num_of_constants) +PNab] *= cvar[10 + (foset*18)];		// PNab
   CONSTANTS[(foset * num_of_constants) +PCab] *= cvar[11 + (foset*18)];		// PCab
@@ -753,7 +753,7 @@ __device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, double epsilon, int foset)
 {
 
-int constant_size = 165;
+int constant_size = 163;
 
 CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > epsilon && hill[(14 * foset) + 1] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
 CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > epsilon && hill[(14 * foset) + 3] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
@@ -770,8 +770,8 @@ CONSTANTS[(constant_size * foset) + GKr_b] = CONSTANTS[(constant_size * foset) +
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_cvar, double bcl, double epsilon, int foset)
 {
 	___initConsts(CONSTANTS, STATES, type, bcl, foset); // clean up later
-  if (is_cvar == 1){
-    ___applyCvar(CONSTANTS, cvar, foset);
+   if (is_cvar == 1){
+    ___applyCvar(CONSTANTS, cvar, foset); //implemented
   }
 	
 }
@@ -779,7 +779,7 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 __device__ void computeRates(double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 165;
+int constants_size = 165; //implemented
 int states_size = 43;
 
 //addition from libcml
@@ -1005,7 +1005,6 @@ ALGEBRAIC[(algebraic_size * foset) + ICaNa_ss] =  CONSTANTS[(constants_size * fo
 ALGEBRAIC[(algebraic_size * foset) + Jdiff] = (STATES[(states_size * foset) + cass] - STATES[(states_size * foset) + cai])/CONSTANTS[(constants_size * foset) + tauCa];
 ALGEBRAIC[(algebraic_size * foset) + fJrelp] = 1.00000/(1.00000+CONSTANTS[(constants_size * foset) + KmCaMK]/ALGEBRAIC[(algebraic_size * foset) + CaMKa]);
 ALGEBRAIC[(algebraic_size * foset) + Jrel] =  CONSTANTS[(constants_size * foset) + Jrel_b]*( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fJrelp])*STATES[(states_size * foset) + Jrel_np]+ ALGEBRAIC[(algebraic_size * foset) + fJrelp]*STATES[(states_size * foset) + Jrel_p]);
-
 ALGEBRAIC[(algebraic_size * foset) + Bcass] = 1.00000/(1.00000+( CONSTANTS[(constants_size * foset) + BSRmax]*CONSTANTS[(constants_size * foset) + KmBSR])/pow(CONSTANTS[(constants_size * foset) + KmBSR]+STATES[(states_size * foset) + cass], 2.00000)+( CONSTANTS[(constants_size * foset) + BSLmax]*CONSTANTS[(constants_size * foset) + KmBSL])/pow(CONSTANTS[(constants_size * foset) + KmBSL]+STATES[(states_size * foset) + cass], 2.00000));
 ALGEBRAIC[(algebraic_size * foset) + gamma_cai] = exp( - CONSTANTS[(constants_size * foset) + constA]*4.00000*( pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)/(1.00000+ pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)) -  0.300000*ALGEBRAIC[(algebraic_size * foset) + Ii]));
 ALGEBRAIC[(algebraic_size * foset) + PhiCaL_i] = ( 4.00000*ALGEBRAIC[(algebraic_size * foset) + vffrt]*( ALGEBRAIC[(algebraic_size * foset) + gamma_cai]*STATES[(states_size * foset) + cai]*exp( 2.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) -  CONSTANTS[(constants_size * foset) + gamma_cao]*CONSTANTS[(constants_size * foset) + cao]))/(exp( 2.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) - 1.00000);
@@ -1109,7 +1108,7 @@ RATES[ (states_size * foset) +cajsr] =  ALGEBRAIC[(algebraic_size * foset) + Bca
 __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 165;
+int constants_size = 165; //implemented
 int states_size = 43;
 ////==============
 ////Exact solution
@@ -1267,7 +1266,7 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
 }
 
 __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
- int constants_size = 165;
+ int constants_size = 165; //implemented
  int rates_size = 43;
 
  double min_time_step = 0.005;
@@ -1361,7 +1360,7 @@ __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
 // ord 2011 set time step
 // __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
 //   double time_step = 0.005;
-//   int constants_size = 165;
+//   int constants_size = 165; //implemented
 //   int rates_size = 43;
 
 //   if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * constants_size)]) * CONSTANTS[BCL + (offset * constants_size)]) <= time_point) {
