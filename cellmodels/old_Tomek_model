@@ -7,491 +7,508 @@
 #include "Tomek_model.hpp"
 #include <cmath>
 #include <cstdlib>
-// #include "../../functions/inputoutput.hpp"
+#include <cstdio>
 #include "../modules/glob_funct.hpp"
 #include <cuda_runtime.h>
 #include <cuda.h>
 
+// #include "../../functions/inputoutput.hpp" // disabled for GPU operations
+
 /*
  * TIME is time in component environment (millisecond).
- * CONSTANTS[(constants_size * foset) + celltype] is celltype in component environment (dimensionless).
- * CONSTANTS[(constants_size * foset) + nao] is nao in component extracellular (millimolar).
- * CONSTANTS[(constants_size * foset) + cao] is cao in component extracellular (millimolar).
- * CONSTANTS[(constants_size * foset) + ko] is ko in component extracellular (millimolar).
- * CONSTANTS[(constants_size * foset) + clo] is clo in component extracellular (millimolar).
- * CONSTANTS[(constants_size * foset) + R] is R in component physical_constants (joule_per_kilomole_kelvin).
- * CONSTANTS[(constants_size * foset) + T] is T in component physical_constants (kelvin).
- * CONSTANTS[(constants_size * foset) + F] is F in component physical_constants (coulomb_per_mole).
- * CONSTANTS[(constants_size * foset) + zna] is zna in component physical_constants (dimensionless).
- * CONSTANTS[(constants_size * foset) + zca] is zca in component physical_constants (dimensionless).
- * CONSTANTS[(constants_size * foset) + zk] is zk in component physical_constants (dimensionless).
- * CONSTANTS[(constants_size * foset) + zcl] is zcl in component physical_constants (dimensionless).
- * CONSTANTS[(constants_size * foset) + L] is L in component cell_geometry (centimeter).
- * CONSTANTS[(constants_size * foset) + rad] is rad in component cell_geometry (centimeter).
- * CONSTANTS[(constants_size * foset) + vcell] is vcell in component cell_geometry (microliter).
- * CONSTANTS[(constants_size * foset) + Ageo] is Ageo in component cell_geometry (centimeter_squared).
- * CONSTANTS[(constants_size * foset) + Acap] is Acap in component cell_geometry (centimeter_squared).
- * CONSTANTS[(constants_size * foset) + vmyo] is vmyo in component cell_geometry (microliter).
- * CONSTANTS[(constants_size * foset) + vnsr] is vnsr in component cell_geometry (microliter).
- * CONSTANTS[(constants_size * foset) + vjsr] is vjsr in component cell_geometry (microliter).
- * CONSTANTS[(constants_size * foset) + vss] is vss in component cell_geometry (microliter).
- * STATES[(states_size * foset) + V] is v in component membrane (millivolt).
- * ALGEBRAIC[(algebraic_size * foset) + vffrt] is vffrt in component membrane (coulomb_per_mole).
- * ALGEBRAIC[(algebraic_size * foset) + vfrt] is vfrt in component membrane (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + INa] is INa in component INa (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + INaL] is INaL in component INaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + Ito] is Ito in component Ito (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaL] is ICaL in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaNa] is ICaNa in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaK] is ICaK in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IKr] is IKr in component IKr (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IKs] is IKs in component IKs (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IK1] is IK1 in component IK1 (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + INaCa_i] is INaCa_i in component INaCa (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + INaCa_ss] is INaCa_ss in component INaCa (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + INaK] is INaK in component INaK (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + INab] is INab in component INab (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IKb] is IKb in component IKb (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IpCa] is IpCa in component IpCa (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICab] is ICab in component ICab (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IClCa] is IClCa in component ICl (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IClb] is IClb in component ICl (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + I_katp] is I_katp in component I_katp (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + Istim] is Istim in component membrane (microA_per_microF).
- * CONSTANTS[(constants_size * foset) + stim_start] is stim_start in component membrane (millisecond).
- * CONSTANTS[(constants_size * foset) + stim_end] is stim_end in component membrane (millisecond).
- * CONSTANTS[(constants_size * foset) + amp] is amp in component membrane (microA_per_microF).
- * CONSTANTS[(constants_size * foset) + BCL] is BCL in component membrane (millisecond).
- * CONSTANTS[(constants_size * foset) + duration] is duration in component membrane (millisecond).
- * CONSTANTS[(constants_size * foset) + KmCaMK] is KmCaMK in component CaMK (millimolar).
- * CONSTANTS[(constants_size * foset) + aCaMK] is aCaMK in component CaMK (per_millimolar_per_millisecond).
- * CONSTANTS[(constants_size * foset) + bCaMK] is bCaMK in component CaMK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + CaMKo] is CaMKo in component CaMK (dimensionless).
- * CONSTANTS[(constants_size * foset) + KmCaM] is KmCaM in component CaMK (millimolar).
- * ALGEBRAIC[(algebraic_size * foset) + CaMKb] is CaMKb in component CaMK (millimolar).
- * ALGEBRAIC[(algebraic_size * foset) + CaMKa] is CaMKa in component CaMK (millimolar).
- * STATES[(states_size * foset) + CaMKt] is CaMKt in component CaMK (millimolar).
- * STATES[(states_size * foset) + cass] is cass in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + cmdnmax_b] is cmdnmax_b in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + cmdnmax] is cmdnmax in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + kmcmdn] is kmcmdn in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + trpnmax] is trpnmax in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + kmtrpn] is kmtrpn in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + BSRmax] is BSRmax in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + KmBSR] is KmBSR in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + BSLmax] is BSLmax in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + KmBSL] is KmBSL in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + csqnmax] is csqnmax in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + kmcsqn] is kmcsqn in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + nai] is nai in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + nass] is nass in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + ki] is ki in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + kss] is kss in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + cansr] is cansr in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + cajsr] is cajsr in component intracellular_ions (millimolar).
- * STATES[(states_size * foset) + cai] is cai in component intracellular_ions (millimolar).
- * CONSTANTS[(constants_size * foset) + cli] is cli in component intracellular_ions (millimolar).
- * ALGEBRAIC[(algebraic_size * foset) + ICaL_ss] is ICaL_ss in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaNa_ss] is ICaNa_ss in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaK_ss] is ICaK_ss in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaL_i] is ICaL_i in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaNa_i] is ICaNa_i in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ICaK_i] is ICaK_i in component ICaL (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + JdiffNa] is JdiffNa in component diff (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jdiff] is Jdiff in component diff (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jup] is Jup in component SERCA (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + JdiffK] is JdiffK in component diff (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jrel] is Jrel in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jtr] is Jtr in component trans_flux (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Bcai] is Bcai in component intracellular_ions (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Bcajsr] is Bcajsr in component intracellular_ions (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Bcass] is Bcass in component intracellular_ions (dimensionless).
- * CONSTANTS[(constants_size * foset) + PKNa] is PKNa in component reversal_potentials (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + ENa] is ENa in component reversal_potentials (millivolt).
- * ALGEBRAIC[(algebraic_size * foset) + EK] is EK in component reversal_potentials (millivolt).
- * ALGEBRAIC[(algebraic_size * foset) + EKs] is EKs in component reversal_potentials (millivolt).
- * CONSTANTS[(constants_size * foset) + ECl] is ECl in component reversal_potentials (millivolt).
- * CONSTANTS[(constants_size * foset) + gkatp] is gkatp in component I_katp (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + fkatp] is fkatp in component I_katp (dimensionless).
- * CONSTANTS[(constants_size * foset) + K_o_n] is K_o_n in component I_katp (millimolar).
- * CONSTANTS[(constants_size * foset) + A_atp] is A_atp in component I_katp (millimolar).
- * CONSTANTS[(constants_size * foset) + K_atp] is K_atp in component I_katp (millimolar).
- * CONSTANTS[(constants_size * foset) + akik] is akik in component I_katp (dimensionless).
- * CONSTANTS[(constants_size * foset) + bkik] is bkik in component I_katp (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + mss] is mss in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + tm] is tm in component INa (millisecond).
- * STATES[(states_size * foset) + m] is m in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + hss] is hss in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + ah] is ah in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + bh] is bh in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + th] is th in component INa (millisecond).
- * STATES[(states_size * foset) + h] is h in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + jss] is jss in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + aj] is aj in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + bj] is bj in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + tj] is tj in component INa (millisecond).
- * STATES[(states_size * foset) + j] is j in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + hssp] is hssp in component INa (dimensionless).
- * STATES[(states_size * foset) + hp] is hp in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + tjp] is tjp in component INa (millisecond).
- * STATES[(states_size * foset) + jp] is jp in component INa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fINap] is fINap in component INa (dimensionless).
- * CONSTANTS[(constants_size * foset) + GNa] is GNa in component INa (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + mLss] is mLss in component INaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + tmL] is tmL in component INaL (millisecond).
- * STATES[(states_size * foset) + mL] is mL in component INaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + thL] is thL in component INaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + hLss] is hLss in component INaL (dimensionless).
- * STATES[(states_size * foset) + hL] is hL in component INaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + hLssp] is hLssp in component INaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + thLp] is thLp in component INaL (millisecond).
- * STATES[(states_size * foset) + hLp] is hLp in component INaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + GNaL_b] is GNaL_b in component INaL (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GNaL] is GNaL in component INaL (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + fINaLp] is fINaLp in component INaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + Gto_b] is Gto_b in component Ito (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + ass] is ass in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + ta] is ta in component Ito (millisecond).
- * STATES[(states_size * foset) + a] is a in component Ito (dimensionless).
- * CONSTANTS[(constants_size * foset) + EKshift] is EKshift in component Ito (millivolt).
- * ALGEBRAIC[(algebraic_size * foset) + iss] is iss in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + delta_epi] is delta_epi in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + tiF_b] is tiF_b in component Ito (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tiS_b] is tiS_b in component Ito (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tiF] is tiF in component Ito (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tiS] is tiS in component Ito (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + AiF] is AiF in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + AiS] is AiS in component Ito (dimensionless).
- * STATES[(states_size * foset) + iF] is iF in component Ito (dimensionless).
- * STATES[(states_size * foset) + iS] is iS in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + i] is i in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + assp] is assp in component Ito (dimensionless).
- * STATES[(states_size * foset) + ap] is ap in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + dti_develop] is dti_develop in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + dti_recover] is dti_recover in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + tiFp] is tiFp in component Ito (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tiSp] is tiSp in component Ito (millisecond).
- * STATES[(states_size * foset) + iFp] is iFp in component Ito (dimensionless).
- * STATES[(states_size * foset) + iSp] is iSp in component Ito (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + ip] is ip in component Ito (dimensionless).
- * CONSTANTS[(constants_size * foset) + Gto] is Gto in component Ito (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + fItop] is fItop in component Ito (dimensionless).
- * CONSTANTS[(constants_size * foset) + Kmn] is Kmn in component ICaL (millimolar).
- * CONSTANTS[(constants_size * foset) + k2n] is k2n in component ICaL (per_millisecond).
- * CONSTANTS[(constants_size * foset) + PCa_b] is PCa_b in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + dss] is dss in component ICaL (dimensionless).
- * STATES[(states_size * foset) + d] is d in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fss] is fss in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + Aff] is Aff in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + Afs] is Afs in component ICaL (dimensionless).
- * STATES[(states_size * foset) + ff] is ff in component ICaL (dimensionless).
- * STATES[(states_size * foset) + fs] is fs in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + f] is f in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fcass] is fcass in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + jcass] is jcass in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Afcaf] is Afcaf in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Afcas] is Afcas in component ICaL (dimensionless).
- * STATES[(states_size * foset) + fcaf] is fcaf in component ICaL (dimensionless).
- * STATES[(states_size * foset) + fcas] is fcas in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fca] is fca in component ICaL (dimensionless).
- * STATES[(states_size * foset) + jca] is jca in component ICaL (dimensionless).
- * STATES[(states_size * foset) + ffp] is ffp in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fp] is fp in component ICaL (dimensionless).
- * STATES[(states_size * foset) + fcafp] is fcafp in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fcap] is fcap in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + km2n] is km2n in component ICaL (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + anca_ss] is anca_ss in component ICaL (dimensionless).
- * STATES[(states_size * foset) + nca_ss] is nca_ss in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + anca_i] is anca_i in component ICaL (dimensionless).
- * STATES[(states_size * foset) + nca_i] is nca_i in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + PhiCaL_ss] is PhiCaL_ss in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + PhiCaNa_ss] is PhiCaNa_ss in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + PhiCaK_ss] is PhiCaK_ss in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + PhiCaL_i] is PhiCaL_i in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + PhiCaNa_i] is PhiCaNa_i in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + PhiCaK_i] is PhiCaK_i in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + PCa] is PCa in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + PCap] is PCap in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + PCaNa] is PCaNa in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + PCaK] is PCaK in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + PCaNap] is PCaNap in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + PCaKp] is PCaKp in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + fICaLp] is fICaLp in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + td] is td in component ICaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tff] is tff in component ICaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tfs] is tfs in component ICaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tfcaf] is tfcaf in component ICaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tfcas] is tfcas in component ICaL (millisecond).
- * CONSTANTS[(constants_size * foset) + tjca] is tjca in component ICaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tffp] is tffp in component ICaL (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tfcafp] is tfcafp in component ICaL (millisecond).
- * CONSTANTS[(constants_size * foset) + vShift] is vShift in component ICaL (millivolt).
- * CONSTANTS[(constants_size * foset) + offset] is offset in component ICaL (millisecond).
- * CONSTANTS[(constants_size * foset) + Io] is Io in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Iss] is Iss in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Ii] is Ii in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + dielConstant] is dielConstant in component ICaL (per_kelvin).
- * CONSTANTS[(constants_size * foset) + constA] is constA in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + gamma_cao] is gamma_cao in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + gamma_cass] is gamma_cass in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + gamma_cai] is gamma_cai in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + gamma_nao] is gamma_nao in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + gamma_nass] is gamma_nass in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + gamma_nai] is gamma_nai in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + gamma_ko] is gamma_ko in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + gamma_kss] is gamma_kss in component ICaL (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + gamma_ki] is gamma_ki in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + ICaL_fractionSS] is ICaL_fractionSS in component ICaL (dimensionless).
- * CONSTANTS[(constants_size * foset) + GKr_b] is GKr_b in component IKr (milliS_per_microF).
- * STATES[(states_size * foset) + C1] is C1 in component IKr (dimensionless).
- * STATES[(states_size * foset) + C2] is C2 in component IKr (dimensionless).
- * STATES[(states_size * foset) + C3] is C3 in component IKr (dimensionless).
- * STATES[(states_size * foset) + I] is I in component IKr (dimensionless).
- * STATES[(states_size * foset) + O] is O in component IKr (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + alpha] is alpha in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + beta] is beta in component IKr (per_millisecond).
- * CONSTANTS[(constants_size * foset) + alpha_1] is alpha_1 in component IKr (per_millisecond).
- * CONSTANTS[(constants_size * foset) + beta_1] is beta_1 in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + alpha_2] is alpha_2 in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + beta_2] is beta_2 in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + alpha_i] is alpha_i in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + beta_i] is beta_i in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + alpha_C2ToI] is alpha_C2ToI in component IKr (per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + beta_ItoC2] is beta_ItoC2 in component IKr (per_millisecond).
- * CONSTANTS[(constants_size * foset) + GKr] is GKr in component IKr (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GKs_b] is GKs_b in component IKs (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GKs] is GKs in component IKs (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + xs1ss] is xs1ss in component IKs (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + xs2ss] is xs2ss in component IKs (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + txs1] is txs1 in component IKs (millisecond).
- * STATES[(states_size * foset) + xs1] is xs1 in component IKs (dimensionless).
- * STATES[(states_size * foset) + xs2] is xs2 in component IKs (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + KsCa] is KsCa in component IKs (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + txs2] is txs2 in component IKs (millisecond).
- * CONSTANTS[(constants_size * foset) + GK1] is GK1 in component IK1 (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GK1_b] is GK1_b in component IK1 (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + aK1] is aK1 in component IK1 (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + bK1] is bK1 in component IK1 (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + K1ss] is K1ss in component IK1 (dimensionless).
- * CONSTANTS[(constants_size * foset) + INaCa_fractionSS] is INaCa_fractionSS in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + kna1] is kna1 in component INaCa (per_millisecond).
- * CONSTANTS[(constants_size * foset) + kna2] is kna2 in component INaCa (per_millisecond).
- * CONSTANTS[(constants_size * foset) + kna3] is kna3 in component INaCa (per_millisecond).
- * CONSTANTS[(constants_size * foset) + kasymm] is kasymm in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + wna] is wna in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + wca] is wca in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + wnaca] is wnaca in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + kcaon] is kcaon in component INaCa (per_millisecond).
- * CONSTANTS[(constants_size * foset) + kcaoff] is kcaoff in component INaCa (per_millisecond).
- * CONSTANTS[(constants_size * foset) + qna] is qna in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + qca] is qca in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + hna] is hna in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + hca] is hca in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + KmCaAct] is KmCaAct in component INaCa (millimolar).
- * CONSTANTS[(constants_size * foset) + Gncx_b] is Gncx_b in component INaCa (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + Gncx] is Gncx in component INaCa (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + h1_i] is h1_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h2_i] is h2_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h3_i] is h3_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h4_i] is h4_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h5_i] is h5_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h6_i] is h6_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h7_i] is h7_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h8_i] is h8_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h9_i] is h9_i in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + h10_i] is h10_i in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + h11_i] is h11_i in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + h12_i] is h12_i in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + k1_i] is k1_i in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + k2_i] is k2_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k3p_i] is k3p_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k3pp_i] is k3pp_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k3_i] is k3_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k4_i] is k4_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k4p_i] is k4p_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k4pp_i] is k4pp_i in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + k5_i] is k5_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k6_i] is k6_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k7_i] is k7_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k8_i] is k8_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x1_i] is x1_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x2_i] is x2_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x3_i] is x3_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x4_i] is x4_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E1_i] is E1_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E2_i] is E2_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E3_i] is E3_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E4_i] is E4_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + allo_i] is allo_i in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] is JncxNa_i in component INaCa (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + JncxCa_i] is JncxCa_i in component INaCa (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + h1_ss] is h1_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h2_ss] is h2_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h3_ss] is h3_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h4_ss] is h4_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h5_ss] is h5_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h6_ss] is h6_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h7_ss] is h7_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h8_ss] is h8_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + h9_ss] is h9_ss in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + h10_ss] is h10_ss in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + h11_ss] is h11_ss in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + h12_ss] is h12_ss in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + k1_ss] is k1_ss in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + k2_ss] is k2_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k3p_ss] is k3p_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k3pp_ss] is k3pp_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k3_ss] is k3_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k4_ss] is k4_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k4p_ss] is k4p_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k4pp_ss] is k4pp_ss in component INaCa (dimensionless).
- * CONSTANTS[(constants_size * foset) + k5_ss] is k5_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k6_ss] is k6_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k7_ss] is k7_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + k8_ss] is k8_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x1_ss] is x1_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x2_ss] is x2_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x3_ss] is x3_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x4_ss] is x4_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E1_ss] is E1_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E2_ss] is E2_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E3_ss] is E3_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E4_ss] is E4_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + allo_ss] is allo_ss in component INaCa (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + JncxNa_ss] is JncxNa_ss in component INaCa (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + JncxCa_ss] is JncxCa_ss in component INaCa (millimolar_per_millisecond).
- * CONSTANTS[(constants_size * foset) + k1p] is k1p in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k1m] is k1m in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k2p] is k2p in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k2m] is k2m in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k3p] is k3p in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k3m] is k3m in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k4p] is k4p in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + k4m] is k4m in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + Knai0] is Knai0 in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + Knao0] is Knao0 in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + delta] is delta in component INaK (millivolt).
- * CONSTANTS[(constants_size * foset) + Kki] is Kki in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + Kko] is Kko in component INaK (per_millisecond).
- * CONSTANTS[(constants_size * foset) + MgADP] is MgADP in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + MgATP] is MgATP in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + Kmgatp] is Kmgatp in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + H] is H in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + eP] is eP in component INaK (dimensionless).
- * CONSTANTS[(constants_size * foset) + Khp] is Khp in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + Knap] is Knap in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + Kxkur] is Kxkur in component INaK (millimolar).
- * CONSTANTS[(constants_size * foset) + Pnak_b] is Pnak_b in component INaK (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + Pnak] is Pnak in component INaK (milliS_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + Knai] is Knai in component INaK (millimolar).
- * ALGEBRAIC[(algebraic_size * foset) + Knao] is Knao in component INaK (millimolar).
- * ALGEBRAIC[(algebraic_size * foset) + P] is P in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + a1] is a1 in component INaK (dimensionless).
- * CONSTANTS[(constants_size * foset) + b1] is b1 in component INaK (dimensionless).
- * CONSTANTS[(constants_size * foset) + a2] is a2 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + b2] is b2 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + a3] is a3 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + b3] is b3 in component INaK (dimensionless).
- * CONSTANTS[(constants_size * foset) + a4] is a4 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + b4] is b4 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x1] is x1 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x2] is x2 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x3] is x3 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + x4] is x4 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E1] is E1 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E2] is E2 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E3] is E3 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + E4] is E4 in component INaK (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + JnakNa] is JnakNa in component INaK (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + JnakK] is JnakK in component INaK (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + xkb] is xkb in component IKb (dimensionless).
- * CONSTANTS[(constants_size * foset) + GKb_b] is GKb_b in component IKb (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GKb] is GKb in component IKb (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + PNab] is PNab in component INab (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + PCab] is PCab in component ICab (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GpCa] is GpCa in component IpCa (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + KmCap] is KmCap in component IpCa (millimolar).
- * CONSTANTS[(constants_size * foset) + GClCa] is GClCa in component ICl (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + GClb] is GClb in component ICl (milliS_per_microF).
- * CONSTANTS[(constants_size * foset) + KdClCa] is KdClCa in component ICl (millimolar).
- * CONSTANTS[(constants_size * foset) + Fjunc] is Fjunc in component ICl (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + IClCa_junc] is IClCa_junc in component ICl (microA_per_microF).
- * ALGEBRAIC[(algebraic_size * foset) + IClCa_sl] is IClCa_sl in component ICl (microA_per_microF).
- * CONSTANTS[(constants_size * foset) + tauNa] is tauNa in component diff (millisecond).
- * CONSTANTS[(constants_size * foset) + tauK] is tauK in component diff (millisecond).
- * CONSTANTS[(constants_size * foset) + tauCa] is tauCa in component diff (millisecond).
- * CONSTANTS[(constants_size * foset) + bt] is bt in component ryr (millisecond).
- * CONSTANTS[(constants_size * foset) + a_rel] is a_rel in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jrel_inf_b] is Jrel_inf_b in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jrel_inf] is Jrel_inf in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tau_rel_b] is tau_rel_b in component ryr (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tau_rel] is tau_rel in component ryr (millisecond).
- * STATES[(states_size * foset) + Jrel_np] is Jrel_np in component ryr (millimolar_per_millisecond).
- * CONSTANTS[(constants_size * foset) + btp] is btp in component ryr (millisecond).
- * CONSTANTS[(constants_size * foset) + a_relp] is a_relp in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jrel_infp_b] is Jrel_infp_b in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jrel_infp] is Jrel_infp in component ryr (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tau_relp_b] is tau_relp_b in component ryr (millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + tau_relp] is tau_relp in component ryr (millisecond).
- * STATES[(states_size * foset) + Jrel_p] is Jrel_p in component ryr (millimolar_per_millisecond).
- * CONSTANTS[(constants_size * foset) + cajsr_half] is cajsr_half in component ryr (millimolar).
- * ALGEBRAIC[(algebraic_size * foset) + fJrelp] is fJrelp in component ryr (dimensionless).
- * CONSTANTS[(constants_size * foset) + Jrel_b] is Jrel_b in component ryr (dimensionless).
- * CONSTANTS[(constants_size * foset) + upScale] is upScale in component SERCA (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Jupnp] is Jupnp in component SERCA (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + Jupp] is Jupp in component SERCA (millimolar_per_millisecond).
- * ALGEBRAIC[(algebraic_size * foset) + fJupp] is fJupp in component SERCA (dimensionless).
- * ALGEBRAIC[(algebraic_size * foset) + Jleak] is Jleak in component SERCA (millimolar_per_millisecond).
- * CONSTANTS[(constants_size * foset) + Jup_b] is Jup_b in component SERCA (dimensionless).
- * RATES[(states_size * foset) + V] is d/dt v in component membrane (millivolt).
- * RATES[(states_size * foset) + CaMKt] is d/dt CaMKt in component CaMK (millimolar).
- * RATES[(states_size * foset) + nai] is d/dt nai in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + nass] is d/dt nass in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + ki] is d/dt ki in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + kss] is d/dt kss in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + cai] is d/dt cai in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + cass] is d/dt cass in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + cansr] is d/dt cansr in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + cajsr] is d/dt cajsr in component intracellular_ions (millimolar).
- * RATES[(states_size * foset) + m] is d/dt m in component INa (dimensionless).
- * RATES[(states_size * foset) + h] is d/dt h in component INa (dimensionless).
- * RATES[(states_size * foset) + j] is d/dt j in component INa (dimensionless).
- * RATES[(states_size * foset) + hp] is d/dt hp in component INa (dimensionless).
- * RATES[(states_size * foset) + jp] is d/dt jp in component INa (dimensionless).
- * RATES[(states_size * foset) + mL] is d/dt mL in component INaL (dimensionless).
- * RATES[(states_size * foset) + hL] is d/dt hL in component INaL (dimensionless).
- * RATES[(states_size * foset) + hLp] is d/dt hLp in component INaL (dimensionless).
- * RATES[(states_size * foset) + a] is d/dt a in component Ito (dimensionless).
- * RATES[(states_size * foset) + iF] is d/dt iF in component Ito (dimensionless).
- * RATES[(states_size * foset) + iS] is d/dt iS in component Ito (dimensionless).
- * RATES[(states_size * foset) + ap] is d/dt ap in component Ito (dimensionless).
- * RATES[(states_size * foset) + iFp] is d/dt iFp in component Ito (dimensionless).
- * RATES[(states_size * foset) + iSp] is d/dt iSp in component Ito (dimensionless).
- * RATES[(states_size * foset) + d] is d/dt d in component ICaL (dimensionless).
- * RATES[(states_size * foset) + ff] is d/dt ff in component ICaL (dimensionless).
- * RATES[(states_size * foset) + fs] is d/dt fs in component ICaL (dimensionless).
- * RATES[(states_size * foset) + fcaf] is d/dt fcaf in component ICaL (dimensionless).
- * RATES[(states_size * foset) + fcas] is d/dt fcas in component ICaL (dimensionless).
- * RATES[(states_size * foset) + jca] is d/dt jca in component ICaL (dimensionless).
- * RATES[(states_size * foset) + ffp] is d/dt ffp in component ICaL (dimensionless).
- * RATES[(states_size * foset) + fcafp] is d/dt fcafp in component ICaL (dimensionless).
- * RATES[(states_size * foset) + nca_ss] is d/dt nca_ss in component ICaL (dimensionless).
- * RATES[(states_size * foset) + nca_i] is d/dt nca_i in component ICaL (dimensionless).
- * RATES[(states_size * foset) + C3] is d/dt C3 in component IKr (dimensionless).
- * RATES[(states_size * foset) + C2] is d/dt C2 in component IKr (dimensionless).
- * RATES[(states_size * foset) + C1] is d/dt C1 in component IKr (dimensionless).
- * RATES[(states_size * foset) + O] is d/dt O in component IKr (dimensionless).
- * RATES[(states_size * foset) + I] is d/dt I in component IKr (dimensionless).
- * RATES[(states_size * foset) + xs1] is d/dt xs1 in component IKs (dimensionless).
- * RATES[(states_size * foset) + xs2] is d/dt xs2 in component IKs (dimensionless).
- * RATES[(states_size * foset) + Jrel_np] is d/dt Jrel_np in component ryr (millimolar_per_millisecond).
- * RATES[(states_size * foset) + Jrel_p] is d/dt Jrel_p in component ryr (millimolar_per_millisecond).
+ * CONSTANTS[celltype] is celltype in component environment (dimensionless).
+ * CONSTANTS[nao] is nao in component extracellular (millimolar).
+ * CONSTANTS[cao] is cao in component extracellular (millimolar).
+ * CONSTANTS[ko] is ko in component extracellular (millimolar).
+ * CONSTANTS[clo] is clo in component extracellular (millimolar).
+ * CONSTANTS[R] is R in component physical_constants (joule_per_kilomole_kelvin).
+ * CONSTANTS[T] is T in component physical_constants (kelvin).
+ * CONSTANTS[F] is F in component physical_constants (coulomb_per_mole).
+ * CONSTANTS[zna] is zna in component physical_constants (dimensionless).
+ * CONSTANTS[zca] is zca in component physical_constants (dimensionless).
+ * CONSTANTS[zk] is zk in component physical_constants (dimensionless).
+ * CONSTANTS[zcl] is zcl in component physical_constants (dimensionless).
+ * CONSTANTS[L] is L in component cell_geometry (centimeter).
+ * CONSTANTS[rad] is rad in component cell_geometry (centimeter).
+ * CONSTANTS[vcell] is vcell in component cell_geometry (microliter).
+ * CONSTANTS[Ageo] is Ageo in component cell_geometry (centimeter_squared).
+ * CONSTANTS[Acap] is Acap in component cell_geometry (centimeter_squared).
+ * CONSTANTS[vmyo] is vmyo in component cell_geometry (microliter).
+ * CONSTANTS[vnsr] is vnsr in component cell_geometry (microliter).
+ * CONSTANTS[vjsr] is vjsr in component cell_geometry (microliter).
+ * CONSTANTS[vss] is vss in component cell_geometry (microliter).
+ * STATES[V] is v in component membrane (millivolt).
+ * ALGEBRAIC[vffrt] is vffrt in component membrane (coulomb_per_mole).
+ * ALGEBRAIC[vfrt] is vfrt in component membrane (dimensionless).
+ * ALGEBRAIC[INa] is INa in component INa (microA_per_microF).
+ * ALGEBRAIC[INaL] is INaL in component INaL (microA_per_microF).
+ * ALGEBRAIC[Ito] is Ito in component Ito (microA_per_microF).
+ * ALGEBRAIC[ICaL] is ICaL in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaNa] is ICaNa in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaK] is ICaK in component ICaL (microA_per_microF).
+ * ALGEBRAIC[IKr] is IKr in component IKr (microA_per_microF).
+ * ALGEBRAIC[IKs] is IKs in component IKs (microA_per_microF).
+ * ALGEBRAIC[IK1] is IK1 in component IK1 (microA_per_microF).
+ * ALGEBRAIC[INaCa_i] is INaCa_i in component INaCa (microA_per_microF).
+ * ALGEBRAIC[INaCa_ss] is INaCa_ss in component INaCa (microA_per_microF).
+ * ALGEBRAIC[INaK] is INaK in component INaK (microA_per_microF).
+ * ALGEBRAIC[INab] is INab in component INab (microA_per_microF).
+ * ALGEBRAIC[IKb] is IKb in component IKb (microA_per_microF).
+ * ALGEBRAIC[IpCa] is IpCa in component IpCa (microA_per_microF).
+ * ALGEBRAIC[ICab] is ICab in component ICab (microA_per_microF).
+ * ALGEBRAIC[IClCa] is IClCa in component ICl (microA_per_microF).
+ * ALGEBRAIC[IClb] is IClb in component ICl (microA_per_microF).
+ * ALGEBRAIC[I_katp] is I_katp in component I_katp (microA_per_microF).
+ * ALGEBRAIC[Istim] is Istim in component membrane (microA_per_microF).
+ * CONSTANTS[stim_start] is stim_start in component membrane (millisecond).
+ * CONSTANTS[i_Stim_End] is i_Stim_End in component membrane (millisecond).
+ * CONSTANTS[i_Stim_Amplitude] is i_Stim_Amplitude in component membrane (microA_per_microF).
+ * CONSTANTS[BCL] is BCL in component membrane (millisecond).
+ * CONSTANTS[i_Stim_PulseDuration] is i_Stim_PulseDuration in component membrane (millisecond).
+ * CONSTANTS[KmCaMK] is KmCaMK in component CaMK (millimolar).
+ * CONSTANTS[aCaMK] is aCaMK in component CaMK (per_millimolar_per_millisecond).
+ * CONSTANTS[bCaMK] is bCaMK in component CaMK (per_millisecond).
+ * CONSTANTS[CaMKo] is CaMKo in component CaMK (dimensionless).
+ * CONSTANTS[KmCaM] is KmCaM in component CaMK (millimolar).
+ * ALGEBRAIC[CaMKb] is CaMKb in component CaMK (millimolar).
+ * ALGEBRAIC[CaMKa] is CaMKa in component CaMK (millimolar).
+ * STATES[CaMKt] is CaMKt in component CaMK (millimolar).
+ * STATES[cass] is cass in component intracellular_ions (millimolar).
+ * CONSTANTS[cmdnmax_b] is cmdnmax_b in component intracellular_ions (millimolar).
+ * CONSTANTS[cmdnmax] is cmdnmax in component intracellular_ions (millimolar).
+ * CONSTANTS[kmcmdn] is kmcmdn in component intracellular_ions (millimolar).
+ * CONSTANTS[trpnmax] is trpnmax in component intracellular_ions (millimolar).
+ * CONSTANTS[kmtrpn] is kmtrpn in component intracellular_ions (millimolar).
+ * CONSTANTS[BSRmax] is BSRmax in component intracellular_ions (millimolar).
+ * CONSTANTS[KmBSR] is KmBSR in component intracellular_ions (millimolar).
+ * CONSTANTS[BSLmax] is BSLmax in component intracellular_ions (millimolar).
+ * CONSTANTS[KmBSL] is KmBSL in component intracellular_ions (millimolar).
+ * CONSTANTS[csqnmax] is csqnmax in component intracellular_ions (millimolar).
+ * CONSTANTS[kmcsqn] is kmcsqn in component intracellular_ions (millimolar).
+ * STATES[nai] is nai in component intracellular_ions (millimolar).
+ * STATES[nass] is nass in component intracellular_ions (millimolar).
+ * STATES[ki] is ki in component intracellular_ions (millimolar).
+ * STATES[kss] is kss in component intracellular_ions (millimolar).
+ * STATES[cansr] is cansr in component intracellular_ions (millimolar).
+ * STATES[cajsr] is cajsr in component intracellular_ions (millimolar).
+ * STATES[cai] is cai in component intracellular_ions (millimolar).
+ * CONSTANTS[cli] is cli in component intracellular_ions (millimolar).
+ * ALGEBRAIC[ICaL_ss] is ICaL_ss in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaNa_ss] is ICaNa_ss in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaK_ss] is ICaK_ss in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaL_i] is ICaL_i in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaNa_i] is ICaNa_i in component ICaL (microA_per_microF).
+ * ALGEBRAIC[ICaK_i] is ICaK_i in component ICaL (microA_per_microF).
+ * ALGEBRAIC[JdiffNa] is JdiffNa in component diff (millimolar_per_millisecond).
+ * ALGEBRAIC[Jdiff] is Jdiff in component diff (millimolar_per_millisecond).
+ * ALGEBRAIC[Jup] is Jup in component SERCA (millimolar_per_millisecond).
+ * ALGEBRAIC[JdiffK] is JdiffK in component diff (millimolar_per_millisecond).
+ * ALGEBRAIC[Jrel] is Jrel in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[Jtr] is Jtr in component trans_flux (millimolar_per_millisecond).
+ * ALGEBRAIC[Bcai] is Bcai in component intracellular_ions (dimensionless).
+ * ALGEBRAIC[Bcajsr] is Bcajsr in component intracellular_ions (dimensionless).
+ * ALGEBRAIC[Bcass] is Bcass in component intracellular_ions (dimensionless).
+ * CONSTANTS[PKNa] is PKNa in component reversal_potentials (dimensionless).
+ * ALGEBRAIC[ENa] is ENa in component reversal_potentials (millivolt).
+ * ALGEBRAIC[EK] is EK in component reversal_potentials (millivolt).
+ * ALGEBRAIC[EKs] is EKs in component reversal_potentials (millivolt).
+ * CONSTANTS[ECl] is ECl in component reversal_potentials (millivolt).
+ * CONSTANTS[gkatp] is gkatp in component I_katp (milliS_per_microF).
+ * CONSTANTS[fkatp] is fkatp in component I_katp (dimensionless).
+ * CONSTANTS[K_o_n] is K_o_n in component I_katp (millimolar).
+ * CONSTANTS[A_atp] is A_atp in component I_katp (millimolar).
+ * CONSTANTS[K_atp] is K_atp in component I_katp (millimolar).
+ * CONSTANTS[akik] is akik in component I_katp (dimensionless).
+ * CONSTANTS[bkik] is bkik in component I_katp (dimensionless).
+ * ALGEBRAIC[mss] is mss in component INa (dimensionless).
+ * ALGEBRAIC[tm] is tm in component INa (millisecond).
+ * STATES[m] is m in component INa (dimensionless).
+ * ALGEBRAIC[hss] is hss in component INa (dimensionless).
+ * ALGEBRAIC[ah] is ah in component INa (dimensionless).
+ * ALGEBRAIC[bh] is bh in component INa (dimensionless).
+ * ALGEBRAIC[th] is th in component INa (millisecond).
+ * STATES[h] is h in component INa (dimensionless).
+ * ALGEBRAIC[jss] is jss in component INa (dimensionless).
+ * ALGEBRAIC[aj] is aj in component INa (dimensionless).
+ * ALGEBRAIC[bj] is bj in component INa (dimensionless).
+ * ALGEBRAIC[tj] is tj in component INa (millisecond).
+ * STATES[j] is j in component INa (dimensionless).
+ * ALGEBRAIC[hssp] is hssp in component INa (dimensionless).
+ * STATES[hp] is hp in component INa (dimensionless).
+ * ALGEBRAIC[tjp] is tjp in component INa (millisecond).
+ * STATES[jp] is jp in component INa (dimensionless).
+ * ALGEBRAIC[fINap] is fINap in component INa (dimensionless).
+ * CONSTANTS[GNa] is GNa in component INa (milliS_per_microF).
+ * ALGEBRAIC[mLss] is mLss in component INaL (dimensionless).
+ * ALGEBRAIC[tmL] is tmL in component INaL (millisecond).
+ * STATES[mL] is mL in component INaL (dimensionless).
+ * CONSTANTS[thL] is thL in component INaL (millisecond).
+ * ALGEBRAIC[hLss] is hLss in component INaL (dimensionless).
+ * STATES[hL] is hL in component INaL (dimensionless).
+ * ALGEBRAIC[hLssp] is hLssp in component INaL (dimensionless).
+ * CONSTANTS[thLp] is thLp in component INaL (millisecond).
+ * STATES[hLp] is hLp in component INaL (dimensionless).
+ * CONSTANTS[GNaL_b] is GNaL_b in component INaL (milliS_per_microF).
+ * CONSTANTS[GNaL] is GNaL in component INaL (milliS_per_microF).
+ * ALGEBRAIC[fINaLp] is fINaLp in component INaL (dimensionless).
+ * CONSTANTS[Gto_b] is Gto_b in component Ito (milliS_per_microF).
+ * ALGEBRAIC[ass] is ass in component Ito (dimensionless).
+ * ALGEBRAIC[ta] is ta in component Ito (millisecond).
+ * STATES[a] is a in component Ito (dimensionless).
+ * CONSTANTS[EKshift] is EKshift in component Ito (millivolt).
+ * ALGEBRAIC[iss] is iss in component Ito (dimensionless).
+ * ALGEBRAIC[delta_epi] is delta_epi in component Ito (dimensionless).
+ * ALGEBRAIC[tiF_b] is tiF_b in component Ito (millisecond).
+ * ALGEBRAIC[tiS_b] is tiS_b in component Ito (millisecond).
+ * ALGEBRAIC[tiF] is tiF in component Ito (millisecond).
+ * ALGEBRAIC[tiS] is tiS in component Ito (millisecond).
+ * ALGEBRAIC[AiF] is AiF in component Ito (dimensionless).
+ * ALGEBRAIC[AiS] is AiS in component Ito (dimensionless).
+ * STATES[iF] is iF in component Ito (dimensionless).
+ * STATES[iS] is iS in component Ito (dimensionless).
+ * ALGEBRAIC[i] is i in component Ito (dimensionless).
+ * ALGEBRAIC[assp] is assp in component Ito (dimensionless).
+ * STATES[ap] is ap in component Ito (dimensionless).
+ * ALGEBRAIC[dti_develop] is dti_develop in component Ito (dimensionless).
+ * ALGEBRAIC[dti_recover] is dti_recover in component Ito (dimensionless).
+ * ALGEBRAIC[tiFp] is tiFp in component Ito (millisecond).
+ * ALGEBRAIC[tiSp] is tiSp in component Ito (millisecond).
+ * STATES[iFp] is iFp in component Ito (dimensionless).
+ * STATES[iSp] is iSp in component Ito (dimensionless).
+ * ALGEBRAIC[ip] is ip in component Ito (dimensionless).
+ * CONSTANTS[Gto] is Gto in component Ito (milliS_per_microF).
+ * ALGEBRAIC[fItop] is fItop in component Ito (dimensionless).
+ * CONSTANTS[Kmn] is Kmn in component ICaL (millimolar).
+ * CONSTANTS[k2n] is k2n in component ICaL (per_millisecond).
+ * CONSTANTS[PCa_b] is PCa_b in component ICaL (dimensionless).
+ * ALGEBRAIC[dss] is dss in component ICaL (dimensionless).
+ * STATES[d] is d in component ICaL (dimensionless).
+ * ALGEBRAIC[fss] is fss in component ICaL (dimensionless).
+ * CONSTANTS[Aff] is Aff in component ICaL (dimensionless).
+ * CONSTANTS[Afs] is Afs in component ICaL (dimensionless).
+ * STATES[ff] is ff in component ICaL (dimensionless).
+ * STATES[fs] is fs in component ICaL (dimensionless).
+ * ALGEBRAIC[f] is f in component ICaL (dimensionless).
+ * ALGEBRAIC[fcass] is fcass in component ICaL (dimensionless).
+ * ALGEBRAIC[jcass] is jcass in component ICaL (dimensionless).
+ * ALGEBRAIC[Afcaf] is Afcaf in component ICaL (dimensionless).
+ * ALGEBRAIC[Afcas] is Afcas in component ICaL (dimensionless).
+ * STATES[fcaf] is fcaf in component ICaL (dimensionless).
+ * STATES[fcas] is fcas in component ICaL (dimensionless).
+ * ALGEBRAIC[fca] is fca in component ICaL (dimensionless).
+ * STATES[jca] is jca in component ICaL (dimensionless).
+ * STATES[ffp] is ffp in component ICaL (dimensionless).
+ * ALGEBRAIC[fp] is fp in component ICaL (dimensionless).
+ * STATES[fcafp] is fcafp in component ICaL (dimensionless).
+ * ALGEBRAIC[fcap] is fcap in component ICaL (dimensionless).
+ * ALGEBRAIC[km2n] is km2n in component ICaL (per_millisecond).
+ * ALGEBRAIC[anca_ss] is anca_ss in component ICaL (dimensionless).
+ * STATES[nca_ss] is nca_ss in component ICaL (dimensionless).
+ * ALGEBRAIC[anca_i] is anca_i in component ICaL (dimensionless).
+ * STATES[nca_i] is nca_i in component ICaL (dimensionless).
+ * ALGEBRAIC[PhiCaL_ss] is PhiCaL_ss in component ICaL (dimensionless).
+ * ALGEBRAIC[PhiCaNa_ss] is PhiCaNa_ss in component ICaL (dimensionless).
+ * ALGEBRAIC[PhiCaK_ss] is PhiCaK_ss in component ICaL (dimensionless).
+ * ALGEBRAIC[PhiCaL_i] is PhiCaL_i in component ICaL (dimensionless).
+ * ALGEBRAIC[PhiCaNa_i] is PhiCaNa_i in component ICaL (dimensionless).
+ * ALGEBRAIC[PhiCaK_i] is PhiCaK_i in component ICaL (dimensionless).
+ * CONSTANTS[PCa] is PCa in component ICaL (dimensionless).
+ * CONSTANTS[PCap] is PCap in component ICaL (dimensionless).
+ * CONSTANTS[PCaNa] is PCaNa in component ICaL (dimensionless).
+ * CONSTANTS[PCaK] is PCaK in component ICaL (dimensionless).
+ * CONSTANTS[PCaNap] is PCaNap in component ICaL (dimensionless).
+ * CONSTANTS[PCaKp] is PCaKp in component ICaL (dimensionless).
+ * ALGEBRAIC[fICaLp] is fICaLp in component ICaL (dimensionless).
+ * ALGEBRAIC[td] is td in component ICaL (millisecond).
+ * ALGEBRAIC[tff] is tff in component ICaL (millisecond).
+ * ALGEBRAIC[tfs] is tfs in component ICaL (millisecond).
+ * ALGEBRAIC[tfcaf] is tfcaf in component ICaL (millisecond).
+ * ALGEBRAIC[tfcas] is tfcas in component ICaL (millisecond).
+ * CONSTANTS[tjca] is tjca in component ICaL (millisecond).
+ * ALGEBRAIC[tffp] is tffp in component ICaL (millisecond).
+ * ALGEBRAIC[tfcafp] is tfcafp in component ICaL (millisecond).
+ * CONSTANTS[vShift] is vShift in component ICaL (millivolt).
+ * CONSTANTS[offset] is offset in component ICaL (millisecond).
+ * CONSTANTS[Io] is Io in component ICaL (dimensionless).
+ * ALGEBRAIC[Iss] is Iss in component ICaL (dimensionless).
+ * ALGEBRAIC[Ii] is Ii in component ICaL (dimensionless).
+ * CONSTANTS[dielConstant] is dielConstant in component ICaL (per_kelvin).
+ * CONSTANTS[constA] is constA in component ICaL (dimensionless).
+ * CONSTANTS[gamma_cao] is gamma_cao in component ICaL (dimensionless).
+ * ALGEBRAIC[gamma_cass] is gamma_cass in component ICaL (dimensionless).
+ * ALGEBRAIC[gamma_cai] is gamma_cai in component ICaL (dimensionless).
+ * CONSTANTS[gamma_nao] is gamma_nao in component ICaL (dimensionless).
+ * ALGEBRAIC[gamma_nass] is gamma_nass in component ICaL (dimensionless).
+ * ALGEBRAIC[gamma_nai] is gamma_nai in component ICaL (dimensionless).
+ * CONSTANTS[gamma_ko] is gamma_ko in component ICaL (dimensionless).
+ * ALGEBRAIC[gamma_kss] is gamma_kss in component ICaL (dimensionless).
+ * ALGEBRAIC[gamma_ki] is gamma_ki in component ICaL (dimensionless).
+ * CONSTANTS[ICaL_fractionSS] is ICaL_fractionSS in component ICaL (dimensionless).
+ * CONSTANTS[GKr_b] is GKr_b in component IKr (milliS_per_microF).
+ * STATES[C1] is C1 in component IKr (dimensionless).
+ * STATES[C2] is C2 in component IKr (dimensionless).
+ * STATES[C3] is C3 in component IKr (dimensionless).
+ * STATES[I] is I in component IKr (dimensionless).
+ * STATES[O] is O in component IKr (dimensionless).
+ * ALGEBRAIC[alpha] is alpha in component IKr (per_millisecond).
+ * ALGEBRAIC[beta] is beta in component IKr (per_millisecond).
+ * CONSTANTS[alpha_1] is alpha_1 in component IKr (per_millisecond).
+ * CONSTANTS[beta_1] is beta_1 in component IKr (per_millisecond).
+ * ALGEBRAIC[alpha_2] is alpha_2 in component IKr (per_millisecond).
+ * ALGEBRAIC[beta_2] is beta_2 in component IKr (per_millisecond).
+ * ALGEBRAIC[alpha_i] is alpha_i in component IKr (per_millisecond).
+ * ALGEBRAIC[beta_i] is beta_i in component IKr (per_millisecond).
+ * ALGEBRAIC[alpha_C2ToI] is alpha_C2ToI in component IKr (per_millisecond).
+ * ALGEBRAIC[beta_ItoC2] is beta_ItoC2 in component IKr (per_millisecond).
+ * CONSTANTS[GKr] is GKr in component IKr (milliS_per_microF).
+ * CONSTANTS[GKs_b] is GKs_b in component IKs (milliS_per_microF).
+ * CONSTANTS[GKs] is GKs in component IKs (milliS_per_microF).
+ * ALGEBRAIC[xs1ss] is xs1ss in component IKs (dimensionless).
+ * ALGEBRAIC[xs2ss] is xs2ss in component IKs (dimensionless).
+ * ALGEBRAIC[txs1] is txs1 in component IKs (millisecond).
+ * STATES[xs1] is xs1 in component IKs (dimensionless).
+ * STATES[xs2] is xs2 in component IKs (dimensionless).
+ * ALGEBRAIC[KsCa] is KsCa in component IKs (dimensionless).
+ * ALGEBRAIC[txs2] is txs2 in component IKs (millisecond).
+ * CONSTANTS[GK1] is GK1 in component IK1 (milliS_per_microF).
+ * CONSTANTS[GK1_b] is GK1_b in component IK1 (milliS_per_microF).
+ * ALGEBRAIC[aK1] is aK1 in component IK1 (dimensionless).
+ * ALGEBRAIC[bK1] is bK1 in component IK1 (dimensionless).
+ * ALGEBRAIC[K1ss] is K1ss in component IK1 (dimensionless).
+ * CONSTANTS[INaCa_fractionSS] is INaCa_fractionSS in component INaCa (dimensionless).
+ * CONSTANTS[kna1] is kna1 in component INaCa (per_millisecond).
+ * CONSTANTS[kna2] is kna2 in component INaCa (per_millisecond).
+ * CONSTANTS[kna3] is kna3 in component INaCa (per_millisecond).
+ * CONSTANTS[kasymm] is kasymm in component INaCa (dimensionless).
+ * CONSTANTS[wna] is wna in component INaCa (dimensionless).
+ * CONSTANTS[wca] is wca in component INaCa (dimensionless).
+ * CONSTANTS[wnaca] is wnaca in component INaCa (dimensionless).
+ * CONSTANTS[kcaon] is kcaon in component INaCa (per_millisecond).
+ * CONSTANTS[kcaoff] is kcaoff in component INaCa (per_millisecond).
+ * CONSTANTS[qna] is qna in component INaCa (dimensionless).
+ * CONSTANTS[qca] is qca in component INaCa (dimensionless).
+ * ALGEBRAIC[hna] is hna in component INaCa (dimensionless).
+ * ALGEBRAIC[hca] is hca in component INaCa (dimensionless).
+ * CONSTANTS[KmCaAct] is KmCaAct in component INaCa (millimolar).
+ * CONSTANTS[Gncx_b] is Gncx_b in component INaCa (milliS_per_microF).
+ * CONSTANTS[Gncx] is Gncx in component INaCa (milliS_per_microF).
+ * ALGEBRAIC[h1_i] is h1_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h2_i] is h2_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h3_i] is h3_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h4_i] is h4_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h5_i] is h5_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h6_i] is h6_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h7_i] is h7_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h8_i] is h8_i in component INaCa (dimensionless).
+ * ALGEBRAIC[h9_i] is h9_i in component INaCa (dimensionless).
+ * CONSTANTS[h10_i] is h10_i in component INaCa (dimensionless).
+ * CONSTANTS[h11_i] is h11_i in component INaCa (dimensionless).
+ * CONSTANTS[h12_i] is h12_i in component INaCa (dimensionless).
+ * CONSTANTS[k1_i] is k1_i in component INaCa (dimensionless).
+ * CONSTANTS[k2_i] is k2_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k3p_i] is k3p_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k3pp_i] is k3pp_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k3_i] is k3_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k4_i] is k4_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k4p_i] is k4p_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k4pp_i] is k4pp_i in component INaCa (dimensionless).
+ * CONSTANTS[k5_i] is k5_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k6_i] is k6_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k7_i] is k7_i in component INaCa (dimensionless).
+ * ALGEBRAIC[k8_i] is k8_i in component INaCa (dimensionless).
+ * ALGEBRAIC[x1_i] is x1_i in component INaCa (dimensionless).
+ * ALGEBRAIC[x2_i] is x2_i in component INaCa (dimensionless).
+ * ALGEBRAIC[x3_i] is x3_i in component INaCa (dimensionless).
+ * ALGEBRAIC[x4_i] is x4_i in component INaCa (dimensionless).
+ * ALGEBRAIC[E1_i] is E1_i in component INaCa (dimensionless).
+ * ALGEBRAIC[E2_i] is E2_i in component INaCa (dimensionless).
+ * ALGEBRAIC[E3_i] is E3_i in component INaCa (dimensionless).
+ * ALGEBRAIC[E4_i] is E4_i in component INaCa (dimensionless).
+ * ALGEBRAIC[allo_i] is allo_i in component INaCa (dimensionless).
+ * ALGEBRAIC[JncxNa_i] is JncxNa_i in component INaCa (millimolar_per_millisecond).
+ * ALGEBRAIC[JncxCa_i] is JncxCa_i in component INaCa (millimolar_per_millisecond).
+ * ALGEBRAIC[h1_ss] is h1_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h2_ss] is h2_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h3_ss] is h3_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h4_ss] is h4_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h5_ss] is h5_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h6_ss] is h6_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h7_ss] is h7_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h8_ss] is h8_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[h9_ss] is h9_ss in component INaCa (dimensionless).
+ * CONSTANTS[h10_ss] is h10_ss in component INaCa (dimensionless).
+ * CONSTANTS[h11_ss] is h11_ss in component INaCa (dimensionless).
+ * CONSTANTS[h12_ss] is h12_ss in component INaCa (dimensionless).
+ * CONSTANTS[k1_ss] is k1_ss in component INaCa (dimensionless).
+ * CONSTANTS[k2_ss] is k2_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k3p_ss] is k3p_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k3pp_ss] is k3pp_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k3_ss] is k3_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k4_ss] is k4_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k4p_ss] is k4p_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k4pp_ss] is k4pp_ss in component INaCa (dimensionless).
+ * CONSTANTS[k5_ss] is k5_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k6_ss] is k6_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k7_ss] is k7_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[k8_ss] is k8_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[x1_ss] is x1_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[x2_ss] is x2_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[x3_ss] is x3_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[x4_ss] is x4_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[E1_ss] is E1_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[E2_ss] is E2_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[E3_ss] is E3_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[E4_ss] is E4_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[allo_ss] is allo_ss in component INaCa (dimensionless).
+ * ALGEBRAIC[JncxNa_ss] is JncxNa_ss in component INaCa (millimolar_per_millisecond).
+ * ALGEBRAIC[JncxCa_ss] is JncxCa_ss in component INaCa (millimolar_per_millisecond).
+ * CONSTANTS[k1p] is k1p in component INaK (per_millisecond).
+ * CONSTANTS[k1m] is k1m in component INaK (per_millisecond).
+ * CONSTANTS[k2p] is k2p in component INaK (per_millisecond).
+ * CONSTANTS[k2m] is k2m in component INaK (per_millisecond).
+ * CONSTANTS[k3p] is k3p in component INaK (per_millisecond).
+ * CONSTANTS[k3m] is k3m in component INaK (per_millisecond).
+ * CONSTANTS[k4p] is k4p in component INaK (per_millisecond).
+ * CONSTANTS[k4m] is k4m in component INaK (per_millisecond).
+ * CONSTANTS[Knai0] is Knai0 in component INaK (millimolar).
+ * CONSTANTS[Knao0] is Knao0 in component INaK (millimolar).
+ * CONSTANTS[delta] is delta in component INaK (millivolt).
+ * CONSTANTS[Kki] is Kki in component INaK (per_millisecond).
+ * CONSTANTS[Kko] is Kko in component INaK (per_millisecond).
+ * CONSTANTS[MgADP] is MgADP in component INaK (millimolar).
+ * CONSTANTS[MgATP] is MgATP in component INaK (millimolar).
+ * CONSTANTS[Kmgatp] is Kmgatp in component INaK (millimolar).
+ * CONSTANTS[H] is H in component INaK (millimolar).
+ * CONSTANTS[eP] is eP in component INaK (dimensionless).
+ * CONSTANTS[Khp] is Khp in component INaK (millimolar).
+ * CONSTANTS[Knap] is Knap in component INaK (millimolar).
+ * CONSTANTS[Kxkur] is Kxkur in component INaK (millimolar).
+ * CONSTANTS[Pnak_b] is Pnak_b in component INaK (milliS_per_microF).
+ * CONSTANTS[Pnak] is Pnak in component INaK (milliS_per_microF).
+ * ALGEBRAIC[Knai] is Knai in component INaK (millimolar).
+ * ALGEBRAIC[Knao] is Knao in component INaK (millimolar).
+ * ALGEBRAIC[P] is P in component INaK (dimensionless).
+ * ALGEBRAIC[a1] is a1 in component INaK (dimensionless).
+ * CONSTANTS[b1] is b1 in component INaK (dimensionless).
+ * CONSTANTS[a2] is a2 in component INaK (dimensionless).
+ * ALGEBRAIC[b2] is b2 in component INaK (dimensionless).
+ * ALGEBRAIC[a3] is a3 in component INaK (dimensionless).
+ * ALGEBRAIC[b3] is b3 in component INaK (dimensionless).
+ * CONSTANTS[a4] is a4 in component INaK (dimensionless).
+ * ALGEBRAIC[b4] is b4 in component INaK (dimensionless).
+ * ALGEBRAIC[x1] is x1 in component INaK (dimensionless).
+ * ALGEBRAIC[x2] is x2 in component INaK (dimensionless).
+ * ALGEBRAIC[x3] is x3 in component INaK (dimensionless).
+ * ALGEBRAIC[x4] is x4 in component INaK (dimensionless).
+ * ALGEBRAIC[E1] is E1 in component INaK (dimensionless).
+ * ALGEBRAIC[E2] is E2 in component INaK (dimensionless).
+ * ALGEBRAIC[E3] is E3 in component INaK (dimensionless).
+ * ALGEBRAIC[E4] is E4 in component INaK (dimensionless).
+ * ALGEBRAIC[JnakNa] is JnakNa in component INaK (millimolar_per_millisecond).
+ * ALGEBRAIC[JnakK] is JnakK in component INaK (millimolar_per_millisecond).
+ * ALGEBRAIC[xkb] is xkb in component IKb (dimensionless).
+ * CONSTANTS[GKb_b] is GKb_b in component IKb (milliS_per_microF).
+ * CONSTANTS[GKb] is GKb in component IKb (milliS_per_microF).
+ * CONSTANTS[PNab] is PNab in component INab (milliS_per_microF).
+ * CONSTANTS[PCab] is PCab in component ICab (milliS_per_microF).
+ * CONSTANTS[GpCa] is GpCa in component IpCa (milliS_per_microF).
+ * CONSTANTS[KmCap] is KmCap in component IpCa (millimolar).
+ * CONSTANTS[GClCa] is GClCa in component ICl (milliS_per_microF).
+ * CONSTANTS[GClb] is GClb in component ICl (milliS_per_microF).
+ * CONSTANTS[KdClCa] is KdClCa in component ICl (millimolar).
+ * CONSTANTS[Fjunc] is Fjunc in component ICl (dimensionless).
+ * ALGEBRAIC[IClCa_junc] is IClCa_junc in component ICl (microA_per_microF).
+ * ALGEBRAIC[IClCa_sl] is IClCa_sl in component ICl (microA_per_microF).
+ * CONSTANTS[tauNa] is tauNa in component diff (millisecond).
+ * CONSTANTS[tauK] is tauK in component diff (millisecond).
+ * CONSTANTS[tauCa] is tauCa in component diff (millisecond).
+ * CONSTANTS[bt] is bt in component ryr (millisecond).
+ * CONSTANTS[a_rel] is a_rel in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[Jrel_inf_b] is Jrel_inf_b in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[Jrel_inf] is Jrel_inf in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[tau_rel_b] is tau_rel_b in component ryr (millisecond).
+ * ALGEBRAIC[tau_rel] is tau_rel in component ryr (millisecond).
+ * STATES[Jrel_np] is Jrel_np in component ryr (millimolar_per_millisecond).
+ * CONSTANTS[btp] is btp in component ryr (millisecond).
+ * CONSTANTS[a_relp] is a_relp in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[Jrel_infp_b] is Jrel_infp_b in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[Jrel_infp] is Jrel_infp in component ryr (millimolar_per_millisecond).
+ * ALGEBRAIC[tau_relp_b] is tau_relp_b in component ryr (millisecond).
+ * ALGEBRAIC[tau_relp] is tau_relp in component ryr (millisecond).
+ * STATES[Jrel_p] is Jrel_p in component ryr (millimolar_per_millisecond).
+ * CONSTANTS[cajsr_half] is cajsr_half in component ryr (millimolar).
+ * ALGEBRAIC[fJrelp] is fJrelp in component ryr (dimensionless).
+ * CONSTANTS[Jrel_b] is Jrel_b in component ryr (dimensionless).
+ * CONSTANTS[upScale] is upScale in component SERCA (dimensionless).
+ * ALGEBRAIC[Jupnp] is Jupnp in component SERCA (millimolar_per_millisecond).
+ * ALGEBRAIC[Jupp] is Jupp in component SERCA (millimolar_per_millisecond).
+ * ALGEBRAIC[fJupp] is fJupp in component SERCA (dimensionless).
+ * ALGEBRAIC[Jleak] is Jleak in component SERCA (millimolar_per_millisecond).
+ * CONSTANTS[Jup_b] is Jup_b in component SERCA (dimensionless).
+ * RATES[V] is d/dt v in component membrane (millivolt).
+ * RATES[CaMKt] is d/dt CaMKt in component CaMK (millimolar).
+ * RATES[nai] is d/dt nai in component intracellular_ions (millimolar).
+ * RATES[nass] is d/dt nass in component intracellular_ions (millimolar).
+ * RATES[ki] is d/dt ki in component intracellular_ions (millimolar).
+ * RATES[kss] is d/dt kss in component intracellular_ions (millimolar).
+ * RATES[cai] is d/dt cai in component intracellular_ions (millimolar).
+ * RATES[cass] is d/dt cass in component intracellular_ions (millimolar).
+ * RATES[cansr] is d/dt cansr in component intracellular_ions (millimolar).
+ * RATES[cajsr] is d/dt cajsr in component intracellular_ions (millimolar).
+ * RATES[m] is d/dt m in component INa (dimensionless).
+ * RATES[h] is d/dt h in component INa (dimensionless).
+ * RATES[j] is d/dt j in component INa (dimensionless).
+ * RATES[hp] is d/dt hp in component INa (dimensionless).
+ * RATES[jp] is d/dt jp in component INa (dimensionless).
+ * RATES[mL] is d/dt mL in component INaL (dimensionless).
+ * RATES[hL] is d/dt hL in component INaL (dimensionless).
+ * RATES[hLp] is d/dt hLp in component INaL (dimensionless).
+ * RATES[a] is d/dt a in component Ito (dimensionless).
+ * RATES[iF] is d/dt iF in component Ito (dimensionless).
+ * RATES[iS] is d/dt iS in component Ito (dimensionless).
+ * RATES[ap] is d/dt ap in component Ito (dimensionless).
+ * RATES[iFp] is d/dt iFp in component Ito (dimensionless).
+ * RATES[iSp] is d/dt iSp in component Ito (dimensionless).
+ * RATES[d] is d/dt d in component ICaL (dimensionless).
+ * RATES[ff] is d/dt ff in component ICaL (dimensionless).
+ * RATES[fs] is d/dt fs in component ICaL (dimensionless).
+ * RATES[fcaf] is d/dt fcaf in component ICaL (dimensionless).
+ * RATES[fcas] is d/dt fcas in component ICaL (dimensionless).
+ * RATES[jca] is d/dt jca in component ICaL (dimensionless).
+ * RATES[ffp] is d/dt ffp in component ICaL (dimensionless).
+ * RATES[fcafp] is d/dt fcafp in component ICaL (dimensionless).
+ * RATES[nca_ss] is d/dt nca_ss in component ICaL (dimensionless).
+ * RATES[nca_i] is d/dt nca_i in component ICaL (dimensionless).
+ * RATES[C3] is d/dt C3 in component IKr (dimensionless).
+ * RATES[C2] is d/dt C2 in component IKr (dimensionless).
+ * RATES[C1] is d/dt C1 in component IKr (dimensionless).
+ * RATES[O] is d/dt O in component IKr (dimensionless).
+ * RATES[I] is d/dt I in component IKr (dimensionless).
+ * RATES[xs1] is d/dt xs1 in component IKs (dimensionless).
+ * RATES[xs2] is d/dt xs2 in component IKs (dimensionless).
+ * RATES[Jrel_np] is d/dt Jrel_np in component ryr (millimolar_per_millisecond).
+ * RATES[Jrel_p] is d/dt Jrel_p in component ryr (millimolar_per_millisecond).
  */
 
- __device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int foset)
+
+// Tomek_model::Tomek_model()
+// {
+// algebraic_size = 223;
+// constants_size = 163;
+// states_size = 43;
+// rates_size = 43;
+// }
+
+// Tomek_model::~Tomek_model()
+// {
+
+// }
+
+__device__ void ___initConsts(double *CONSTANTS, double *STATES, double type, double bcl, int foset)
 {
-int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
-int states_size = 43;    
+int constants_size = 165;
+int states_size = 43;
+
 CONSTANTS[(constants_size * foset) + celltype] = type;
 CONSTANTS[(constants_size * foset) + nao] = 140.0;
 CONSTANTS[(constants_size * foset) + cao] = 1.8;
@@ -508,13 +525,10 @@ CONSTANTS[(constants_size * foset) + L] = 0.01;
 CONSTANTS[(constants_size * foset) + rad] = 0.0011;
 STATES[(states_size * foset) + V] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  -89.14 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  -89.1704 : -88.7638);
 CONSTANTS[(constants_size * foset) + stim_start] = 10;
-#ifdef TISSUE
-CONSTANTS[(constants_size * foset) + stim_start] = 2;
-#endif
-CONSTANTS[(constants_size * foset) + stim_end] = 100000000000000000;
-CONSTANTS[(constants_size * foset) + amp] = -53;
+CONSTANTS[(constants_size * foset) + i_Stim_End] = 100000000000000000;
+CONSTANTS[(constants_size * foset) + i_Stim_Amplitude] = -53;
 CONSTANTS[(constants_size * foset) + BCL] = bcl;
-CONSTANTS[(constants_size * foset) + duration] = 1.0;
+CONSTANTS[(constants_size * foset) + i_Stim_PulseDuration] = 1.0;
 CONSTANTS[(constants_size * foset) + KmCaMK] = 0.15;
 CONSTANTS[(constants_size * foset) + aCaMK] = 0.05;
 CONSTANTS[(constants_size * foset) + bCaMK] = 0.00068;
@@ -647,12 +661,13 @@ CONSTANTS[(constants_size * foset) + tauCa] = 0.2;
 CONSTANTS[(constants_size * foset) + bt] = 4.75;
 STATES[(states_size * foset) + Jrel_np] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 2.82E-24 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ? 0. : 1.6129e-22);
 STATES[(states_size * foset) + Jrel_p] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 0. : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ? 0. : 1.2475e-20);
+// cvar addition, implemented
+CONSTANTS[(constants_size * foset) + Jtr_b] = 1.0;	// Trans_Total (NSR to JSR translocation)
+CONSTANTS[(constants_size * foset) + Jleak_b] = 1.0;	// Leak_Total (Ca leak from NSR)
+
 CONSTANTS[(constants_size * foset) + cajsr_half] = 1.7;
 CONSTANTS[(constants_size * foset) + Jrel_b] = 1.5378;
 CONSTANTS[(constants_size * foset) + Jup_b] = 1.0;
-// CVAR: Additional scaling factor for Jleak and Jtr
-CONSTANTS[(constants_size * foset) + Jtr_b] = 1.0;	// Trans_Total (NSR to JSR translocation)
-CONSTANTS[(constants_size * foset) + Jleak_b] = 1.0;	// Leak_Total (Ca leak from NSR)
 CONSTANTS[(constants_size * foset) + vcell] =  1000.00*3.14000*CONSTANTS[(constants_size * foset) + rad]*CONSTANTS[(constants_size * foset) + rad]*CONSTANTS[(constants_size * foset) + L];
 CONSTANTS[(constants_size * foset) + cmdnmax] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + cmdnmax_b]*1.30000 : CONSTANTS[(constants_size * foset) + cmdnmax_b]);
 CONSTANTS[(constants_size * foset) + ECl] =  (( CONSTANTS[(constants_size * foset) + R]*CONSTANTS[(constants_size * foset) + T])/( CONSTANTS[(constants_size * foset) + zcl]*CONSTANTS[(constants_size * foset) + F]))*log(CONSTANTS[(constants_size * foset) + clo]/CONSTANTS[(constants_size * foset) + cli]);
@@ -705,69 +720,69 @@ CONSTANTS[(constants_size * foset) + a2] = CONSTANTS[(constants_size * foset) + 
 CONSTANTS[(constants_size * foset) + a4] = (( CONSTANTS[(constants_size * foset) + k4p]*CONSTANTS[(constants_size * foset) + MgATP])/CONSTANTS[(constants_size * foset) + Kmgatp])/(1.00000+CONSTANTS[(constants_size * foset) + MgATP]/CONSTANTS[(constants_size * foset) + Kmgatp]);
 CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.900000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.700000 : CONSTANTS[(constants_size * foset) + Pnak_b]);
 }
+//implemented
+__device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset)
+{
+  int num_of_constants = 165;
 
-__device__ void ___applyCvar(double *CONSTANTS, double *cvar, int foset) {
-int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
-  
-  CONSTANTS[(constants_size * foset) + GNa] *= cvar[(18 * foset) + 0];		// GNa
-  CONSTANTS[(constants_size * foset) + GNaL_b] *= cvar[(18 * foset) + 1];		// GNaL
-  CONSTANTS[(constants_size * foset) + Gto_b] *= cvar[(18 * foset) + 2];		// Gto
-  CONSTANTS[(constants_size * foset) + GKr_b] *= cvar[(18 * foset) + 3];		// GKr
-  CONSTANTS[(constants_size * foset) + GKs_b] *= cvar[(18 * foset) + 4];		// GKs
-  CONSTANTS[(constants_size * foset) + GK1_b] *= cvar[(18 * foset) + 5];		// GK1
-  CONSTANTS[(constants_size * foset) + Gncx_b] *= cvar[(18 * foset) + 6];		// GNaCa
-  CONSTANTS[(constants_size * foset) + GKb_b] *= cvar[(18 * foset) + 7];		// GKb
-  CONSTANTS[(constants_size * foset) + PCa_b] *= cvar[(18 * foset) + 8];		// PCa
-  CONSTANTS[(constants_size * foset) + Pnak_b] *= cvar[(18 * foset) + 9];		// INaK
-  CONSTANTS[(constants_size * foset) + PNab] *= cvar[(18 * foset) + 10];		// PNab
-  CONSTANTS[(constants_size * foset) + PCab] *= cvar[(18 * foset) + 11];		// PCab
-  CONSTANTS[(constants_size * foset) + GpCa] *= cvar[(18 * foset) + 12];		// GpCa
-  CONSTANTS[(constants_size * foset) + KmCaMK] *= cvar[(18 * foset) + 17];	// KCaMK
+  CONSTANTS[(foset * num_of_constants) +GNa] *= cvar[0 + (foset*18)];		// GNa
+  CONSTANTS[(foset * num_of_constants) +GNaL_b] *= cvar[1 + (foset*18)];		// GNaL
+  CONSTANTS[(foset * num_of_constants) +Gto_b] *= cvar[2 + (foset*18)];		// Gto
+  CONSTANTS[(foset * num_of_constants) +GKr_b] *= cvar[3 + (foset*18)];		// GKr
+  CONSTANTS[(foset * num_of_constants) +GKs_b] *= cvar[4 + (foset*18)];		// GKs
+  CONSTANTS[(foset * num_of_constants) +GK1_b] *= cvar[5 + (foset*18)];		// GK1
+  CONSTANTS[(foset * num_of_constants) +Gncx_b] *= cvar[6 + (foset*18)];		// GNaCa
+  CONSTANTS[(foset * num_of_constants) +GKb_b] *= cvar[7 + (foset*18)];		// GKb
+  CONSTANTS[(foset * num_of_constants) +PCa_b] *= cvar[8 + (foset*18)];		// PCa
+  CONSTANTS[(foset * num_of_constants) +Pnak_b] *= cvar[9 + (foset*18)];		// INaK
+  CONSTANTS[(foset * num_of_constants) +PNab] *= cvar[10 + (foset*18)];		// PNab
+  CONSTANTS[(foset * num_of_constants) +PCab] *= cvar[11 + (foset*18)];		// PCab
+  CONSTANTS[(foset * num_of_constants) +GpCa] *= cvar[12 + (foset*18)];		// GpCa
+  CONSTANTS[(foset * num_of_constants) +KmCaMK] *= cvar[17 + (foset*18)];	// KCaMK
 
   // Additional constants
-  CONSTANTS[(constants_size * foset) + Jrel_b] *= cvar[(18 * foset) + 13];	// SERCA_Total (release)
-  CONSTANTS[(constants_size * foset) + Jup_b] *= cvar[(18 * foset) + 14];	// RyR_Total (uptake)
-  CONSTANTS[(constants_size * foset) + Jtr_b] *= cvar[(18 * foset) + 15];	// Trans_Total (NSR to JSR translocation)
-  CONSTANTS[(constants_size * foset) + Jleak_b] *= cvar[(18 * foset) + 16];	// Leak_Total (Ca leak from NSR)
+  CONSTANTS[(foset * num_of_constants) +Jrel_b] *= cvar[13 + (foset*18)];	// SERCA_Total (release)
+  CONSTANTS[(foset * num_of_constants) +Jup_b] *= cvar[14 + (foset*18)];	// RyR_Total (uptake)
+  CONSTANTS[(foset * num_of_constants) +Jtr_b] *= cvar[15 + (foset*18)];	// Trans_Total (NSR to JSR translocation)
+  CONSTANTS[(foset * num_of_constants) +Jleak_b] *= cvar[16 + (foset*18)];	// Leak_Total (Ca leak from NSR)
+  // CONSTANTS[(foset * num_of_constants) +KCaMK_scale] *= cvar[17 + (foset*18)];	// KCaMK
 }
+
+
 
 __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *hill, double epsilon, int foset)
 {
-int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
-CONSTANTS[(constants_size * foset) + PCa_b] = CONSTANTS[(constants_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > 10E-14 && hill[(14 * foset) + 1] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
-CONSTANTS[(constants_size * foset) + GK1_b] = CONSTANTS[(constants_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > 10E-14 && hill[(14 * foset) + 3] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
-CONSTANTS[(constants_size * foset) + GKs_b] = CONSTANTS[(constants_size * foset) + GKs_b] * ((hill[(14 * foset) + 4] > 10E-14 && hill[(14 * foset) + 5] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 4],hill[(14 * foset) + 5])) : 1.);
-CONSTANTS[(constants_size * foset) + GNa] = CONSTANTS[(constants_size * foset) + GNa] * ((hill[(14 * foset) + 6] > 10E-14 && hill[(14 * foset) + 7] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 6],hill[(14 * foset) + 7])) : 1.);
-CONSTANTS[(constants_size * foset) + GNaL_b] = CONSTANTS[(constants_size * foset) + GNaL_b] * ((hill[(14 * foset) + 8] > 10E-14 && hill[(14 * foset) + 9] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 8],hill[(14 * foset) + 9])) : 1.);
-CONSTANTS[(constants_size * foset) + Gto_b] = CONSTANTS[(constants_size * foset) + Gto_b] * ((hill[(14 * foset) + 10] > 10E-14 && hill[(14 * foset) + 11] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 10],hill[(14 * foset) + 11])) : 1.);
-CONSTANTS[(constants_size * foset) + GKr_b] = CONSTANTS[(constants_size * foset) + GKr_b] * ((hill[(14 * foset) + 12] > 10E-14 && hill[(14 * foset) + 13] > 10E-14) ? 1./(1.+pow(conc/hill[(14 * foset) + 12],hill[(14 * foset) + 13])) : 1.);
+
+int constant_size = 163;
+
+CONSTANTS[(constant_size * foset) + PCa_b] = CONSTANTS[(constant_size * foset) + PCa_b] * ((hill[(14 * foset) + 0] > epsilon && hill[(14 * foset) + 1] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 0],hill[(14 * foset) + 1])) : 1.);
+CONSTANTS[(constant_size * foset) + GK1_b] = CONSTANTS[(constant_size * foset) + GK1_b] * ((hill[(14 * foset) + 2] > epsilon && hill[(14 * foset) + 3] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 2],hill[(14 * foset) + 3])) : 1.);
+CONSTANTS[(constant_size * foset) + GKs_b] = CONSTANTS[(constant_size * foset) + GKs_b] * ((hill[(14 * foset) + 4] > epsilon && hill[(14 * foset) + 5] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 4],hill[(14 * foset) + 5])) : 1.);
+CONSTANTS[(constant_size * foset) + GNa] = CONSTANTS[(constant_size * foset) + GNa] * ((hill[(14 * foset) + 6] > epsilon && hill[(14 * foset) + 7] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 6],hill[(14 * foset) + 7])) : 1.);
+CONSTANTS[(constant_size * foset) + GNaL_b] = CONSTANTS[(constant_size * foset) + GNaL_b] * ((hill[(14 * foset) + 8] > epsilon && hill[(14 * foset) + 9] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 8],hill[(14 * foset) + 9])) : 1.);
+CONSTANTS[(constant_size * foset) + Gto_b] = CONSTANTS[(constant_size * foset) + Gto_b] * ((hill[(14 * foset) + 10] > epsilon && hill[(14 * foset) + 11] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 10],hill[(14 * foset) + 11])) : 1.);
+CONSTANTS[(constant_size * foset) + GKr_b] = CONSTANTS[(constant_size * foset) + GKr_b] * ((hill[(14 * foset) + 12] > epsilon && hill[(14 * foset) + 13] > epsilon) ? 1./(1.+pow(conc/hill[(14 * foset) + 12],hill[(14 * foset) + 13])) : 1.);
+
+
 }
+
 
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *hill, double *cvar, bool is_cvar, double bcl, double epsilon, int foset)
 {
-int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
-  ___initConsts(CONSTANTS, STATES, type, bcl, foset);
-  if (foset == 0) {
-  printf("Celltype: %lf\n", CONSTANTS[(constants_size * 0) + celltype]);
-  printf("Concentration: %lf\n", conc);
-  printf("Control: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n", 
-      CONSTANTS[(constants_size * 0) + PCa_b], CONSTANTS[(constants_size * 0) + GK1_b], CONSTANTS[(constants_size * 0) + GKs_b], CONSTANTS[(constants_size * 0) + GNa], CONSTANTS[(constants_size * 0) + GNaL_b], CONSTANTS[(constants_size * 0) + Gto_b], CONSTANTS[(constants_size * 0) + GKr_b]);
-  }
-  applyDrugEffect(CONSTANTS, conc, hill, epsilon, foset);
-  if (foset == 0) printf("After drug: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n", 
-      CONSTANTS[(constants_size * 0) + PCa_b], CONSTANTS[(constants_size * 0) + GK1_b], CONSTANTS[(constants_size * 0) + GKs_b], CONSTANTS[(constants_size * 0) + GNa], CONSTANTS[(constants_size * 0) + GNaL_b], CONSTANTS[(constants_size * 0) + Gto_b], CONSTANTS[(constants_size * 0) + GKr_b]);
-  
-  if (is_cvar == 1){
-    if (foset == 0) printf("Implementing Inter-individual Variability\n");
+	___initConsts(CONSTANTS, STATES, type, bcl, foset); // clean up later
+   if (is_cvar == 1){
     ___applyCvar(CONSTANTS, cvar, foset); //implemented
   }
+	
 }
 
 __device__ void computeRates(double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int foset)
 {
 int algebraic_size = 223;
-int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
+int constants_size = 165; //implemented
 int states_size = 43;
+
+//addition from libcml
 CONSTANTS[(constants_size * foset) + cmdnmax] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + cmdnmax_b]*1.30000 : CONSTANTS[(constants_size * foset) + cmdnmax_b]);
 CONSTANTS[(constants_size * foset) + GNaL] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GNaL_b]*0.600000 : CONSTANTS[(constants_size * foset) + GNaL_b]);
 CONSTANTS[(constants_size * foset) + Gto] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Gto_b]*2.00000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Gto_b]*2.00000 : CONSTANTS[(constants_size * foset) + Gto_b]);
@@ -778,13 +793,8 @@ CONSTANTS[(constants_size * foset) + GK1] = (CONSTANTS[(constants_size * foset) 
 CONSTANTS[(constants_size * foset) + GKb] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GKb_b]*0.600000 : CONSTANTS[(constants_size * foset) + GKb_b]);
 CONSTANTS[(constants_size * foset) + upScale] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ? 1.30000 : 1.00000);
 CONSTANTS[(constants_size * foset) + Gncx] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Gncx_b]*1.10000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Gncx_b]*1.40000 : CONSTANTS[(constants_size * foset) + Gncx_b]);
-CONSTANTS[(constants_size * foset) + Pnak] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.900000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Pnak_b]*0.700000 : CONSTANTS[(constants_size * foset) + Pnak_b]);
-#ifdef TISSUE
-if(is_s1) ALGEBRAIC[(algebraic_size * foset) + Istim] = CONSTANTS[(constants_size * foset) + amp];
-else ALGEBRAIC[(algebraic_size * foset) + Istim] = 0.0;
-#else
-ALGEBRAIC[(algebraic_size * foset) + Istim] = (TIME>=CONSTANTS[(constants_size * foset) + stim_start]&&TIME<=CONSTANTS[(constants_size * foset) + stim_end]&&(TIME - CONSTANTS[(constants_size * foset) + stim_start]) -  floor((TIME - CONSTANTS[(constants_size * foset) + stim_start])/CONSTANTS[(constants_size * foset) + BCL])*CONSTANTS[(constants_size * foset) + BCL]<=CONSTANTS[(constants_size * foset) + duration] ? CONSTANTS[(constants_size * foset) + amp] : 0.00000);
-#endif
+
+
 ALGEBRAIC[(algebraic_size * foset) + hLss] = 1.00000/(1.00000+exp((STATES[(states_size * foset) + V]+87.6100)/7.48800));
 ALGEBRAIC[(algebraic_size * foset) + hLssp] = 1.00000/(1.00000+exp((STATES[(states_size * foset) + V]+93.8100)/7.48800));
 ALGEBRAIC[(algebraic_size * foset) + jcass] = 1.00000/(1.00000+exp((STATES[(states_size * foset) + V]+18.0800)/2.79160));
@@ -900,6 +910,7 @@ ALGEBRAIC[(algebraic_size * foset) + INaK] =  CONSTANTS[(constants_size * foset)
 ALGEBRAIC[(algebraic_size * foset) + xkb] = 1.00000/(1.00000+exp(- (STATES[(states_size * foset) + V] - 10.8968)/23.9871));
 ALGEBRAIC[(algebraic_size * foset) + IKb] =  CONSTANTS[(constants_size * foset) + GKb]*ALGEBRAIC[(algebraic_size * foset) + xkb]*(STATES[(states_size * foset) + V] - ALGEBRAIC[(algebraic_size * foset) + EK]);
 ALGEBRAIC[(algebraic_size * foset) + I_katp] =  CONSTANTS[(constants_size * foset) + fkatp]*CONSTANTS[(constants_size * foset) + gkatp]*CONSTANTS[(constants_size * foset) + akik]*CONSTANTS[(constants_size * foset) + bkik]*(STATES[(states_size * foset) + V] - ALGEBRAIC[(algebraic_size * foset) + EK]);
+ALGEBRAIC[(algebraic_size * foset) + Istim] = (TIME>=CONSTANTS[(constants_size * foset) + stim_start]&&TIME<=CONSTANTS[(constants_size * foset) + i_Stim_End]&&(TIME - CONSTANTS[(constants_size * foset) + stim_start]) -  floor((TIME - CONSTANTS[(constants_size * foset) + stim_start])/CONSTANTS[(constants_size * foset) + BCL])*CONSTANTS[(constants_size * foset) + BCL]<=CONSTANTS[(constants_size * foset) + i_Stim_PulseDuration] ? CONSTANTS[(constants_size * foset) + i_Stim_Amplitude] : 0.00000);
 ALGEBRAIC[(algebraic_size * foset) + Ii] = ( 0.500000*(STATES[(states_size * foset) + nai]+STATES[(states_size * foset) + ki]+CONSTANTS[(constants_size * foset) + cli]+ 4.00000*STATES[(states_size * foset) + cai]))/1000.00;
 ALGEBRAIC[(algebraic_size * foset) + gamma_ki] = exp( - CONSTANTS[(constants_size * foset) + constA]*1.00000*( pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)/(1.00000+ pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)) -  0.300000*ALGEBRAIC[(algebraic_size * foset) + Ii]));
 ALGEBRAIC[(algebraic_size * foset) + PhiCaK_i] = ( 1.00000*ALGEBRAIC[(algebraic_size * foset) + vffrt]*( ALGEBRAIC[(algebraic_size * foset) + gamma_ki]*STATES[(states_size * foset) + ki]*exp( 1.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) -  CONSTANTS[(constants_size * foset) + gamma_ko]*CONSTANTS[(constants_size * foset) + ko]))/(exp( 1.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) - 1.00000);
@@ -910,7 +921,9 @@ ALGEBRAIC[(algebraic_size * foset) + PhiCaK_ss] = ( 1.00000*ALGEBRAIC[(algebraic
 ALGEBRAIC[(algebraic_size * foset) + ICaK_ss] =  CONSTANTS[(constants_size * foset) + ICaL_fractionSS]*( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fICaLp])*CONSTANTS[(constants_size * foset) + PCaK]*ALGEBRAIC[(algebraic_size * foset) + PhiCaK_ss]*STATES[(states_size * foset) + d]*( ALGEBRAIC[(algebraic_size * foset) + f]*(1.00000 - STATES[(states_size * foset) + nca_ss])+ STATES[(states_size * foset) + jca]*ALGEBRAIC[(algebraic_size * foset) + fca]*STATES[(states_size * foset) + nca_ss])+ ALGEBRAIC[(algebraic_size * foset) + fICaLp]*CONSTANTS[(constants_size * foset) + PCaKp]*ALGEBRAIC[(algebraic_size * foset) + PhiCaK_ss]*STATES[(states_size * foset) + d]*( ALGEBRAIC[(algebraic_size * foset) + fp]*(1.00000 - STATES[(states_size * foset) + nca_ss])+ STATES[(states_size * foset) + jca]*ALGEBRAIC[(algebraic_size * foset) + fcap]*STATES[(states_size * foset) + nca_ss]));
 ALGEBRAIC[(algebraic_size * foset) + ENa] =  (( CONSTANTS[(constants_size * foset) + R]*CONSTANTS[(constants_size * foset) + T])/( CONSTANTS[(constants_size * foset) + zna]*CONSTANTS[(constants_size * foset) + F]))*log(CONSTANTS[(constants_size * foset) + nao]/STATES[(states_size * foset) + nai]);
 ALGEBRAIC[(algebraic_size * foset) + fINap] = 1.00000/(1.00000+CONSTANTS[(constants_size * foset) + KmCaMK]/ALGEBRAIC[(algebraic_size * foset) + CaMKa]);
-ALGEBRAIC[(algebraic_size * foset) + INa] =  CONSTANTS[(constants_size * foset) + GNa]*(STATES[(states_size * foset) + V] - ALGEBRAIC[(algebraic_size * foset) + ENa])*pow(STATES[(states_size * foset) + m], 3.00000)*( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fINap])*STATES[(states_size * foset) + h]*STATES[(states_size * foset) + j]+ ALGEBRAIC[(algebraic_size * foset) + fINap]*STATES[(states_size * foset) + hp]*STATES[(states_size * foset) + jp]);
+
+ALGEBRAIC[(algebraic_size * foset) + INa] = CONSTANTS[(constants_size * foset) + GNa]*(STATES[(states_size * foset) + V] - ALGEBRAIC[(algebraic_size * foset) + ENa])*pow(STATES[(states_size * foset) + m], 3.00000)*( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fINap])*STATES[(states_size * foset) + h]*STATES[(states_size * foset) + j]+ ALGEBRAIC[(algebraic_size * foset) + fINap]*STATES[(states_size * foset) + hp]*STATES[(states_size * foset) + jp]);
+
 ALGEBRAIC[(algebraic_size * foset) + fINaLp] = 1.00000/(1.00000+CONSTANTS[(constants_size * foset) + KmCaMK]/ALGEBRAIC[(algebraic_size * foset) + CaMKa]);
 ALGEBRAIC[(algebraic_size * foset) + INaL] =  CONSTANTS[(constants_size * foset) + GNaL]*(STATES[(states_size * foset) + V] - ALGEBRAIC[(algebraic_size * foset) + ENa])*STATES[(states_size * foset) + mL]*( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fINaLp])*STATES[(states_size * foset) + hL]+ ALGEBRAIC[(algebraic_size * foset) + fINaLp]*STATES[(states_size * foset) + hLp]);
 ALGEBRAIC[(algebraic_size * foset) + allo_i] = 1.00000/(1.00000+pow(CONSTANTS[(constants_size * foset) + KmCaAct]/STATES[(states_size * foset) + cai], 2.00000));
@@ -938,13 +951,19 @@ ALGEBRAIC[(algebraic_size * foset) + x1_i] =  CONSTANTS[(constants_size * foset)
 ALGEBRAIC[(algebraic_size * foset) + x2_i] =  CONSTANTS[(constants_size * foset) + k1_i]*ALGEBRAIC[(algebraic_size * foset) + k7_i]*(ALGEBRAIC[(algebraic_size * foset) + k4_i]+CONSTANTS[(constants_size * foset) + k5_i])+ ALGEBRAIC[(algebraic_size * foset) + k4_i]*ALGEBRAIC[(algebraic_size * foset) + k6_i]*(CONSTANTS[(constants_size * foset) + k1_i]+ALGEBRAIC[(algebraic_size * foset) + k8_i]);
 ALGEBRAIC[(algebraic_size * foset) + x3_i] =  CONSTANTS[(constants_size * foset) + k1_i]*ALGEBRAIC[(algebraic_size * foset) + k3_i]*(ALGEBRAIC[(algebraic_size * foset) + k7_i]+ALGEBRAIC[(algebraic_size * foset) + k6_i])+ ALGEBRAIC[(algebraic_size * foset) + k8_i]*ALGEBRAIC[(algebraic_size * foset) + k6_i]*(CONSTANTS[(constants_size * foset) + k2_i]+ALGEBRAIC[(algebraic_size * foset) + k3_i]);
 ALGEBRAIC[(algebraic_size * foset) + x4_i] =  CONSTANTS[(constants_size * foset) + k2_i]*ALGEBRAIC[(algebraic_size * foset) + k8_i]*(ALGEBRAIC[(algebraic_size * foset) + k4_i]+CONSTANTS[(constants_size * foset) + k5_i])+ ALGEBRAIC[(algebraic_size * foset) + k3_i]*CONSTANTS[(constants_size * foset) + k5_i]*(CONSTANTS[(constants_size * foset) + k1_i]+ALGEBRAIC[(algebraic_size * foset) + k8_i]);
-ALGEBRAIC[(algebraic_size * foset) + E1_i] = ALGEBRAIC[(algebraic_size * foset) + x1_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
+
+ALGEBRAIC[(algebraic_size * foset) + E1_i] = ALGEBRAIC[(algebraic_size * foset) + x1_i] / (ALGEBRAIC[(algebraic_size * foset) + x1_i] + ALGEBRAIC[(algebraic_size * foset) + x2_i] + ALGEBRAIC[(algebraic_size * foset) + x3_i] + ALGEBRAIC[(algebraic_size * foset) + x4_i]);
+
 ALGEBRAIC[(algebraic_size * foset) + E2_i] = ALGEBRAIC[(algebraic_size * foset) + x2_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
+
 ALGEBRAIC[(algebraic_size * foset) + E3_i] = ALGEBRAIC[(algebraic_size * foset) + x3_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
 ALGEBRAIC[(algebraic_size * foset) + E4_i] = ALGEBRAIC[(algebraic_size * foset) + x4_i]/(ALGEBRAIC[(algebraic_size * foset) + x1_i]+ALGEBRAIC[(algebraic_size * foset) + x2_i]+ALGEBRAIC[(algebraic_size * foset) + x3_i]+ALGEBRAIC[(algebraic_size * foset) + x4_i]);
-ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] = ( 3.00000*( ALGEBRAIC[(algebraic_size * foset) + E4_i]*ALGEBRAIC[(algebraic_size * foset) + k7_i] -  ALGEBRAIC[(algebraic_size * foset) + E1_i]*ALGEBRAIC[(algebraic_size * foset) + k8_i])+ ALGEBRAIC[(algebraic_size * foset) + E3_i]*ALGEBRAIC[(algebraic_size * foset) + k4pp_i]) -  ALGEBRAIC[(algebraic_size * foset) + E2_i]*ALGEBRAIC[(algebraic_size * foset) + k3pp_i];
-ALGEBRAIC[(algebraic_size * foset) + JncxCa_i] =  ALGEBRAIC[(algebraic_size * foset) + E2_i]*CONSTANTS[(constants_size * foset) + k2_i] -  ALGEBRAIC[(algebraic_size * foset) + E1_i]*CONSTANTS[(constants_size * foset) + k1_i];
-ALGEBRAIC[(algebraic_size * foset) + INaCa_i] =  (1.00000 - CONSTANTS[(constants_size * foset) + INaCa_fractionSS])*CONSTANTS[(constants_size * foset) + Gncx]*ALGEBRAIC[(algebraic_size * foset) + allo_i]*( CONSTANTS[(constants_size * foset) + zna]*ALGEBRAIC[(algebraic_size * foset) + JncxNa_i]+ CONSTANTS[(constants_size * foset) + zca]*ALGEBRAIC[(algebraic_size * foset) + JncxCa_i]);
+ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] = ( 3.00000*( ALGEBRAIC[(algebraic_size * foset) + E4_i]*ALGEBRAIC[(algebraic_size * foset) + k7_i] - ALGEBRAIC[(algebraic_size * foset) + E1_i]*ALGEBRAIC[(algebraic_size * foset) + k8_i])+ ALGEBRAIC[(algebraic_size * foset) + E3_i]*ALGEBRAIC[(algebraic_size * foset) + k4pp_i]) -  ALGEBRAIC[(algebraic_size * foset) + E2_i]*ALGEBRAIC[(algebraic_size * foset) + k3pp_i];
+
+ALGEBRAIC[(algebraic_size * foset) + JncxCa_i] = ALGEBRAIC[(algebraic_size * foset) + E2_i] * CONSTANTS[(constants_size * foset) + k2_i] - ALGEBRAIC[(algebraic_size * foset) + E1_i] * CONSTANTS[(constants_size * foset) + k1_i];
+
+ALGEBRAIC[(algebraic_size * foset) + INaCa_i] = (1.00000 - CONSTANTS[(constants_size * foset) + INaCa_fractionSS]) * CONSTANTS[(constants_size * foset) + Gncx] * ALGEBRAIC[(algebraic_size * foset) + allo_i] * (CONSTANTS[(constants_size * foset) + zna] * ALGEBRAIC[(algebraic_size * foset) + JncxNa_i] + CONSTANTS[(constants_size * foset) + zca] * ALGEBRAIC[(algebraic_size * foset) + JncxCa_i]);
+
 ALGEBRAIC[(algebraic_size * foset) + INab] = ( CONSTANTS[(constants_size * foset) + PNab]*ALGEBRAIC[(algebraic_size * foset) + vffrt]*( STATES[(states_size * foset) + nai]*exp(ALGEBRAIC[(algebraic_size * foset) + vfrt]) - CONSTANTS[(constants_size * foset) + nao]))/(exp(ALGEBRAIC[(algebraic_size * foset) + vfrt]) - 1.00000);
 ALGEBRAIC[(algebraic_size * foset) + gamma_nai] = exp( - CONSTANTS[(constants_size * foset) + constA]*1.00000*( pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)/(1.00000+ pow(ALGEBRAIC[(algebraic_size * foset) + Ii], 1.0 / 2)) -  0.300000*ALGEBRAIC[(algebraic_size * foset) + Ii]));
 ALGEBRAIC[(algebraic_size * foset) + PhiCaNa_i] = ( 1.00000*ALGEBRAIC[(algebraic_size * foset) + vffrt]*( ALGEBRAIC[(algebraic_size * foset) + gamma_nai]*STATES[(states_size * foset) + nai]*exp( 1.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) -  CONSTANTS[(constants_size * foset) + gamma_nao]*CONSTANTS[(constants_size * foset) + nao]))/(exp( 1.00000*ALGEBRAIC[(algebraic_size * foset) + vfrt]) - 1.00000);
@@ -1002,56 +1021,89 @@ ALGEBRAIC[(algebraic_size * foset) + IClb] =  CONSTANTS[(constants_size * foset)
 ALGEBRAIC[(algebraic_size * foset) + Jupnp] = ( CONSTANTS[(constants_size * foset) + upScale]*0.00542500*STATES[(states_size * foset) + cai])/(STATES[(states_size * foset) + cai]+0.000920000);
 ALGEBRAIC[(algebraic_size * foset) + Jupp] = ( CONSTANTS[(constants_size * foset) + upScale]*2.75000*0.00542500*STATES[(states_size * foset) + cai])/((STATES[(states_size * foset) + cai]+0.000920000) - 0.000170000);
 ALGEBRAIC[(algebraic_size * foset) + fJupp] = 1.00000/(1.00000+CONSTANTS[(constants_size * foset) + KmCaMK]/ALGEBRAIC[(algebraic_size * foset) + CaMKa]);
-ALGEBRAIC[(algebraic_size * foset) + Jleak] = CONSTANTS[(constants_size * foset) + Jleak_b] * ( 0.00488250*STATES[(states_size * foset) + cansr])/15.0000;
+ALGEBRAIC[(algebraic_size * foset) + Jleak] = ( 0.00488250*STATES[(states_size * foset) + cansr])/15.0000;
 ALGEBRAIC[(algebraic_size * foset) + Jup] =  CONSTANTS[(constants_size * foset) + Jup_b]*(( (1.00000 - ALGEBRAIC[(algebraic_size * foset) + fJupp])*ALGEBRAIC[(algebraic_size * foset) + Jupnp]+ ALGEBRAIC[(algebraic_size * foset) + fJupp]*ALGEBRAIC[(algebraic_size * foset) + Jupp]) - ALGEBRAIC[(algebraic_size * foset) + Jleak]);
 ALGEBRAIC[(algebraic_size * foset) + Bcai] = 1.00000/(1.00000+( CONSTANTS[(constants_size * foset) + cmdnmax]*CONSTANTS[(constants_size * foset) + kmcmdn])/pow(CONSTANTS[(constants_size * foset) + kmcmdn]+STATES[(states_size * foset) + cai], 2.00000)+( CONSTANTS[(constants_size * foset) + trpnmax]*CONSTANTS[(constants_size * foset) + kmtrpn])/pow(CONSTANTS[(constants_size * foset) + kmtrpn]+STATES[(states_size * foset) + cai], 2.00000));
-ALGEBRAIC[(algebraic_size * foset) + Jtr] = CONSTANTS[(constants_size * foset) + Jtr_b]*  (STATES[(states_size * foset) + cansr] - STATES[(states_size * foset) + cajsr])/60.0000;
+ALGEBRAIC[(algebraic_size * foset) + Jtr] = (STATES[(states_size * foset) + cansr] - STATES[(states_size * foset) + cajsr])/60.0000;
 ALGEBRAIC[(algebraic_size * foset) + Bcajsr] = 1.00000/(1.00000+( CONSTANTS[(constants_size * foset) + csqnmax]*CONSTANTS[(constants_size * foset) + kmcsqn])/pow(CONSTANTS[(constants_size * foset) + kmcsqn]+STATES[(states_size * foset) + cajsr], 2.00000));
 
-RATES[(states_size * foset) + hL] = (ALGEBRAIC[(algebraic_size * foset) + hLss] - STATES[(states_size * foset) + hL])/CONSTANTS[(constants_size * foset) + thL];
-RATES[(states_size * foset) + hLp] = (ALGEBRAIC[(algebraic_size * foset) + hLssp] - STATES[(states_size * foset) + hLp])/CONSTANTS[(constants_size * foset) + thLp];
-RATES[(states_size * foset) + jca] = (ALGEBRAIC[(algebraic_size * foset) + jcass] - STATES[(states_size * foset) + jca])/CONSTANTS[(constants_size * foset) + tjca];
-RATES[(states_size * foset) + m] = (ALGEBRAIC[(algebraic_size * foset) + mss] - STATES[(states_size * foset) + m])/ALGEBRAIC[(algebraic_size * foset) + tm];
-RATES[(states_size * foset) + mL] = (ALGEBRAIC[(algebraic_size * foset) + mLss] - STATES[(states_size * foset) + mL])/ALGEBRAIC[(algebraic_size * foset) + tmL];
-RATES[(states_size * foset) + a] = (ALGEBRAIC[(algebraic_size * foset) + ass] - STATES[(states_size * foset) + a])/ALGEBRAIC[(algebraic_size * foset) + ta];
-RATES[(states_size * foset) + d] = (ALGEBRAIC[(algebraic_size * foset) + dss] - STATES[(states_size * foset) + d])/ALGEBRAIC[(algebraic_size * foset) + td];
-RATES[(states_size * foset) + ff] = (ALGEBRAIC[(algebraic_size * foset) + fss] - STATES[(states_size * foset) + ff])/ALGEBRAIC[(algebraic_size * foset) + tff];
-RATES[(states_size * foset) + fs] = (ALGEBRAIC[(algebraic_size * foset) + fss] - STATES[(states_size * foset) + fs])/ALGEBRAIC[(algebraic_size * foset) + tfs];
-RATES[(states_size * foset) + nca_ss] =  ALGEBRAIC[(algebraic_size * foset) + anca_ss]*CONSTANTS[(constants_size * foset) + k2n] -  STATES[(states_size * foset) + nca_ss]*ALGEBRAIC[(algebraic_size * foset) + km2n];
-RATES[(states_size * foset) + nca_i] =  ALGEBRAIC[(algebraic_size * foset) + anca_i]*CONSTANTS[(constants_size * foset) + k2n] -  STATES[(states_size * foset) + nca_i]*ALGEBRAIC[(algebraic_size * foset) + km2n];
-RATES[(states_size * foset) + xs1] = (ALGEBRAIC[(algebraic_size * foset) + xs1ss] - STATES[(states_size * foset) + xs1])/ALGEBRAIC[(algebraic_size * foset) + txs1];
-RATES[(states_size * foset) + ap] = (ALGEBRAIC[(algebraic_size * foset) + assp] - STATES[(states_size * foset) + ap])/ALGEBRAIC[(algebraic_size * foset) + ta];
-RATES[(states_size * foset) + fcaf] = (ALGEBRAIC[(algebraic_size * foset) + fcass] - STATES[(states_size * foset) + fcaf])/ALGEBRAIC[(algebraic_size * foset) + tfcaf];
-RATES[(states_size * foset) + fcas] = (ALGEBRAIC[(algebraic_size * foset) + fcass] - STATES[(states_size * foset) + fcas])/ALGEBRAIC[(algebraic_size * foset) + tfcas];
-RATES[(states_size * foset) + ffp] = (ALGEBRAIC[(algebraic_size * foset) + fss] - STATES[(states_size * foset) + ffp])/ALGEBRAIC[(algebraic_size * foset) + tffp];
-RATES[(states_size * foset) + xs2] = (ALGEBRAIC[(algebraic_size * foset) + xs2ss] - STATES[(states_size * foset) + xs2])/ALGEBRAIC[(algebraic_size * foset) + txs2];
-RATES[(states_size * foset) + CaMKt] =  CONSTANTS[(constants_size * foset) + aCaMK]*ALGEBRAIC[(algebraic_size * foset) + CaMKb]*(ALGEBRAIC[(algebraic_size * foset) + CaMKb]+STATES[(states_size * foset) + CaMKt]) -  CONSTANTS[(constants_size * foset) + bCaMK]*STATES[(states_size * foset) + CaMKt];
-RATES[(states_size * foset) + h] = (ALGEBRAIC[(algebraic_size * foset) + hss] - STATES[(states_size * foset) + h])/ALGEBRAIC[(algebraic_size * foset) + th];
-RATES[(states_size * foset) + fcafp] = (ALGEBRAIC[(algebraic_size * foset) + fcass] - STATES[(states_size * foset) + fcafp])/ALGEBRAIC[(algebraic_size * foset) + tfcafp];
-RATES[(states_size * foset) + j] = (ALGEBRAIC[(algebraic_size * foset) + jss] - STATES[(states_size * foset) + j])/ALGEBRAIC[(algebraic_size * foset) + tj];
-RATES[(states_size * foset) + hp] = (ALGEBRAIC[(algebraic_size * foset) + hssp] - STATES[(states_size * foset) + hp])/ALGEBRAIC[(algebraic_size * foset) + th];
-RATES[(states_size * foset) + iF] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iF])/ALGEBRAIC[(algebraic_size * foset) + tiF];
-RATES[(states_size * foset) + C3] =  ALGEBRAIC[(algebraic_size * foset) + beta]*STATES[(states_size * foset) + C2] -  ALGEBRAIC[(algebraic_size * foset) + alpha]*STATES[(states_size * foset) + C3];
-RATES[(states_size * foset) + C2] = ( ALGEBRAIC[(algebraic_size * foset) + alpha]*STATES[(states_size * foset) + C3]+ CONSTANTS[(constants_size * foset) + beta_1]*STATES[(states_size * foset) + C1]) -  (ALGEBRAIC[(algebraic_size * foset) + beta]+CONSTANTS[(constants_size * foset) + alpha_1])*STATES[(states_size * foset) + C2];
-RATES[(states_size * foset) + jp] = (ALGEBRAIC[(algebraic_size * foset) + jss] - STATES[(states_size * foset) + jp])/ALGEBRAIC[(algebraic_size * foset) + tjp];
-RATES[(states_size * foset) + iS] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iS])/ALGEBRAIC[(algebraic_size * foset) + tiS];
-RATES[(states_size * foset) + O] = ( ALGEBRAIC[(algebraic_size * foset) + alpha_2]*STATES[(states_size * foset) + C1]+ ALGEBRAIC[(algebraic_size * foset) + beta_i]*STATES[(states_size * foset) + I]) -  (ALGEBRAIC[(algebraic_size * foset) + beta_2]+ALGEBRAIC[(algebraic_size * foset) + alpha_i])*STATES[(states_size * foset) + O];
-RATES[(states_size * foset) + iFp] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iFp])/ALGEBRAIC[(algebraic_size * foset) + tiFp];
-RATES[(states_size * foset) + iSp] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iSp])/ALGEBRAIC[(algebraic_size * foset) + tiSp];
-RATES[(states_size * foset) + C1] = ( CONSTANTS[(constants_size * foset) + alpha_1]*STATES[(states_size * foset) + C2]+ ALGEBRAIC[(algebraic_size * foset) + beta_2]*STATES[(states_size * foset) + O]+ ALGEBRAIC[(algebraic_size * foset) + beta_ItoC2]*STATES[(states_size * foset) + I]) -  (CONSTANTS[(constants_size * foset) + beta_1]+ALGEBRAIC[(algebraic_size * foset) + alpha_2]+ALGEBRAIC[(algebraic_size * foset) + alpha_C2ToI])*STATES[(states_size * foset) + C1];
-RATES[(states_size * foset) + I] = ( ALGEBRAIC[(algebraic_size * foset) + alpha_C2ToI]*STATES[(states_size * foset) + C1]+ ALGEBRAIC[(algebraic_size * foset) + alpha_i]*STATES[(states_size * foset) + O]) -  (ALGEBRAIC[(algebraic_size * foset) + beta_ItoC2]+ALGEBRAIC[(algebraic_size * foset) + beta_i])*STATES[(states_size * foset) + I];
-RATES[(states_size * foset) + Jrel_np] = (ALGEBRAIC[(algebraic_size * foset) + Jrel_inf] - STATES[(states_size * foset) + Jrel_np])/ALGEBRAIC[(algebraic_size * foset) + tau_rel];
-RATES[(states_size * foset) + Jrel_p] = (ALGEBRAIC[(algebraic_size * foset) + Jrel_infp] - STATES[(states_size * foset) + Jrel_p])/ALGEBRAIC[(algebraic_size * foset) + tau_relp];
-RATES[(states_size * foset) + ki] = ( - (((ALGEBRAIC[(algebraic_size * foset) + Ito]+ALGEBRAIC[(algebraic_size * foset) + IKr]+ALGEBRAIC[(algebraic_size * foset) + IKs]+ALGEBRAIC[(algebraic_size * foset) + IK1]+ALGEBRAIC[(algebraic_size * foset) + IKb]+ALGEBRAIC[(algebraic_size * foset) + I_katp]+ALGEBRAIC[(algebraic_size * foset) + Istim]) -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaK])+ALGEBRAIC[(algebraic_size * foset) + ICaK_i])*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + JdiffK]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo];
-RATES[(states_size * foset) + kss] = ( - ALGEBRAIC[(algebraic_size * foset) + ICaK_ss]*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vss]) - ALGEBRAIC[(algebraic_size * foset) + JdiffK];
-RATES[(states_size * foset) + nai] = ( - (ALGEBRAIC[(algebraic_size * foset) + INa]+ALGEBRAIC[(algebraic_size * foset) + INaL]+ 3.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_i]+ALGEBRAIC[(algebraic_size * foset) + ICaNa_i]+ 3.00000*ALGEBRAIC[(algebraic_size * foset) + INaK]+ALGEBRAIC[(algebraic_size * foset) + INab])*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + JdiffNa]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo];
-RATES[(states_size * foset) + nass] = ( - (ALGEBRAIC[(algebraic_size * foset) + ICaNa_ss]+ 3.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_ss])*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vss]) - ALGEBRAIC[(algebraic_size * foset) + JdiffNa];
-RATES[(states_size * foset) + cass] =  ALGEBRAIC[(algebraic_size * foset) + Bcass]*((( - (ALGEBRAIC[(algebraic_size * foset) + ICaL_ss] -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_ss])*CONSTANTS[(constants_size * foset) + Acap])/( 2.00000*CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vss])+( ALGEBRAIC[(algebraic_size * foset) + Jrel]*CONSTANTS[(constants_size * foset) + vjsr])/CONSTANTS[(constants_size * foset) + vss]) - ALGEBRAIC[(algebraic_size * foset) + Jdiff]);
-RATES[(states_size * foset) + V] = - (ALGEBRAIC[(algebraic_size * foset) + INa]+ALGEBRAIC[(algebraic_size * foset) + INaL]+ALGEBRAIC[(algebraic_size * foset) + Ito]+ALGEBRAIC[(algebraic_size * foset) + ICaL]+ALGEBRAIC[(algebraic_size * foset) + ICaNa]+ALGEBRAIC[(algebraic_size * foset) + ICaK]+ALGEBRAIC[(algebraic_size * foset) + IKr]+ALGEBRAIC[(algebraic_size * foset) + IKs]+ALGEBRAIC[(algebraic_size * foset) + IK1]+ALGEBRAIC[(algebraic_size * foset) + INaCa_i]+ALGEBRAIC[(algebraic_size * foset) + INaCa_ss]+ALGEBRAIC[(algebraic_size * foset) + INaK]+ALGEBRAIC[(algebraic_size * foset) + INab]+ALGEBRAIC[(algebraic_size * foset) + IKb]+ALGEBRAIC[(algebraic_size * foset) + IpCa]+ALGEBRAIC[(algebraic_size * foset) + ICab]+ALGEBRAIC[(algebraic_size * foset) + IClCa]+ALGEBRAIC[(algebraic_size * foset) + IClb]+ALGEBRAIC[(algebraic_size * foset) + I_katp]+ALGEBRAIC[(algebraic_size * foset) + Istim]);
-RATES[(states_size * foset) + cai] =  ALGEBRAIC[(algebraic_size * foset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * foset) + ICaL_i]+ALGEBRAIC[(algebraic_size * foset) + IpCa]+ALGEBRAIC[(algebraic_size * foset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_i])*CONSTANTS[(constants_size * foset) + Acap])/( 2.00000*CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo]) - ( ALGEBRAIC[(algebraic_size * foset) + Jup]*CONSTANTS[(constants_size * foset) + vnsr])/CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + Jdiff]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo]);
-RATES[(states_size * foset) + cansr] = ALGEBRAIC[(algebraic_size * foset) + Jup] - ( ALGEBRAIC[(algebraic_size * foset) + Jtr]*CONSTANTS[(constants_size * foset) + vjsr])/CONSTANTS[(constants_size * foset) + vnsr];
-RATES[(states_size * foset) + cajsr] =  ALGEBRAIC[(algebraic_size * foset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * foset) + Jtr] - ALGEBRAIC[(algebraic_size * foset) + Jrel]);
+RATES[ (states_size * foset) +hL] = (ALGEBRAIC[(algebraic_size * foset) + hLss] - STATES[(states_size * foset) + hL])/CONSTANTS[(constants_size * foset) + thL];
+RATES[ (states_size * foset) +hLp] = (ALGEBRAIC[(algebraic_size * foset) + hLssp] - STATES[(states_size * foset) + hLp])/CONSTANTS[(constants_size * foset) + thLp];
+RATES[ (states_size * foset) +jca] = (ALGEBRAIC[(algebraic_size * foset) + jcass] - STATES[(states_size * foset) + jca])/CONSTANTS[(constants_size * foset) + tjca];
+RATES[ (states_size * foset) +m] = (ALGEBRAIC[(algebraic_size * foset) + mss] - STATES[(states_size * foset) + m])/ALGEBRAIC[(algebraic_size * foset) + tm];
+RATES[ (states_size * foset) +mL] = (ALGEBRAIC[(algebraic_size * foset) + mLss] - STATES[(states_size * foset) + mL])/ALGEBRAIC[(algebraic_size * foset) + tmL];
+RATES[ (states_size * foset) +a] = (ALGEBRAIC[(algebraic_size * foset) + ass] - STATES[(states_size * foset) + a])/ALGEBRAIC[(algebraic_size * foset) + ta];
+RATES[ (states_size * foset) +d] = (ALGEBRAIC[(algebraic_size * foset) + dss] - STATES[(states_size * foset) + d])/ALGEBRAIC[(algebraic_size * foset) + td];
+RATES[ (states_size * foset) +ff] = (ALGEBRAIC[(algebraic_size * foset) + fss] - STATES[(states_size * foset) + ff])/ALGEBRAIC[(algebraic_size * foset) + tff];
+RATES[ (states_size * foset) +fs] = (ALGEBRAIC[(algebraic_size * foset) + fss] - STATES[(states_size * foset) + fs])/ALGEBRAIC[(algebraic_size * foset) + tfs];
+RATES[ (states_size * foset) +nca_ss] =  ALGEBRAIC[(algebraic_size * foset) + anca_ss]*CONSTANTS[(constants_size * foset) + k2n] -  STATES[(states_size * foset) + nca_ss]*ALGEBRAIC[(algebraic_size * foset) + km2n];
+RATES[ (states_size * foset) +nca_i] =  ALGEBRAIC[(algebraic_size * foset) + anca_i]*CONSTANTS[(constants_size * foset) + k2n] -  STATES[(states_size * foset) + nca_i]*ALGEBRAIC[(algebraic_size * foset) + km2n];
+RATES[ (states_size * foset) +xs1] = (ALGEBRAIC[(algebraic_size * foset) + xs1ss] - STATES[(states_size * foset) + xs1])/ALGEBRAIC[(algebraic_size * foset) + txs1];
+RATES[ (states_size * foset) +ap] = (ALGEBRAIC[(algebraic_size * foset) + assp] - STATES[(states_size * foset) + ap])/ALGEBRAIC[(algebraic_size * foset) + ta];
+RATES[ (states_size * foset) +fcaf] = (ALGEBRAIC[(algebraic_size * foset) + fcass] - STATES[(states_size * foset) + fcaf])/ALGEBRAIC[(algebraic_size * foset) + tfcaf];
+RATES[ (states_size * foset) +fcas] = (ALGEBRAIC[(algebraic_size * foset) + fcass] - STATES[(states_size * foset) + fcas])/ALGEBRAIC[(algebraic_size * foset) + tfcas];
+RATES[ (states_size * foset) +ffp] = (ALGEBRAIC[(algebraic_size * foset) + fss] - STATES[(states_size * foset) + ffp])/ALGEBRAIC[(algebraic_size * foset) + tffp];
+RATES[ (states_size * foset) +xs2] = (ALGEBRAIC[(algebraic_size * foset) + xs2ss] - STATES[(states_size * foset) + xs2])/ALGEBRAIC[(algebraic_size * foset) + txs2];
+RATES[ (states_size * foset) +CaMKt] =  CONSTANTS[(constants_size * foset) + aCaMK]*ALGEBRAIC[(algebraic_size * foset) + CaMKb]*(ALGEBRAIC[(algebraic_size * foset) + CaMKb]+STATES[(states_size * foset) + CaMKt]) -  CONSTANTS[(constants_size * foset) + bCaMK]*STATES[(states_size * foset) + CaMKt];
+RATES[ (states_size * foset) +h] = (ALGEBRAIC[(algebraic_size * foset) + hss] - STATES[(states_size * foset) + h])/ALGEBRAIC[(algebraic_size * foset) + th];
+RATES[ (states_size * foset) +fcafp] = (ALGEBRAIC[(algebraic_size * foset) + fcass] - STATES[(states_size * foset) + fcafp])/ALGEBRAIC[(algebraic_size * foset) + tfcafp];
+RATES[ (states_size * foset) +j] = (ALGEBRAIC[(algebraic_size * foset) + jss] - STATES[(states_size * foset) + j])/ALGEBRAIC[(algebraic_size * foset) + tj];
+RATES[ (states_size * foset) +hp] = (ALGEBRAIC[(algebraic_size * foset) + hssp] - STATES[(states_size * foset) + hp])/ALGEBRAIC[(algebraic_size * foset) + th];
+RATES[ (states_size * foset) +iF] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iF])/ALGEBRAIC[(algebraic_size * foset) + tiF];
+RATES[ (states_size * foset) +C3] =  ALGEBRAIC[(algebraic_size * foset) + beta]*STATES[(states_size * foset) + C2] -  ALGEBRAIC[(algebraic_size * foset) + alpha]*STATES[(states_size * foset) + C3];
+RATES[ (states_size * foset) +C2] = ( ALGEBRAIC[(algebraic_size * foset) + alpha]*STATES[(states_size * foset) + C3]+ CONSTANTS[(constants_size * foset) + beta_1]*STATES[(states_size * foset) + C1]) -  (ALGEBRAIC[(algebraic_size * foset) + beta]+CONSTANTS[(constants_size * foset) + alpha_1])*STATES[(states_size * foset) + C2];
+RATES[ (states_size * foset) +jp] = (ALGEBRAIC[(algebraic_size * foset) + jss] - STATES[(states_size * foset) + jp])/ALGEBRAIC[(algebraic_size * foset) + tjp];
+RATES[ (states_size * foset) +iS] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iS])/ALGEBRAIC[(algebraic_size * foset) + tiS];
+RATES[ (states_size * foset) +O] = ( ALGEBRAIC[(algebraic_size * foset) + alpha_2]*STATES[(states_size * foset) + C1]+ ALGEBRAIC[(algebraic_size * foset) + beta_i]*STATES[(states_size * foset) + I]) -  (ALGEBRAIC[(algebraic_size * foset) + beta_2]+ALGEBRAIC[(algebraic_size * foset) + alpha_i])*STATES[(states_size * foset) + O];
+RATES[ (states_size * foset) +iFp] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iFp])/ALGEBRAIC[(algebraic_size * foset) + tiFp];
+RATES[ (states_size * foset) +iSp] = (ALGEBRAIC[(algebraic_size * foset) + iss] - STATES[(states_size * foset) + iSp])/ALGEBRAIC[(algebraic_size * foset) + tiSp];
+RATES[ (states_size * foset) +C1] = ( CONSTANTS[(constants_size * foset) + alpha_1]*STATES[(states_size * foset) + C2]+ ALGEBRAIC[(algebraic_size * foset) + beta_2]*STATES[(states_size * foset) + O]+ ALGEBRAIC[(algebraic_size * foset) + beta_ItoC2]*STATES[(states_size * foset) + I]) -  (CONSTANTS[(constants_size * foset) + beta_1]+ALGEBRAIC[(algebraic_size * foset) + alpha_2]+ALGEBRAIC[(algebraic_size * foset) + alpha_C2ToI])*STATES[(states_size * foset) + C1];
+RATES[ (states_size * foset) +I] = ( ALGEBRAIC[(algebraic_size * foset) + alpha_C2ToI]*STATES[(states_size * foset) + C1]+ ALGEBRAIC[(algebraic_size * foset) + alpha_i]*STATES[(states_size * foset) + O]) -  (ALGEBRAIC[(algebraic_size * foset) + beta_ItoC2]+ALGEBRAIC[(algebraic_size * foset) + beta_i])*STATES[(states_size * foset) + I];
+RATES[ (states_size * foset) +Jrel_np] = (ALGEBRAIC[(algebraic_size * foset) + Jrel_inf] - STATES[(states_size * foset) + Jrel_np])/ALGEBRAIC[(algebraic_size * foset) + tau_rel];
+RATES[ (states_size * foset) +Jrel_p] = (ALGEBRAIC[(algebraic_size * foset) + Jrel_infp] - STATES[(states_size * foset) + Jrel_p])/ALGEBRAIC[(algebraic_size * foset) + tau_relp];
+RATES[ (states_size * foset) +ki] = ( - (((ALGEBRAIC[(algebraic_size * foset) + Ito]+ALGEBRAIC[(algebraic_size * foset) + IKr]+ALGEBRAIC[(algebraic_size * foset) + IKs]+ALGEBRAIC[(algebraic_size * foset) + IK1]+ALGEBRAIC[(algebraic_size * foset) + IKb]+ALGEBRAIC[(algebraic_size * foset) + I_katp]+ALGEBRAIC[(algebraic_size * foset) + Istim]) -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaK])+ALGEBRAIC[(algebraic_size * foset) + ICaK_i])*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + JdiffK]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo];
+RATES[ (states_size * foset) +kss] = ( - ALGEBRAIC[(algebraic_size * foset) + ICaK_ss]*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vss]) - ALGEBRAIC[(algebraic_size * foset) + JdiffK];
+RATES[ (states_size * foset) +nai] = ( - (ALGEBRAIC[(algebraic_size * foset) + INa]+ALGEBRAIC[(algebraic_size * foset) + INaL]+ 3.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_i]+ALGEBRAIC[(algebraic_size * foset) + ICaNa_i]+ 3.00000*ALGEBRAIC[(algebraic_size * foset) + INaK]+ALGEBRAIC[(algebraic_size * foset) + INab])*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + JdiffNa]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo];
+RATES[ (states_size * foset) +nass] = ( - (ALGEBRAIC[(algebraic_size * foset) + ICaNa_ss]+ 3.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_ss])*CONSTANTS[(constants_size * foset) + Acap])/( CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vss]) - ALGEBRAIC[(algebraic_size * foset) + JdiffNa];
+RATES[ (states_size * foset) +cass] =  ALGEBRAIC[(algebraic_size * foset) + Bcass]*((( - (ALGEBRAIC[(algebraic_size * foset) + ICaL_ss] -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_ss])*CONSTANTS[(constants_size * foset) + Acap])/( 2.00000*CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vss])+( ALGEBRAIC[(algebraic_size * foset) + Jrel]*CONSTANTS[(constants_size * foset) + vjsr])/CONSTANTS[(constants_size * foset) + vss]) - ALGEBRAIC[(algebraic_size * foset) + Jdiff]);
+
+RATES[ (states_size * foset) +V] = - (ALGEBRAIC[(algebraic_size * foset) + INa]+ALGEBRAIC[(algebraic_size * foset) + INaL]+ALGEBRAIC[(algebraic_size * foset) + Ito]+ALGEBRAIC[(algebraic_size * foset) + ICaL]+ALGEBRAIC[(algebraic_size * foset) + ICaNa]+ALGEBRAIC[(algebraic_size * foset) + ICaK]+ALGEBRAIC[(algebraic_size * foset) + IKr]+ALGEBRAIC[(algebraic_size * foset) + IKs]+ALGEBRAIC[(algebraic_size * foset) + IK1]+ALGEBRAIC[(algebraic_size * foset) + INaCa_i]+ALGEBRAIC[(algebraic_size * foset) + INaCa_ss]+ALGEBRAIC[(algebraic_size * foset) + INaK]+ALGEBRAIC[(algebraic_size * foset) + INab]+ALGEBRAIC[(algebraic_size * foset) + IKb]+ALGEBRAIC[(algebraic_size * foset) + IpCa]+ALGEBRAIC[(algebraic_size * foset) + ICab]+ALGEBRAIC[(algebraic_size * foset) + IClCa]+ALGEBRAIC[(algebraic_size * foset) + IClb]+ALGEBRAIC[(algebraic_size * foset) + I_katp]+ALGEBRAIC[(algebraic_size * foset) + Istim]);
+
+RATES[ (states_size * foset) +cai] =  ALGEBRAIC[(algebraic_size * foset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * foset) + ICaL_i]+ALGEBRAIC[(algebraic_size * foset) + IpCa]+ALGEBRAIC[(algebraic_size * foset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * foset) + INaCa_i])*CONSTANTS[(constants_size * foset) + Acap])/( 2.00000*CONSTANTS[(constants_size * foset) + F]*CONSTANTS[(constants_size * foset) + vmyo]) - ( ALGEBRAIC[(algebraic_size * foset) + Jup]*CONSTANTS[(constants_size * foset) + vnsr])/CONSTANTS[(constants_size * foset) + vmyo])+( ALGEBRAIC[(algebraic_size * foset) + Jdiff]*CONSTANTS[(constants_size * foset) + vss])/CONSTANTS[(constants_size * foset) + vmyo]);
+RATES[ (states_size * foset) +cansr] = ALGEBRAIC[(algebraic_size * foset) + Jup] - ( ALGEBRAIC[(algebraic_size * foset) + Jtr]*CONSTANTS[(constants_size * foset) + vjsr])/CONSTANTS[(constants_size * foset) + vnsr];
+RATES[ (states_size * foset) +cajsr] =  ALGEBRAIC[(algebraic_size * foset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * foset) + Jtr] - ALGEBRAIC[(algebraic_size * foset) + Jrel]);
 }
+
+// void Tomek_model::solveRK4(double TIME, double dt)
+// {
+// 	double k1[43],k23[43];
+// 	double yk123[43];
+// 	int idx;
+
+
+// 	// assuming first computeRates() have been executed
+// 	computeRates( TIME, CONSTANTS, RATES, STATES, ALGEBRAIC );
+// 	for( idx = 0; idx < states_size; idx++ ) {
+// 		k1[idx] = RATES[ (states_size * foset) +idx];
+// 		yk123[idx] = STATES[(states_size * foset) + idx] + (k1[idx]*dt*0.5);
+// 	}
+// 	computeRates( TIME+(dt*0.5), CONSTANTS, RATES, yk123, ALGEBRAIC );
+// 	for( idx = 0; idx < states_size; idx++ ) {
+// 		k23[idx] = RATES[ (states_size * foset) +idx];
+// 		yk123[idx] = STATES[(states_size * foset) + idx] + (k23[idx]*dt*0.5);
+// 	}
+// 	computeRates( TIME+(dt*0.5), CONSTANTS, RATES, yk123, ALGEBRAIC );
+//   for( idx = 0; idx < states_size; idx++ ) {
+//     k23[idx] += RATES[ (states_size * foset) +idx];
+//     yk123[idx] = STATES[(states_size * foset) + idx] + (k23[idx]*dt);
+//   }
+//   computeRates( TIME+dt, CONSTANTS, RATES, yk123, ALGEBRAIC );
+// 	for( idx = 0; idx < states_size; idx++ ) {
+// 		STATES[(states_size * foset) + idx] += (k1[idx]+(2*k23[idx])+RATES[idx])/6. * dt;
+//   }
+
+
+// }
 
 __device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int foset)
 {
@@ -1214,24 +1266,24 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
 }
 
 __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
-
-int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
-int states_size = 43;
+ int constants_size = 165; //implemented
+ int rates_size = 43;
 
  double min_time_step = 0.005;
  double min_dV = 0.2;
  double max_dV = 0.8;
-double time_step = min_time_step;
+ double time_step = min_time_step;
+
  if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[(constants_size * foset) + BCL]) * CONSTANTS[(constants_size * foset) + BCL]) <= time_point) {
     //printf("TIME <= time_point ms\n");
     return time_step;
-    //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[(states_size * foset) + V] * time_step, time_step);
+    //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
   }
   else {
     //printf("TIME > time_point ms\n");
-    if (std::abs(RATES[(states_size * foset) + V] * time_step) <= min_dV) {//Slow changes in V
+    if (std::abs(RATES[(rates_size * foset) +V] * time_step) <= min_dV) {//Slow changes in V
         //printf("dV/dt <= 0.2\n");
-        time_step = std::abs(max_dV / RATES[(states_size * foset) + V]);
+        time_step = std::abs(max_dV / RATES[(rates_size * foset) +V]);
         //Make sure time_step is between min time step and max_time_step
         if (time_step < min_time_step) {
             time_step = min_time_step;
@@ -1239,19 +1291,20 @@ double time_step = min_time_step;
         else if (time_step > max_time_step) {
             time_step = max_time_step;
         }
-        //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[(states_size * foset) + V] * time_step, time_step);
+        //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
     }
-    else if (std::abs(RATES[(states_size * foset) + V] * time_step) >= max_dV) {//Fast changes in V
+    else if (std::abs(RATES[(rates_size * foset) +V] * time_step) >= max_dV) {//Fast changes in V
         //printf("dV/dt >= 0.8\n");
-        time_step = std::abs(min_dV / RATES[(states_size * foset) + V]);
+        time_step = std::abs(min_dV / RATES[(rates_size * foset) +V]);
         //Make sure time_step is not less than 0.005
         if (time_step < min_time_step) {
             time_step = min_time_step;
         }
-        //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[(states_size * foset) + V] * time_step, time_step);
+        //printf("TIME = %E, dV = %E, time_step = %E\n",TIME, RATES[V] * time_step, time_step);
     } else {
         time_step = min_time_step;
     }
+
     return time_step;
   }
 }
@@ -1303,3 +1356,44 @@ __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
   STATES[(states_size * foset) + Jrel_np] = STATES[(states_size * foset) + Jrel_np] + RATES[ (states_size * foset) +Jrel_np] * dt;
   STATES[(states_size * foset) + Jrel_p] = STATES[(states_size * foset) + Jrel_p] + RATES[(states_size * foset) +Jrel_p] * dt;
 }
+
+// ord 2011 set time step
+// __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
+//   double time_step = 0.005;
+//   int constants_size = 165; //implemented
+//   int rates_size = 43;
+
+//   if (TIME <= time_point || (TIME - floor(TIME / CONSTANTS[BCL + (offset * constants_size)]) * CONSTANTS[BCL + (offset * constants_size)]) <= time_point) {
+//     // printf("TIME <= time_point ms\n");
+//     // printf("dV = %lf, time_step = %lf\n",RATES[V + (offset * rates_size)] * time_step, time_step);
+//     return time_step;
+//     // printf("dV = %lf, time_step = %lf\n",RATES[V] * time_step, time_step);
+//   }
+//   else {
+//     printf("TIME > time_point ms\n");
+//     if (std::abs(RATES[V + (offset * rates_size)] * time_step) <= 0.2) {//Slow changes in V
+//         // printf("dV/dt <= 0.2\n");
+//         time_step = std::abs(0.8 / RATES[V + (offset * rates_size)]);
+//         //Make sure time_step is between 0.005 and max_time_step
+//         if (time_step < 0.005) {
+//             time_step = 0.005;
+//         }
+//         else if (time_step > max_time_step) {
+//             time_step = max_time_step;
+//         }
+//         //printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
+//     }
+//     else if (std::abs(RATES[V + (offset * rates_size)] * time_step) >= 0.8) {//Fast changes in V
+//         // printf("dV/dt >= 0.8\n");
+//         time_step = std::abs(0.2 / RATES[V + (offset * rates_size)]);
+//         while (std::abs(RATES[V + (offset * rates_size)]  * time_step) >= 0.8 &&
+//                0.005 < time_step &&
+//                time_step < max_time_step) {
+//             time_step = time_step / 10.0;
+//             // printf("dV = %lf, time_step = %lf\n",std::abs(RATES[V] * time_step), time_step);
+//         }
+//     }
+//     // __syncthreads();
+//     return time_step;
+//   }
+// }

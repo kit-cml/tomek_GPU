@@ -143,9 +143,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_cvar, bcl, epsilon, sample_id);
 
-    applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
+    // applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
 
-    d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
+    // d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
 
     // generate file for time-series output
