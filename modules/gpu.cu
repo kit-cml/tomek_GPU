@@ -209,7 +209,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
             //   }
             if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
               pace_steepest = pace_count;
-              // printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
+              if (sample_id == 0) printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
 
               // cipa_result = temp_result;
               cipa_result[sample_id].qnet = temp_result[sample_id].qnet;
@@ -370,16 +370,21 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           // comment is peak true if you want to take last pace!
           if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           {
-            // printf("input_counter: %d\n",input_counter);
+            
+            if (sample_id == 0){
+              printf("In for %d and others\n", sample_id); //cache file
+              printf("cipa datapoint: %d\n",cipa_datapoint);
+            } 
+            // this designed to store only 1-2 paces, so disable this for now
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
-            temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
-            temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
+            // temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
+            // temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
 
-            temp_result[sample_id].vm_data[cipa_datapoint] = d_STATES[(sample_id * num_of_states) +V];
-            temp_result[sample_id].vm_time[cipa_datapoint] = tcurr[sample_id];
+            // temp_result[sample_id].vm_data[cipa_datapoint] = d_STATES[(sample_id * num_of_states) +V];
+            // temp_result[sample_id].vm_time[cipa_datapoint] = tcurr[sample_id];
 
-            temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
-            temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
+            // temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
+            // temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
@@ -387,10 +392,11 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
               // capture temp
               if(init_states_captured == false){
-              if (sample_id == 0) printf("Writing cache for %d\n", sample_id); //cache file
+              if (sample_id == 0) printf("Writing cache for %d and others\n", sample_id); //cache file
               int counter;
               for(counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+                if (sample_id == 0) printf("%lf\n", d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter]);
               }
               d_STATES_RESULT[(sample_id * (num_of_states+1)) + num_of_states ] = pace_count;
               init_states_captured = true;

@@ -757,9 +757,13 @@ int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
   if (foset == 0) printf("After drug: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n", 
       CONSTANTS[(constants_size * 0) + PCa_b], CONSTANTS[(constants_size * 0) + GK1_b], CONSTANTS[(constants_size * 0) + GKs_b], CONSTANTS[(constants_size * 0) + GNa], CONSTANTS[(constants_size * 0) + GNaL_b], CONSTANTS[(constants_size * 0) + Gto_b], CONSTANTS[(constants_size * 0) + GKr_b]);
   
-  if (is_cvar == 1){
-    if (foset == 0) printf("Implementing Inter-individual Variability\n");
+  if (is_cvar == 1){ 
     ___applyCvar(CONSTANTS, cvar, foset); //implemented
+    if (foset == 0){
+      printf("Implementing Inter-individual Variability\n");
+      printf("After cvar: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n", 
+      CONSTANTS[(constants_size * 0) + PCa_b], CONSTANTS[(constants_size * 0) + GK1_b], CONSTANTS[(constants_size * 0) + GKs_b], CONSTANTS[(constants_size * 0) + GNa], CONSTANTS[(constants_size * 0) + GNaL_b], CONSTANTS[(constants_size * 0) + Gto_b], CONSTANTS[(constants_size * 0) + GKr_b]);
+    }
   }
 }
 
