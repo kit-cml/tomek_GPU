@@ -371,10 +371,10 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
           if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           {
             
-            if (sample_id == 0){
-              printf("In for %d and others\n", sample_id); //cache file
-              printf("cipa datapoint: %d\n",cipa_datapoint);
-            } 
+            // if (sample_id == 0){ //debug
+            //   printf("In for %d and others\n", sample_id); //cache file
+            //   printf("cipa datapoint: %d\n",cipa_datapoint);
+            // } 
             // this designed to store only 1-2 paces, so disable this for now
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
             // temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
@@ -396,7 +396,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
               int counter;
               for(counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter] = d_STATES[(sample_id * num_of_states) + counter];
-                if (sample_id == 0) printf("%lf\n", d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter]);
+                // if (sample_id == 0) printf("%lf\n", d_STATES_RESULT[(sample_id * (num_of_states+1)) + counter]); //debug
               }
               d_STATES_RESULT[(sample_id * (num_of_states+1)) + num_of_states ] = pace_count;
               init_states_captured = true;
