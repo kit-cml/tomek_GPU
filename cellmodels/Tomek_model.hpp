@@ -8,6 +8,7 @@
 	__device__ void computeRates(double TIME, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int offset);
 	__device__ void solveAnalytical(double *CONSTANTS, double *STATES, double *ALGEBRAIC, double *RATES, double dt, int offset);
 	__device__ void solveEuler(double *STATES, double *RATES, double dt, int offset);
+	__device__ void solve_rk2(double* k1,double* k2,double* temp_states, double* STATES, double* CONSTANTS, double* ALGEBRAIC, double* RATES, double TIME, double dt, int sample_id);
 	__device__ double set_time_step(double TIME, double time_point, double max_time_step, double* CONSTANTS, double* RATES, int offset); // ord 2011 set time
     __device__ void applyDrugEffect(double *CONSTANTS, double conc, double *ic50, double epsilon, int offset);
 	__device__ void ___applyCvar(double *CONSTANTS, double *cvar, int offset); //cvar

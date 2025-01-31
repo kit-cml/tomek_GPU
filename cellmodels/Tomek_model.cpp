@@ -1218,7 +1218,6 @@ __device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
 }
 
 __device__ double set_time_step(double TIME, double time_point, double max_time_step, double *CONSTANTS, double *RATES, int foset) {
-
 int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
 int states_size = 43;
 
@@ -1259,6 +1258,8 @@ double time_step = min_time_step;
     return time_step;
   }
 }
+
+
 __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
 {
   //int rates_size = 43;
@@ -1306,4 +1307,25 @@ __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
   STATES[(states_size * foset) + xs2] = STATES[(states_size * foset) + xs2] + RATES[ (states_size * foset) +xs2] * dt;
   STATES[(states_size * foset) + Jrel_np] = STATES[(states_size * foset) + Jrel_np] + RATES[ (states_size * foset) +Jrel_np] * dt;
   STATES[(states_size * foset) + Jrel_p] = STATES[(states_size * foset) + Jrel_p] + RATES[(states_size * foset) +Jrel_p] * dt;
+}
+
+__device__ void solve_rk2 (double* k1,double* k2,double* temp_states, double* STATES, 
+                  double* CONSTANTS, double* ALGEBRAIC, double* RATES, 
+                  double TIME, double dt, int foset) {
+    // printf("Inside solve_rk2\n");
+    int num_of_states = 43;
+
+    // Use existing computeRates
+    computeRates(TIME, CONSTANTS, k1, STATES, ALGEBRAIC, foset);
+    printf("k1: %lf\n", k1[foset]);
+    
+    for (int i = 0; i < num_of_states; i++) {
+        temp_states[(foset * num_of_states) + i] = STATES[(foset * num_of_states) + i] + (dt/2.0) * k1[(foset * num_of_states) + i];
+    }
+    computeRates(TIME + dt/2.0, CONSTANTS, k2, temp_states, ALGEBRAIC, foset);
+    
+    for (int i = 0; i < num_of_states; i++) {
+        STATES[(foset * num_of_states) + i] += dt * k2[(foset * num_of_states) + i];
+        RATES[(foset * num_of_states) + i] = k2[(foset * num_of_states) + i];
+    }
 }
