@@ -33,8 +33,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
     int num_of_algebraic = 223;
     int algebraic_size = num_of_algebraic;
     int num_of_constants = 165;
-    int num_of_states = 43;
+    const int num_of_states = 43;
     int num_of_rates = 43;
+
+    double *k1 = (double *)malloc(num_of_states * 2002 * sizeof(double));
+    double *k2 = (double *)malloc(num_of_states * 2002 * sizeof(double));
+    double *temp_states = (double *)malloc(num_of_states * 2002 * sizeof(double));
 
     // INIT STARTS
 
@@ -159,7 +163,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
 
     while (tcurr[sample_id]<tmax)
     {
-        computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
+        if (sample_id == 0 && tcurr[0]<1.0) printf("rates 0: %lf \n",d_RATES[(sample_id * num_of_states) + 0]);
+        // computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
         // dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
         //euler only
@@ -278,7 +283,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
         
 
         // solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
-        solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
+        // solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
+        solve_rk2(k1, k2, temp_states, d_STATES, d_CONSTANTS, d_ALGEBRAIC, d_RATES, tcurr[sample_id], dt[sample_id], sample_id);
+        // printf("after rk2\n");
         
         // begin the last 250 pace operations
 
@@ -415,6 +422,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double *d_CONST
        
     } // while loop ends here 
     // __syncthreads();
+
+    free(k1); free(k2); free(temp_states); 
 }
 
 
@@ -447,6 +456,10 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
     int num_of_constants = 165;
     int num_of_states = 43;
     int num_of_rates = 43;
+
+    double *k1 = (double *)malloc(num_of_states * sample_size * sizeof(double));
+    double *k2 = (double *)malloc(num_of_states * sample_size * sizeof(double));
+    double *temp_states = (double *)malloc(num_of_states * sample_size * sizeof(double));
 
 
     // INIT STARTS
@@ -610,7 +623,8 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
 
     while (tcurr[sample_id]<tmax)
     {
-        computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
+        if (sample_id == 0 && tcurr[0]<1.0) printf("rates 0: %lf \n",d_RATES[(sample_id * num_of_states) + 0]);
+        // computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
         // dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
          dt_set = p_param->dt;
@@ -722,8 +736,9 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
         }
         
         // solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
-        solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
-
+        // solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
+        solve_rk2(k1, k2, temp_states, d_STATES, d_CONSTANTS, d_ALGEBRAIC, d_RATES, tcurr[sample_id], dt[sample_id], sample_id);
+        // printf("after rk2\n");
         if( temp_result[sample_id].dvmdt_max < d_RATES[(sample_id * num_of_states)+V] )temp_result[sample_id].dvmdt_max = d_RATES[(sample_id * num_of_states)+V];
           
           // this part should be
@@ -923,6 +938,10 @@ __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double *
       temp_result[sample_id].cad90 = cad90_curr - cad90_prev;
       cipa_result[sample_id].cad90 = temp_result[sample_id].cad90;
       cipa_result[sample_id].cad50 = temp_result[sample_id].cad50;
+
+      free(temp_states);
+      free(k1);
+      free(k2);
 
 }
 

@@ -1313,20 +1313,41 @@ __device__ void solveEuler(double *STATES, double *RATES, double dt, int foset)
 __device__ void solve_rk2 (double* k1,double* k2,double* temp_states, double* STATES, 
                   double* CONSTANTS, double* ALGEBRAIC, double* RATES, 
                   double TIME, double dt, int foset) {
-    // printf("Inside solve_rk2\n");
     int num_of_states = 43;
 
-    // Use existing computeRates
-    computeRates(TIME, CONSTANTS, k1, STATES, ALGEBRAIC, foset);
-    printf("k1: %lf\n", k1[foset]);
+    // Debug print before computeRates
+    printf("Thread %d: Before first computeRates, TIME=%f\n", foset, TIME);
     
+    // Check array indices
+    if (foset >= 0) {
+        // First computeRates call
+      // Store k1 directly in RATES first
+    computeRates(TIME, CONSTANTS, RATES, STATES, ALGEBRAIC, foset);
+    
+    // Copy RATES to k1
     for (int i = 0; i < num_of_states; i++) {
-        temp_states[(foset * num_of_states) + i] = STATES[(foset * num_of_states) + i] + (dt/2.0) * k1[(foset * num_of_states) + i];
+        k1[i] = RATES[(foset * num_of_states) + i];
     }
-    computeRates(TIME + dt/2.0, CONSTANTS, k2, temp_states, ALGEBRAIC, foset);
-    
-    for (int i = 0; i < num_of_states; i++) {
-        STATES[(foset * num_of_states) + i] += dt * k2[(foset * num_of_states) + i];
-        RATES[(foset * num_of_states) + i] = k2[(foset * num_of_states) + i];
+        
+        // Intermediate state calculation
+        for (int i = 0; i < num_of_states; i++) {
+            temp_states[(foset * num_of_states) + i] = 
+                STATES[(foset * num_of_states) + i] + (dt/2.0) * k1[(foset * num_of_states) + i];
+        }
+        printf("Thread %d: After temp states calculation\n", foset);
+        
+        // Second computeRates call
+        // computeRates(TIME + dt/2.0, CONSTANTS, k2, temp_states, ALGEBRAIC, foset);
+        // Calculate k2
+        computeRates(TIME + dt/2.0, CONSTANTS, RATES, temp_states, ALGEBRAIC, foset);
+        printf("Thread %d: After second computeRates\n", foset);
+        
+        // Final update
+        for (int i = 0; i < num_of_states; i++) {
+            // STATES[(foset * num_of_states) + i] += dt * k2[(foset * num_of_states) + i];
+            // RATES[(foset * num_of_states) + i] = k2[(foset * num_of_states) + i];
+            k2[(foset * num_of_states) + i] = RATES[(foset * num_of_states) + i];
+            STATES[(foset * num_of_states) + i] += dt * k2[(foset * num_of_states) + i];
+        }
     }
 }
