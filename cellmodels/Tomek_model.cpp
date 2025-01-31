@@ -772,6 +772,7 @@ __device__ void computeRates(double TIME, double *CONSTANTS, double *RATES, doub
 int algebraic_size = 223;
 int constants_size = 163+2; // Add 2 constant for scaling factor, Jtr and Jleak
 int states_size = 43;
+// if (foset == 0){printf("inside computeRates\n");}
 CONSTANTS[(constants_size * foset) + cmdnmax] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + cmdnmax_b]*1.30000 : CONSTANTS[(constants_size * foset) + cmdnmax_b]);
 CONSTANTS[(constants_size * foset) + GNaL] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + GNaL_b]*0.600000 : CONSTANTS[(constants_size * foset) + GNaL_b]);
 CONSTANTS[(constants_size * foset) + Gto] = (CONSTANTS[(constants_size * foset) + celltype]==1.00000 ?  CONSTANTS[(constants_size * foset) + Gto_b]*2.00000 : CONSTANTS[(constants_size * foset) + celltype]==2.00000 ?  CONSTANTS[(constants_size * foset) + Gto_b]*2.00000 : CONSTANTS[(constants_size * foset) + Gto_b]);
