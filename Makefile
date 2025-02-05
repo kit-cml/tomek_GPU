@@ -31,10 +31,32 @@ CXXLINK := nvlink
 # Use this if you want to use Tomek 2019 cell model.
 # Otherwise, comment it
 #CXXFLAGS += -DTOMEK_2019
+# Consider optimizing with -O3 for performance. remove dead code, etc.
+# Optimization Levels:
+# --------------------
+# | Flag | Description                                      |
+# |------|--------------------------------------------------|
+# | -O0  | No optimization. Best for debugging.             |
+# | -O1  | Basic optimizations. Balances speed and size.    |
+# | -O2  | Moderate optimizations. Good performance boost.  |
+# | -O3  | Aggressive optimizations. Maximizes performance. |
+# | -Os  | Optimizes for code size rather than speed.       |
+# | -Ofast| Aggressive optimizations, may break standards.  |
+# --------------------
+# Notes:
+# - Use -O3 for performance-critical code.
+# - Use -O0 for debugging (no optimizations).
+# - -O2 is often the default for a balance of speed and size.
+# - -Ofast may sacrifice precision for speed (e.g., floating-point math).
+
+# CXXFLAGS += -Wall -O3
 
 # LDFLAGS is used for linker (-g enables debug symbols)
 # LDFLAGS  += -g -L/usr/local/cuda/lib64
-LDFLAGS  += -g -L/usr/local/cuda/lib64 -arch=sm_86 -rdc=true
+# FOR 3xxx series GPU:
+# LDFLAGS  += -g -L/usr/local/cuda/lib64 -arch=sm_86 -rdc=true
+# FOR 4xxx series GPU:
+LDFLAGS  += -g -L/usr/local/cuda/lib64 -arch=sm_89 -rdc=true
 
 # List the project' sources to compile or let the Makefile recognize
 # them for you using 'wildcard' function.
@@ -72,7 +94,7 @@ $(PROGNAME) : $(OBJECTS) Makefile
 #
 # Choice 2: don't use implicit rules and specify our will
 %.o: %.cpp $(HEADERS) Makefile
-	$(CXX) -x cu $(CXXFLAGS) $(CPPFLAGS) -dc -arch=sm_86 $(OUTPUT_OPTION) $<
+	$(CXX) -x cu $(CXXFLAGS) $(CPPFLAGS) -dc -arch=sm_89 $(OUTPUT_OPTION) $<
 # -dc -rdc=true 
 
 # Simple clean-up target
