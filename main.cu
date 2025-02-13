@@ -380,6 +380,8 @@ int main(int argc, char **argv)
       // endwin();
       
       cudaDeviceSynchronize();
+      cudaError_t err = cudaGetLastError();
+      printf("CUDA comments: %s\n", cudaGetErrorString(err));
       
 
       printf("allocating memory for computation result in the CPU, malloc style \n");
@@ -679,6 +681,9 @@ int main(int argc, char **argv)
     // endwin();
     
     cudaDeviceSynchronize();
+
+    cudaError_t err = cudaGetLastError();
+    printf("CUDA comments: %s\n", cudaGetErrorString(err));
     
 
     printf("allocating memory for computation result in the CPU, malloc style \n");
